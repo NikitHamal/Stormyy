@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Existing styles remain the same -->
+  <style>
+    /* Original orb styles */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      perspective: 1000px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .orb-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      transform-style: preserve-3d;
+    }
+
+    .magical-orb {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .orb-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(147, 51, 234),
+        rgb(88, 28, 135));
+      box-shadow: 0 0 60px rgba(147, 51, 234, 0.4);
+      transform-style: preserve-3d;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .thunder-wave {
+      position: absolute;
+      width: 140%;
+      height: 140%;
+      top: -20%;
+      left: -20%;
+      border-radius: 50%;
+      background: 
+        repeating-radial-gradient(
+          circle at center,
+          transparent 0%,
+          rgba(147, 51, 234, 0.1) 2%,
+          rgba(167, 71, 254, 0.2) 3%,
+          transparent 4%
+        );
+      filter: blur(1px);
+      animation: thunderWave 3s linear infinite;
+      mix-blend-mode: screen;
+    }
+
+    .eyes-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      animation: eyesFloat 4s ease-in-out infinite;
+    }
+
+    .eye {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: white;
+      border-radius: 50%;
+      top: 35%;
+      animation: blink 4s infinite;
+      overflow: hidden;
+    }
+
+    .eye-left {
+      left: 25%;
+    }
+
+    .eye-right {
+      right: 25%;
+    }
+
+    .pupil {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #000;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: lookAround 8s infinite;
+    }
+
+    @keyframes thunderWave {
+      0% {
+        transform: scale(0.8) rotate(0deg);
+        opacity: 0.3;
+      }
+      50% {
+        transform: scale(1.2) rotate(180deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(0.8) rotate(360deg);
+        opacity: 0.3;
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(-10px); }
+      50% { transform: translateY(10px); }
+    }
+
+    @keyframes blink {
+      0%, 48%, 52%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(0.1); }
+    }
+
+    @keyframes lookAround {
+      0%, 100% { transform: translate(-50%, -50%); }
+      15% { transform: translate(-100%, -50%); }
+      30% { transform: translate(-50%, -100%); }
+      45% { transform: translate(0%, -50%); }
+      60% { transform: translate(-50%, 0%); }
+      75% { transform: translate(-50%, -50%); }
+    }
+
+    @keyframes eyesFloat {
+      0%, 100% { transform: translateY(-5px); }
+      50% { transform: translateY(5px); }
+    }
+
+    /* Add new chat interface styles */
+    .chat-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      background: rgba(147, 51, 234, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-out;
+      z-index: 1000;
+    }
+
+    .chat-container.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .chat-input:focus {
+      background: rgba(0, 0, 0, 0.9);
+      outline: none;
+    }
+
+    .send-button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 15px;
+      background: rgb(147, 51, 234);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .send-button:hover {
+      background: rgb(167, 71, 254);
+    }
+
+    /* New animations */
+    @keyframes thinking {
+      0% { transform: rotate(0deg) scale(1) translateY(0px); }
+      25% { transform: rotate(5deg) scale(1.1) translateY(-5px); }
+      75% { transform: rotate(-5deg) scale(0.9) translateY(5px); }
+      100% { transform: rotate(0deg) scale(1) translateY(0px); }
+    }
+
+    .thinking .magical-orb {
+      animation: thinking 1.5s ease-in-out infinite !important;
+    }
+
+    .thinking .thunder-wave {
+      animation: thunderWave 2s linear infinite;
+      opacity: 0.8;
+    }
+
+    .response-received .orb-inner {
+      animation: pulse 1s ease-in-out;
+      box-shadow: 0 0 100px rgba(147, 51, 234, 0.8);
+    }
+
+    /* Add these new styles after the existing styles */
+    .speech-bubble {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(147, 51, 234, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 15px 20px;
+      border-radius: 20px;
+      max-width: 300px;
+      min-width: 150px;
+      color: white;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 1000;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+      display: block;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 12px solid rgba(147, 51, 234, 0.3);
+    }
+
+    .speech-bubble.active {
+      opacity: 1;
+      top: -100px;
+      transform: translateX(-50%) scale(1);
+      visibility: visible;
+    }
+
+    .speech-bubble.thinking {
+      content: 'Thinking...';
+    }
+
+    /* Add these new styles in the <style> section */
+    .caption-container {
+      position: absolute;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .thinking-dots {
+      display: none;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 10px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: rgb(147, 51, 234);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    .thinking .thinking-dots {
+      display: flex;
+    }
+
+    .thinking .dot {
+      animation: dotPulse 1.4s infinite;
+    }
+
+    .thinking .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .thinking .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.5); opacity: 1; }
+    }
+
+    /* Click animation for the orb */
+    @keyframes clickPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .orb-click {
+      animation: clickPulse 0.3s ease-out;
+    }
+
+    /* Enhance existing animations */
+    @keyframes thinking {
+      0% { 
+        transform: rotate(0deg) scale(1) translateY(0px);
+        filter: brightness(1);
+      }
+      25% { 
+        transform: rotate(5deg) scale(1.1) translateY(-5px);
+        filter: brightness(1.2);
+      }
+      75% { 
+        transform: rotate(-5deg) scale(0.9) translateY(5px);
+        filter: brightness(0.9);
+      }
+      100% { 
+        transform: rotate(0deg) scale(1) translateY(0px);
+        filter: brightness(1);
+      }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .orb-container {
+        width: 150px;
+        height: 150px;
+      }
+
+      .chat-container {
+        width: 90%;
+        max-width: 400px;
+      }
+
+      .speech-bubble {
+        width: 80%;
+        max-width: 300px;
+        font-size: 12px;
+      }
+
+      .eye {
+        width: 25px;
+        height: 25px;
+      }
+
+      .pupil {
+        width: 10px;
+        height: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .orb-container {
+        width: 120px;
+        height: 120px;
+      }
+
+      .chat-container {
+        padding: 10px;
+      }
+
+      .chat-input {
+        font-size: 14px;
+      }
+
+      .send-button {
+        padding: 8px 15px;
+      }
+    }
+
+    /* Add new chat history styles */
+    .chat-history {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 15px;
+      display: none;
+    }
+
+    .chat-message {
+      margin: 8px 0;
+      padding: 8px 12px;
+      border-radius: 12px;
+      max-width: 80%;
+    }
+
+    .user-message {
+      background: rgba(147, 51, 234, 0.3);
+      margin-left: auto;
+      color: white;
+    }
+
+    .bot-message {
+      background: rgba(255, 255, 255, 0.1);
+      margin-right: auto;
+      color: white;
+    }
+
+    .chat-container.expanded .chat-history {
+      display: block;
+    }
+
+    /* Add these styles to the existing <style> section */
+    .chat-history-icon {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(147, 51, 234, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+      z-index: 1000;
+    }
+
+    .chat-history-icon:hover {
+      transform: scale(1.1);
+      background: rgba(147, 51, 234, 0.3);
+    }
+
+    .chat-history-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    /* Remove the chat history styles */
+    .chat-history {
+      display: none;
+    }
+
+    /* Add idle message style */
+    .idle-message {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .idle-message.visible {
+      opacity: 1;
+    }
+
+    /* Add a subtle glow effect when visible */
+    .chat-container.visible .input-group {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Add microphone icon styles */
+    .mic-icon {
+      position: absolute;
+      right: 60px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      fill: white;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .mic-icon:hover {
+      opacity: 1;
+    }
+
+    .mic-icon.listening {
+      animation: pulseRed 1.5s infinite;
+    }
+
+    @keyframes pulseRed {
+      0% { fill: white; }
+      50% { fill: #ff4444; }
+      100% { fill: white; }
+    }
+
+    /* Remove the mic-icon styles and add orb listening state styles */
+    .orb-container.listening .magical-orb {
+      animation: listeningPulse 1.5s infinite !important;
+    }
+
+    .orb-container.listening .thunder-wave {
+      animation: thunderWave 1.5s linear infinite;
+      opacity: 0.9;
+      filter: hue-rotate(45deg);
+    }
+
+    @keyframes listeningPulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.05); filter: brightness(1.2); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    /* Update speech bubble styles for listening state */
+    .speech-bubble.listening {
+      background: rgba(255, 68, 68, 0.3);
+    }
+
+    .speech-bubble.listening::after {
+      border-top-color: rgba(255, 68, 68, 0.3);
+    }
+
+    /* Add these styles for the keyboard icon */
+    .keyboard-icon {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(147, 51, 234, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+      z-index: 1000;
+    }
+
+    .keyboard-icon:hover {
+      transform: scale(1.1);
+      background: rgba(147, 51, 234, 0.3);
+    }
+
+    .keyboard-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    .keyboard-icon.active {
+      background: rgba(147, 51, 234, 0.4);
+      transform: scale(0.95);
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Original orb structure -->
+  <div id="orb-container" class="orb-container">
+    <div class="magical-orb">
+      <div class="thunder-wave"></div>
+      <div class="thunder-wave" style="animation-delay: -1.5s"></div>
+      <div class="orb-inner"></div>
+      <div class="eyes-container">
+        <div class="eye eye-left">
+          <div class="pupil"></div>
+        </div>
+        <div class="eye eye-right">
+          <div class="pupil"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add this after the orb structure but before the speech bubble -->
+  <div class="caption-container" id="captionContainer">
+    <div class="caption-text"></div>
+    <div class="thinking-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Add this after the orb structure but before the chat container -->
+  <div class="speech-bubble" id="speechBubble"></div>
+
+  <!-- Add this before the chat container -->
+  <a href="chat-history.html" class="chat-history-icon" title="View Chat History">
+    <svg viewBox="0 0 24 24">
+      <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,16H6l-2,2V4h16V16z"/>
+    </svg>
+  </a>
+
+  <!-- Update the chat container to remove chat history -->
+  <div class="chat-container" id="chatContainer">
+    <div class="input-group">
+      <input type="text" class="chat-input" id="userInput" placeholder="Ask Stormy anything...">
+      <button class="send-button" id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <!-- Add this after the orb structure -->
+  <div class="idle-message" id="idleMessage">Click me to chat!</div>
+
+  <!-- Add this after the orb container but before the chat container -->
+  <div class="keyboard-icon" id="keyboardIcon" title="Toggle keyboard input">
+    <svg viewBox="0 0 24 24">
+      <path d="M20,5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M20,17H4V7h16V17z"/>
+      <path d="M11,8h2v2h-2V8z"/>
+      <path d="M8,8h2v2H8V8z"/>
+      <path d="M5,8h2v2H5V8z"/>
+      <path d="M14,8h2v2h-2V8z"/>
+      <path d="M17,8h2v2h-2V8z"/>
+      <path d="M8,11h2v2H8V11z"/>
+      <path d="M11,11h2v2h-2V11z"/>
+      <path d="M14,11h2v2h-2V11z"/>
+      <path d="M17,11h2v2h-2V11z"/>
+      <path d="M8,14h8v2H8V14z"/>
+    </svg>
+  </div>
+
+  <script>
+    // Original orb interaction code
+    const orbContainer = document.getElementById('orb-container');
+    const pupils = document.querySelectorAll('.pupil');
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+    let lastMovementTime = 0;
+    const idleThreshold = 500;
+
+    // Chat functionality
+    const chatContainer = document.getElementById('chatContainer');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const magicalOrb = document.querySelector('.magical-orb');
+
+    // Toggle chat on orb click
+    orbContainer.addEventListener('click', () => {
+      if (!isDragging) {
+        if (!isListening && recognition) {
+          // Start listening
+          recognition.start();
+          chatContainer.classList.remove('visible');
+          keyboardIcon.classList.remove('active');
+        } else if (isListening) {
+          // Stop listening
+          recognition.stop();
+        }
+        idleMessage.classList.remove('visible');
+      }
+    });
+
+    // API configuration
+    const API_KEY = 'AIzaSyBlvhpuRx-ispBO9mCxnMNu78FQ4rLnmrI'; // Replace with your actual API key
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    // Add these functions to the script section
+    function showCaption(text) {
+      const captionContainer = document.getElementById('captionContainer');
+      const captionText = captionContainer.querySelector('.caption-text');
+      captionText.textContent = text;
+      captionContainer.style.opacity = '1';
+    }
+
+    function hideCaption() {
+      const captionContainer = document.getElementById('captionContainer');
+      captionContainer.style.opacity = '0';
+    }
+
+    // Add click animation
+    orbContainer.addEventListener('mousedown', () => {
+      magicalOrb.classList.add('orb-click');
+    });
+
+    orbContainer.addEventListener('mouseup', () => {
+      magicalOrb.classList.remove('orb-click');
+    });
+
+    // Add this function to store messages
+    function saveMessage(text, type) {
+      const history = JSON.parse(localStorage.getItem('stormyChatHistory') || '[]');
+      history.push({
+        text,
+        type,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('stormyChatHistory', JSON.stringify(history));
+    }
+
+    // Initialize speech synthesis and get voices
+    let speechSynthesis = window.speechSynthesis;
+    let voices = [];
+
+    function loadVoices() {
+      voices = speechSynthesis.getVoices();
+    }
+
+    // Load voices when they're available
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // Add these functions to handle speech recognition
+    let recognition;
+    let isListening = false;
+
+    function initSpeechRecognition() {
+      if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          orbContainer.classList.add('listening');
+          speechBubble.textContent = "I'm listening...";
+          speechBubble.classList.add('active', 'listening');
+          isListening = true;
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          orbContainer.classList.remove('listening');
+          speechBubble.classList.remove('listening');
+          handleUserInput(transcript);
+        };
+
+        recognition.onend = () => {
+          orbContainer.classList.remove('listening');
+          speechBubble.classList.remove('active', 'listening');
+          isListening = false;
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          orbContainer.classList.remove('listening');
+          speechBubble.textContent = "Sorry, I couldn't hear that.";
+          speechBubble.classList.remove('listening');
+          setTimeout(() => speechBubble.classList.remove('active'), 2000);
+          isListening = false;
+        };
+      }
+    }
+
+    // Initialize speech recognition
+    initSpeechRecognition();
+
+    // Update the handleUserInput function to better handle text processing
+    function cleanTextForSpeech(text) {
+      // Remove emojis
+      text = text.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+      
+      // Remove markdown and code blocks
+      text = text.replace(/```[\s\S]*?```/g, '')
+                .replace(/`.*?`/g, '')
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\*(.*?)\*/g, '$1')
+                .replace(/#+ /g, '')
+                .trim();
+      
+      // Add proper punctuation for better speech
+      text = text.replace(/([.!?])(\w)/g, '$1 $2');
+      
+      return text;
+    }
+
+    // Update the speech synthesis part in handleUserInput
+    async function handleUserInput(transcript) {
+      const prompt = transcript.trim();
+      if (!prompt) return;
+
+      // Save user message to history
+      saveMessage(prompt, 'user');
+
+      userInput.value = '';
+      const speechBubble = document.getElementById('speechBubble');
+      
+      // Show thinking state in speech bubble
+      speechBubble.textContent = "Thinking...";
+      speechBubble.classList.add('active');
+      magicalOrb.parentElement.classList.add('thinking');
+      userInput.disabled = true;
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are Stormy, a magical AI companion. Please keep responses concise and friendly. User asks: ${prompt}`
+              }]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates[0]) {
+          const answer = data.candidates[0].content.parts[0].text;
+          const formattedAnswer = cleanTextForSpeech(answer);
+          
+          magicalOrb.parentElement.classList.remove('thinking');
+          magicalOrb.parentElement.classList.add('response-received');
+          
+          showCaption('Speaking...');
+          speechBubble.textContent = formattedAnswer;
+          speechBubble.classList.add('active');
+          
+          const speech = new SpeechSynthesisUtterance(formattedAnswer);
+          speech.rate = 1.0;
+          speech.pitch = 1.2;
+          speech.volume = 0.8;
+          
+          // Get available voices and prefer Google female voice
+          const voices = speechSynthesis.getVoices();
+          const preferredVoices = [
+            'Google UK English Female',
+            'Microsoft Zira',
+            'Samantha',
+            'Victoria'
+          ];
+          
+          const femaleVoice = voices.find(voice => 
+            preferredVoices.some(preferred => 
+              voice.name.toLowerCase().includes(preferred.toLowerCase())
+            )
+          ) || voices.find(voice => voice.name.toLowerCase().includes('female'));
+          
+          if (femaleVoice) {
+            speech.voice = femaleVoice;
+          }
+          
+          // Ensure any ongoing speech is stopped
+          speechSynthesis.cancel();
+          
+          // Break long responses into sentences for better speech
+          const sentences = formattedAnswer.match(/[^.!?]+[.!?]+/g) || [formattedAnswer];
+          
+          for (const sentence of sentences) {
+            const speechSegment = new SpeechSynthesisUtterance(sentence.trim());
+            speechSegment.voice = speech.voice;
+            speechSegment.rate = speech.rate;
+            speechSegment.pitch = speech.pitch;
+            speechSegment.volume = speech.volume;
+            speechSynthesis.speak(speechSegment);
+          }
+          
+          speech.onend = () => {
+            setTimeout(() => {
+              speechBubble.classList.remove('active');
+              magicalOrb.parentElement.classList.remove('response-received');
+            }, 2000);
+          };
+
+          // Save bot response to history
+          saveMessage(formattedAnswer, 'bot');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        speechBubble.textContent = "Sorry, I'm having trouble connecting...";
+        speechBubble.classList.add('active');
+        magicalOrb.parentElement.classList.remove('thinking');
+        
+        setTimeout(() => {
+          speechBubble.classList.remove('active');
+        }, 3000);
+        
+        saveMessage("Sorry, I'm having trouble connecting right now.", 'bot');
+      } finally {
+        userInput.disabled = false;
+        sendButton.disabled = false;
+      }
+    }
+
+    sendButton.addEventListener('click', () => {
+      const userInput = document.getElementById('userInput');
+      const speechBubble = document.getElementById('speechBubble');
+      const prompt = userInput.value.trim();
+      if (prompt) {
+        handleUserInput(prompt);
+      }
+    });
+
+    // Add idle message handler
+    let idleMessageTimeout;
+
+    function showIdleMessage() {
+      const idleMessage = document.getElementById('idleMessage');
+      const chatContainer = document.getElementById('chatContainer');
+      
+      if (!chatContainer.classList.contains('visible')) {
+        idleMessage.classList.add('visible');
+        setTimeout(() => {
+          idleMessage.classList.remove('visible');
+        }, 3000);
+      }
+    }
+
+    // Show idle message periodically
+    setInterval(showIdleMessage, 10000);
+
+    // Show idle message after page load
+    setTimeout(showIdleMessage, 2000);
+
+    // Hide idle message when moving mouse over orb
+    orbContainer.addEventListener('mouseenter', () => {
+      const idleMessage = document.getElementById('idleMessage');
+      idleMessage.classList.add('visible');
+    });
+
+    orbContainer.addEventListener('mouseleave', () => {
+      const idleMessage = document.getElementById('idleMessage');
+      idleMessage.classList.remove('visible');
+    });
+
+    // Add this to make sure speech bubble is properly positioned relative to the orb
+    window.addEventListener('load', () => {
+      const speechBubble = document.getElementById('speechBubble');
+      const orbContainer = document.getElementById('orb-container');
+      orbContainer.appendChild(speechBubble);
+    });
+
+    // Add this to your script section
+    const keyboardIcon = document.getElementById('keyboardIcon');
+
+    keyboardIcon.addEventListener('click', () => {
+      if (isListening) {
+        // Stop listening if active
+        recognition.stop();
+      }
+      chatContainer.classList.toggle('visible');
+      keyboardIcon.classList.toggle('active');
+      
+      if (chatContainer.classList.contains('visible')) {
+        userInput.focus();
+      }
+    });
+  </script>
+</body>
+</html> 

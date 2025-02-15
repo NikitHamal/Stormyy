@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(147, 51, 234, 0.2);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      padding: 8px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .back-button svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    .chat-container {
+      max-width: 800px;
+      margin: 80px auto 20px;
+      padding: 20px;
+    }
+
+    .chat-message {
+      margin: 16px 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      max-width: 80%;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .user-message {
+      background: rgba(147, 51, 234, 0.3);
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background: rgba(255, 255, 255, 0.1);
+      margin-right: auto;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        padding: 10px;
+      }
+
+      .chat-message {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="stormy.html" class="back-button">
+      <svg viewBox="0 0 24 24">
+        <path d="M20,11H7.83l5.59-5.59L12,4l-8,8l8,8l1.41-1.41L7.83,13H20v-2z"/>
+      </svg>
+      Back to Stormy
+    </a>
+  </div>
+
+  <div class="chat-container" id="chatContainer">
+    <!-- Chat messages will be loaded here -->
+  </div>
+
+  <script>
+    // Load chat history from localStorage
+    function loadChatHistory() {
+      const chatContainer = document.getElementById('chatContainer');
+      const history = JSON.parse(localStorage.getItem('stormyChatHistory') || '[]');
+
+      history.forEach(message => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${message.type}-message`;
+        
+        const content = document.createElement('div');
+        content.textContent = message.text;
+        messageDiv.appendChild(content);
+
+        const timestamp = document.createElement('div');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = new Date(message.timestamp).toLocaleString();
+        messageDiv.appendChild(timestamp);
+
+        chatContainer.appendChild(messageDiv);
+      });
+    }
+
+    // Load chat history when page loads
+    loadChatHistory();
+  </script>
+</body>
+</html> 
