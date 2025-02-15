@@ -42,6 +42,33 @@
       box-shadow: 0 0 60px rgba(147, 51, 234, 0.4);
       transform-style: preserve-3d;
       animation: pulse 2s ease-in-out infinite;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .data-stream {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: 
+        radial-gradient(circle at center, 
+          transparent 30%, 
+          rgba(0, 255, 255, 0.1) 70%,
+          transparent 71%
+        );
+      animation: dataStream 5s linear infinite;
+      transform-style: preserve-3d;
+    }
+
+    .energy-ring {
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      top: -10%;
+      left: -10%;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 255, 255, 0.3);
+      animation: energyRing 6s ease-in-out infinite;
+      transform-style: preserve-3d;
     }
 
     .thunder-wave {
@@ -81,6 +108,7 @@
       top: 35%;
       animation: blink 4s infinite;
       overflow: hidden;
+      transition: transform 0.3s ease-out;
     }
 
     .eye-left {
@@ -266,20 +294,6 @@
 
     .speech-bubble.thinking {
       content: 'Thinking...';
-    }
-
-    /* Add these new styles in the <style> section */
-    .caption-container {
-      position: absolute;
-      bottom: -40px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 14px;
-      font-family: Arial, sans-serif;
-      opacity: 0;
-      transition: opacity 0.3s;
     }
 
     .thinking-dots {
@@ -580,6 +594,464 @@
       background: rgba(147, 51, 234, 0.4);
       transform: scale(0.95);
     }
+    .caption-container {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(147, 51, 234, 0.2);
+      padding: 8px 16px;
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .caption-text {
+      color: white;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* Add emotion styles with !important to override default state */
+    .orb-container[data-emotion="happy"] .orb-inner {
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(255, 189, 89),
+        rgb(255, 145, 48)) !important;
+      box-shadow: 0 0 60px rgba(255, 166, 0, 0.4) !important;
+    }
+
+    .orb-container[data-emotion="sad"] .orb-inner {
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(100, 181, 246),
+        rgb(30, 136, 229)) !important;
+      box-shadow: 0 0 60px rgba(30, 136, 229, 0.4) !important;
+    }
+
+    .orb-container[data-emotion="angry"] .orb-inner {
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(255, 82, 82),
+        rgb(211, 47, 47)) !important;
+      box-shadow: 0 0 60px rgba(211, 47, 47, 0.4) !important;
+    }
+
+    .orb-container[data-emotion="confused"] .orb-inner {
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(171, 71, 188),
+        rgb(142, 36, 170)) !important;
+      box-shadow: 0 0 60px rgba(142, 36, 170, 0.4) !important;
+    }
+
+    /* Update eye styles to handle emotions */
+    .eye {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: white;
+      border-radius: 50%;
+      top: 35%;
+      animation: blink 4s infinite;
+      overflow: hidden;
+      transition: transform 0.3s ease-out;
+    }
+
+    /* Add emotion-specific eye animations with !important */
+    .orb-container[data-emotion="happy"] .eye {
+      transform: scale(1.1) translateY(-2px) !important;
+    }
+
+    .orb-container[data-emotion="sad"] .eye {
+      transform: scale(0.9) translateY(2px) !important;
+    }
+
+    .orb-container[data-emotion="angry"] .eye {
+      transform: scaleY(0.8) !important;
+    }
+
+    .orb-container[data-emotion="confused"] .eye-left {
+      transform: translateY(-2px) !important;
+    }
+
+    .orb-container[data-emotion="confused"] .eye-right {
+      transform: translateY(2px) !important;
+    }
+
+    /* Add these emotion-specific animations */
+    @keyframes happyBounce {
+      0%, 100% { transform: translateY(-10px) scale(1); }
+      50% { transform: translateY(10px) scale(1.1); }
+    }
+
+    @keyframes sadDroop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(15px) scale(0.95); }
+    }
+
+    @keyframes angryShake {
+      0%, 100% { transform: translateX(0) scale(1); }
+      25% { transform: translateX(-5px) scale(1.05); }
+      75% { transform: translateX(5px) scale(1.05); }
+    }
+
+    @keyframes confusedSpin {
+      0% { transform: rotate(-5deg) scale(1); }
+      50% { transform: rotate(5deg) scale(0.95); }
+      100% { transform: rotate(-5deg) scale(1); }
+    }
+
+    /* Add thunder effects for angry state */
+    @keyframes angryThunder {
+      0% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.3); }
+      51% { opacity: 0.3; transform: scale(0.8); }
+      100% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    /* Update emotion styles with animations */
+    .orb-container[data-emotion="happy"] .magical-orb {
+      animation: happyBounce 2s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="happy"] .thunder-wave {
+      opacity: 0.6;
+      filter: hue-rotate(280deg) brightness(1.5);
+    }
+
+    .orb-container[data-emotion="sad"] .magical-orb {
+      animation: sadDroop 3s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="sad"] .thunder-wave {
+      opacity: 0.3;
+      filter: hue-rotate(180deg);
+    }
+
+    .orb-container[data-emotion="angry"] .magical-orb {
+      animation: angryShake 0.5s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="angry"] .thunder-wave {
+      animation: angryThunder 1s linear infinite !important;
+      filter: hue-rotate(320deg) brightness(1.5);
+    }
+
+    .orb-container[data-emotion="confused"] .magical-orb {
+      animation: confusedSpin 3s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="confused"] .thunder-wave {
+      animation: thunderWave 4s linear infinite reverse;
+      filter: hue-rotate(90deg);
+    }
+
+    /* Add particle effects for emotional states */
+    .emotion-particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .orb-container[data-emotion] .emotion-particles {
+      opacity: 1;
+    }
+
+    @keyframes particleFloat {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-50px) scale(0); opacity: 0; }
+    }
+
+    .particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: particleFloat 2s ease-out forwards;
+    }
+
+    /* Add this to the existing eye animations */
+    .orb-container[data-emotion="happy"] .pupil {
+      animation: happyPupils 3s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="sad"] .pupil {
+      animation: sadPupils 3s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="angry"] .pupil {
+      animation: angryPupils 1s ease-in-out infinite !important;
+    }
+
+    .orb-container[data-emotion="confused"] .pupil {
+      animation: confusedPupils 3s linear infinite !important;
+    }
+
+    @keyframes happyPupils {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.2); }
+    }
+
+    @keyframes sadPupils {
+      0%, 100% { transform: translate(-50%, -50%); }
+      50% { transform: translate(-50%, 0%); }
+    }
+
+    @keyframes angryPupils {
+      0%, 100% { transform: translate(-50%, -50%) scaleY(0.8); }
+      50% { transform: translate(-50%, -50%) scaleY(1.2); }
+    }
+
+    @keyframes confusedPupils {
+      0% { transform: translate(-100%, -50%); }
+      25% { transform: translate(-50%, -100%); }
+      50% { transform: translate(0%, -50%); }
+      75% { transform: translate(-50%, 0%); }
+      100% { transform: translate(-100%, -50%); }
+    }
+
+    /* Thunderbolt icon styles */
+    .thunderbolt-icon {
+      position: fixed;
+      top: 20px;
+      left: 80px; /* Position it next to keyboard icon */
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 215, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+      z-index: 1000;
+    }
+
+    .thunderbolt-icon:hover {
+      transform: scale(1.1);
+      background: rgba(255, 215, 0, 0.3);
+    }
+
+    .thunderbolt-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: #FFD700;
+    }
+
+    .thunderbolt-icon.active {
+      background: rgba(255, 215, 0, 0.4);
+      transform: scale(0.95);
+    }
+
+    /* Lightning effect styles */
+    .lightning-effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+    }
+
+    .lightning-effect.active {
+      animation: lightningFlash 0.5s ease-out;
+    }
+
+    @keyframes lightningFlash {
+      0% {
+        opacity: 0;
+      }
+      25% {
+        opacity: 1;
+        background: linear-gradient(45deg, 
+          rgba(255, 255, 255, 0.8),
+          rgba(255, 215, 0, 0.8)
+        );
+      }
+      50% {
+        opacity: 0;
+      }
+      75% {
+        opacity: 1;
+        background: linear-gradient(-45deg,
+          rgba(255, 255, 255, 0.6),
+          rgba(255, 215, 0, 0.6)
+        );
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* Hurt animation styles */
+    @keyframes hurtShake {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(-10px, 5px) scale(0.95); }
+      50% { transform: translate(8px, -4px) scale(0.97); }
+      75% { transform: translate(-6px, 3px) scale(0.98); }
+    }
+
+    @keyframes hurtEyes {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(0.2); }
+    }
+
+    .orb-container.hurt .magical-orb {
+      animation: hurtShake 0.5s ease-out !important;
+    }
+
+    .orb-container.hurt .eye {
+      animation: hurtEyes 0.5s ease-out !important;
+    }
+
+    .orb-container.hurt .thunder-wave {
+      animation: thunderWave 0.5s linear infinite !important;
+      opacity: 1 !important;
+      filter: hue-rotate(180deg) brightness(1.5) !important;
+    }
+
+    /* Add hurt state styles */
+    .orb-container.hurt .orb-inner {
+      background: radial-gradient(circle at 30% 30%, 
+        rgb(255, 165, 0),
+        rgb(255, 69, 0)) !important;
+      box-shadow: 0 0 60px rgba(255, 69, 0, 0.6) !important;
+    }
+
+    /* Add these new icon styles */
+    .tickle-icon, .love-icon, .dizzy-icon {
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      background: rgba(147, 51, 234, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+      z-index: 1000;
+    }
+
+    .tickle-icon {
+      top: 20px;
+      left: 140px;
+      background: rgba(255, 182, 193, 0.2);
+    }
+
+    .love-icon {
+      top: 20px;
+      left: 200px;
+      background: rgba(255, 105, 180, 0.2);
+    }
+
+    .dizzy-icon {
+      top: 20px;
+      left: 260px;
+      background: rgba(138, 43, 226, 0.2);
+    }
+
+    .tickle-icon:hover, .love-icon:hover, .dizzy-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .tickle-icon svg, .love-icon svg, .dizzy-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: white;
+    }
+
+    /* Add new animation keyframes */
+    @keyframes tickle {
+      0%, 100% { transform: rotate(0) scale(1); }
+      25% { transform: rotate(15deg) scale(1.1); }
+      50% { transform: rotate(-15deg) scale(0.9); }
+      75% { transform: rotate(10deg) scale(1.05); }
+    }
+
+    @keyframes love {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.2); }
+      50% { transform: scale(0.95); }
+      75% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes dizzy {
+      0% { transform: rotate(0) scale(1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    @keyframes heartBeat {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    /* Add heart particles style */
+    .heart-particle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: pink;
+      clip-path: path('M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z');
+      animation: heartBeat 1s forwards;
+    }
+
+    /* Add stars for dizzy effect */
+    .star-particle {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: yellow;
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      animation: starSpin 1s linear infinite;
+    }
+
+    @keyframes starSpin {
+      0% { transform: rotate(0) scale(1); opacity: 1; }
+      100% { transform: rotate(360deg) scale(0); opacity: 0; }
+    }
+
+    /* Add dizzy eyes animation */
+    @keyframes dizzyEyes {
+      0% { transform: rotate(0) translateX(0); }
+      100% { transform: rotate(360deg) translateX(5px); }
+    }
+
+    .orb-container.dizzy .pupil {
+      animation: dizzyEyes 0.5s linear infinite !important;
+    }
+
+    /* Add tickle eyes animation */
+    @keyframes tickleEyes {
+      0%, 100% { transform: translate(-50%, -50%); }
+      25% { transform: translate(-30%, -60%); }
+      50% { transform: translate(-70%, -40%); }
+      75% { transform: translate(-40%, -30%); }
+    }
+
+    .orb-container.tickled .pupil {
+      animation: tickleEyes 0.3s linear infinite !important;
+    }
+
+    /* Add love eyes animation */
+    @keyframes loveEyes {
+      0%, 100% { clip-path: none; background: white; }
+      50% { 
+        clip-path: path('M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z');
+        background: pink;
+      }
+    }
+
+    .orb-container.loved .eye {
+      animation: loveEyes 0.5s ease-in-out infinite !important;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -598,36 +1070,13 @@
           <div class="pupil"></div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Add this after the orb structure but before the speech bubble -->
-  <div class="caption-container" id="captionContainer">
-    <div class="caption-text"></div>
-    <div class="thinking-dots">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
+      <div class="emotion-particles"></div>
+      <div class="lightning-effect"></div>
     </div>
   </div>
 
   <!-- Add this after the orb structure but before the chat container -->
   <div class="speech-bubble" id="speechBubble"></div>
-
-  <!-- Add this before the chat container -->
-  <a href="chat-history.html" class="chat-history-icon" title="View Chat History">
-    <svg viewBox="0 0 24 24">
-      <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,16H6l-2,2V4h16V16z"/>
-    </svg>
-  </a>
-
-  <!-- Update the chat container to remove chat history -->
-  <div class="chat-container" id="chatContainer">
-    <div class="input-group">
-      <input type="text" class="chat-input" id="userInput" placeholder="Ask Stormy anything...">
-      <button class="send-button" id="sendButton">Send</button>
-    </div>
-  </div>
 
   <!-- Add this after the orb structure -->
   <div class="idle-message" id="idleMessage">Click me to chat!</div>
@@ -648,6 +1097,53 @@
       <path d="M8,14h8v2H8V14z"/>
     </svg>
   </div>
+
+  <!-- Add this after the keyboard icon but before the chat container -->
+  <div class="thunderbolt-icon" id="thunderboltIcon" title="Strike with lightning">
+    <svg viewBox="0 0 24 24">
+      <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+    </svg>
+  </div>
+
+  <!-- Add this before the chat container -->
+  <a href="chat-history.html" class="chat-history-icon" title="View Chat History">
+    <svg viewBox="0 0 24 24">
+      <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,16H6l-2,2V4h16V16z"/>
+    </svg>
+  </a>
+
+  <!-- Update the chat container to remove chat history -->
+  <div class="chat-container" id="chatContainer">
+    <div class="input-group">
+      <input type="text" class="chat-input" id="userInput" placeholder="Ask Stormy anything...">
+      <button class="send-button" id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <div id="captionContainer" class="caption-container">
+    <div class="caption-text"></div>
+  </div>
+
+  <!-- Add these new icons after the thunderbolt icon -->
+  <div class="tickle-icon" id="tickleIcon" title="Tickle the orb">
+    <svg viewBox="0 0 24 24">
+      <path d="M19.59 7L12 14.59 6.41 9H10V7H3v7h2V9.41L12 16.41 19.59 9H16V7h7v7h-2V9.41L14.41 16 21 22.59 19.59 21 13 14.41 6.41 21 5 19.59 11.59 13 5 6.41 6.41 5 13 11.59 19.59 5 21 6.41 14.41 13z"/>
+    </svg>
+  </div>
+
+  <div class="love-icon" id="loveIcon" title="Show some love">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+  </div>
+
+  <div class="dizzy-icon" id="dizzyIcon" title="Make the orb dizzy">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+      <path d="M15 16H9v-2h6v2zm0-4H9v-2h6v2zm0-4H9V6h6v2z"/>
+    </svg>
+  </div>
+</div>
 
   <script>
     // Original orb interaction code
@@ -800,19 +1296,18 @@
     }
 
     // Update the speech synthesis part in handleUserInput
-    async function handleUserInput(transcript) {
-      const prompt = transcript.trim();
+    async function handleUserInput(directInput) {
+      const prompt = directInput || userInput.value.trim();
       if (!prompt) return;
 
-      // Save user message to history
       saveMessage(prompt, 'user');
+      if (!directInput) userInput.value = '';
 
-      userInput.value = '';
       const speechBubble = document.getElementById('speechBubble');
-      
-      // Show thinking state in speech bubble
       speechBubble.textContent = "Thinking...";
       speechBubble.classList.add('active');
+      
+      orbContainer.setAttribute('data-emotion', 'neutral');
       magicalOrb.parentElement.classList.add('thinking');
       userInput.disabled = true;
       sendButton.disabled = true;
@@ -824,7 +1319,26 @@
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `You are Stormy, a magical AI companion. Please keep responses concise and friendly. User asks: ${prompt}`
+                text: `You are Stormy, an emotional AI companion. Respond with raw JSON only, no markdown, no code blocks:
+                {"emotion": "emotion_type", "response": "your_response"}
+
+                IMPORTANT: Return ONLY the JSON object, nothing else.
+                
+                Emotions available: happy, sad, angry, confused, neutral
+                
+                Examples of valid responses:
+                {"emotion": "happy", "response": "That's wonderful! I'm so glad to hear that!"}
+                {"emotion": "angry", "response": "I don't appreciate that tone."}
+                {"emotion": "confused", "response": "Hmm, that's quite complex."}
+                
+                Rules for emotions:
+                - happy: for compliments, positive interactions
+                - sad: for negative news, empathy
+                - angry: for rude behavior
+                - confused: for complex topics
+                - neutral: for normal questions
+
+                User says: ${prompt}`
               }]
             }]
           })
@@ -833,76 +1347,74 @@
         const data = await response.json();
         
         if (data.candidates && data.candidates[0]) {
-          const answer = data.candidates[0].content.parts[0].text;
-          const formattedAnswer = cleanTextForSpeech(answer);
-          
-          magicalOrb.parentElement.classList.remove('thinking');
-          magicalOrb.parentElement.classList.add('response-received');
-          
-          showCaption('Speaking...');
-          speechBubble.textContent = formattedAnswer;
-          speechBubble.classList.add('active');
-          
-          const speech = new SpeechSynthesisUtterance(formattedAnswer);
-          speech.rate = 1.0;
-          speech.pitch = 1.2;
-          speech.volume = 0.8;
-          
-          // Get available voices and prefer Google female voice
-          const voices = speechSynthesis.getVoices();
-          const preferredVoices = [
-            'Google UK English Female',
-            'Microsoft Zira',
-            'Samantha',
-            'Victoria'
-          ];
-          
-          const femaleVoice = voices.find(voice => 
-            preferredVoices.some(preferred => 
-              voice.name.toLowerCase().includes(preferred.toLowerCase())
-            )
-          ) || voices.find(voice => voice.name.toLowerCase().includes('female'));
-          
-          if (femaleVoice) {
-            speech.voice = femaleVoice;
-          }
-          
-          // Ensure any ongoing speech is stopped
-          speechSynthesis.cancel();
-          
-          // Break long responses into sentences for better speech
-          const sentences = formattedAnswer.match(/[^.!?]+[.!?]+/g) || [formattedAnswer];
-          
-          for (const sentence of sentences) {
-            const speechSegment = new SpeechSynthesisUtterance(sentence.trim());
-            speechSegment.voice = speech.voice;
-            speechSegment.rate = speech.rate;
-            speechSegment.pitch = speech.pitch;
-            speechSegment.volume = speech.volume;
-            speechSynthesis.speak(speechSegment);
-          }
-          
-          speech.onend = () => {
-            setTimeout(() => {
-              speechBubble.classList.remove('active');
-              magicalOrb.parentElement.classList.remove('response-received');
-            }, 2000);
-          };
+          try {
+            // Clean and parse JSON response
+            let responseText = data.candidates[0].content.parts[0].text;
+            // Remove markdown code blocks and clean the text
+            responseText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+            console.log('Cleaned response:', responseText);
+            
+            const jsonResponse = JSON.parse(responseText);
+            console.log('Parsed JSON:', jsonResponse);
 
-          // Save bot response to history
-          saveMessage(formattedAnswer, 'bot');
+            // Set emotion and update orb
+            const validEmotions = ['happy', 'sad', 'angry', 'confused', 'neutral'];
+            const emotion = validEmotions.includes(jsonResponse.emotion) ? jsonResponse.emotion : 'neutral';
+            
+            console.log('Setting emotion to:', emotion);
+            orbContainer.setAttribute('data-emotion', emotion);
+            magicalOrb.parentElement.classList.remove('thinking');
+            
+            // Show response
+            const formattedAnswer = jsonResponse.response;
+            speechBubble.textContent = formattedAnswer;
+            
+            // Configure and play speech
+            const speech = new SpeechSynthesisUtterance(formattedAnswer);
+            
+            switch(emotion) {
+              case 'happy':
+                speech.pitch = 1.3;
+                speech.rate = 1.1;
+                break;
+              case 'sad':
+                speech.pitch = 0.9;
+                speech.rate = 0.9;
+                break;
+              case 'angry':
+                speech.pitch = 1.4;
+                speech.rate = 1.2;
+                break;
+              case 'confused':
+                speech.pitch = 1.1;
+                speech.rate = 0.95;
+                break;
+              default:
+                speech.pitch = 1.2;
+                speech.rate = 1.0;
+            }
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(speech);
+
+            // Reset emotion after speaking
+            speech.onend = () => {
+              setTimeout(() => {
+                orbContainer.setAttribute('data-emotion', 'neutral');
+                speechBubble.classList.remove('active');
+              }, 2000);
+            };
+
+          } catch (parseError) {
+            console.error('Parse error:', parseError);
+            orbContainer.setAttribute('data-emotion', 'confused');
+            speechBubble.textContent = "Sorry, I'm having trouble understanding that.";
+          }
         }
       } catch (error) {
-        console.error('Error:', error);
-        speechBubble.textContent = "Sorry, I'm having trouble connecting...";
-        speechBubble.classList.add('active');
-        magicalOrb.parentElement.classList.remove('thinking');
-        
-        setTimeout(() => {
-          speechBubble.classList.remove('active');
-        }, 3000);
-        
-        saveMessage("Sorry, I'm having trouble connecting right now.", 'bot');
+        console.error('Network error:', error);
+        orbContainer.setAttribute('data-emotion', 'sad');
+        speechBubble.textContent = "Sorry, I'm having trouble connecting right now.";
       } finally {
         userInput.disabled = false;
         sendButton.disabled = false;
@@ -971,6 +1483,182 @@
       if (chatContainer.classList.contains('visible')) {
         userInput.focus();
       }
+    });
+
+    // Add this function to create particle effects
+    function createParticles(emotion) {
+      const particlesContainer = document.querySelector('.emotion-particles');
+      particlesContainer.innerHTML = '';
+      
+      const colors = {
+        happy: ['#FFD700', '#FFA500', '#FF8C00'],
+        sad: ['#4169E1', '#1E90FF', '#87CEEB'],
+        angry: ['#FF4500', '#FF6347', '#FF7F50'],
+        confused: ['#BA55D3', '#9370DB', '#8A2BE2'],
+        neutral: ['#9333EA', '#7B1FA2', '#6A1B9A']
+      };
+
+      for (let i = 0; i < 12; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.backgroundColor = colors[emotion][Math.floor(Math.random() * 3)];
+        particle.style.animationDelay = `${Math.random() * 2}s`;
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Initialize thunderbolt functionality
+    const thunderboltIcon = document.getElementById('thunderboltIcon');
+    const lightningEffect = document.querySelector('.lightning-effect');
+
+    thunderboltIcon.addEventListener('click', () => {
+      // Set emotion to hurt
+      orbContainer.setAttribute('data-emotion', 'angry');
+      createParticles('angry');
+
+      // Activate lightning effect
+      lightningEffect.classList.add('active');
+      
+      // Add hurt state to orb
+      orbContainer.classList.add('hurt');
+      
+      // Show hurt reaction
+      const speechBubble = document.getElementById('speechBubble');
+      speechBubble.textContent = "Ouch! That hurt!";
+      speechBubble.classList.add('active');
+      
+      // Play hurt sound
+      const hurtSound = new Audio('data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZ4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=');  
+      hurtSound.play();
+      
+      // Remove effects after animation
+      setTimeout(() => {
+        lightningEffect.classList.remove('active');
+        orbContainer.classList.remove('hurt');
+        speechBubble.classList.remove('active');
+        // Reset emotion after hurt animation
+        orbContainer.setAttribute('data-emotion', 'neutral');
+        createParticles('neutral');
+      }, 1000);
+      
+      // Prevent multiple clicks during animation
+      thunderboltIcon.style.pointerEvents = 'none';
+      setTimeout(() => {
+        thunderboltIcon.style.pointerEvents = 'auto';
+      }, 1000);
+    });
+
+    // Add random eye movement during hurt state
+    function randomEyeMovement() {
+      if (orbContainer.classList.contains('hurt')) {
+        const pupils = document.querySelectorAll('.pupil');
+        pupils.forEach(pupil => {
+          const x = (Math.random() - 0.5) * 100;
+          const y = (Math.random() - 0.5) * 100;
+          pupil.style.transform = `translate(${x}%, ${y}%)`;
+        });
+      }
+    }
+
+    // Start random eye movement during hurt state
+    setInterval(randomEyeMovement, 100);
+
+    // Add these new interaction handlers to your script section
+    const tickleIcon = document.getElementById('tickleIcon');
+    const loveIcon = document.getElementById('loveIcon');
+    const dizzyIcon = document.getElementById('dizzyIcon');
+
+    // Tickle interaction
+    tickleIcon.addEventListener('click', () => {
+      orbContainer.classList.add('tickled');
+      magicalOrb.style.animation = 'tickle 0.5s ease-in-out';
+      
+      // Show reaction
+      speechBubble.textContent = "Hehe, that tickles!";
+      speechBubble.classList.add('active');
+      
+      // Create tickle particles
+      for (let i = 0; i < 8; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.backgroundColor = `hsl(${Math.random() * 60 + 300}, 70%, 70%)`;
+        document.querySelector('.emotion-particles').appendChild(particle);
+      }
+      
+      // Reset after animation
+      setTimeout(() => {
+        orbContainer.classList.remove('tickled');
+        magicalOrb.style.animation = '';
+        speechBubble.classList.remove('active');
+      }, 2000);
+    });
+
+    // Love interaction
+    loveIcon.addEventListener('click', () => {
+      orbContainer.classList.add('loved');
+      orbContainer.setAttribute('data-emotion', 'happy');
+      magicalOrb.style.animation = 'love 1s ease-in-out';
+      
+      // Show reaction
+      speechBubble.textContent = "Aww, I love you too! ❤️";
+      speechBubble.classList.add('active');
+      
+      // Create heart particles
+      for (let i = 0; i < 10; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-particle';
+        heart.style.left = `${Math.random() * 100}%`;
+        heart.style.top = `${Math.random() * 100}%`;
+        document.querySelector('.emotion-particles').appendChild(heart);
+      }
+      
+      // Reset after animation
+      setTimeout(() => {
+        orbContainer.classList.remove('loved');
+        magicalOrb.style.animation = '';
+        speechBubble.classList.remove('active');
+        orbContainer.setAttribute('data-emotion', 'neutral');
+      }, 3000);
+    });
+
+    // Dizzy interaction
+    dizzyIcon.addEventListener('click', () => {
+      orbContainer.classList.add('dizzy');
+      magicalOrb.style.animation = 'dizzy 1s linear infinite';
+      
+      // Show reaction
+      speechBubble.textContent = "Whoooa... everything's spinning! @_@";
+      speechBubble.classList.add('active');
+      
+      // Create star particles
+      for (let i = 0; i < 6; i++) {
+        const star = document.createElement('div');
+        star.className = 'star-particle';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        document.querySelector('.emotion-particles').appendChild(star);
+      }
+      
+      // Reset after animation
+      setTimeout(() => {
+        orbContainer.classList.remove('dizzy');
+        magicalOrb.style.animation = '';
+        speechBubble.classList.remove('active');
+      }, 3000);
+    });
+
+    // Add hover effects for icons
+    [tickleIcon, loveIcon, dizzyIcon].forEach(icon => {
+      icon.addEventListener('mouseover', () => {
+        const caption = icon.getAttribute('title');
+        showCaption(caption);
+      });
+      
+      icon.addEventListener('mouseout', () => {
+        hideCaption();
+      });
     });
   </script>
 </body>
