@@ -76,35 +76,24 @@
     }
 
     .chat-message {
-      margin: 20px 0;
-      padding: 16px 20px;
-      border-radius: 16px;
-      max-width: 85%;
-      animation: messageSlide 0.3s ease-out;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      border: 1px solid rgba(147, 51, 234, 0.1);
+      padding: 24px;
+      max-width: 100%;
+      transition: background-color 0.2s;
+      border-radius: 0;
+      border: none;
+      margin: 0;
     }
 
     .chat-message:hover {
-      transform: translateY(-2px) scale(1.01);
-      box-shadow: 0 8px 25px rgba(147, 51, 234, 0.25);
+      background-color: rgba(255, 255, 255, 0.02);
     }
 
     .user-message {
-      background: rgba(147, 51, 234, 0.25);
-      margin-left: auto;
-      border-bottom-right-radius: 4px;
+      background: rgba(52, 53, 65, 0.7);
     }
 
     .bot-message {
-      background: rgba(255, 255, 255, 0.08);
-      margin-right: auto;
-      border-bottom-left-radius: 4px;
+      background: rgba(68, 70, 84, 0.7);
     }
 
     .timestamp {
@@ -207,8 +196,11 @@
 
     /* Message content styling */
     .message-content {
+      max-width: 780px;
+      margin: 0 auto;
       font-size: 15px;
       line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
     }
 
     /* Loading indicator */
@@ -240,7 +232,7 @@
 
     .message-header {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       margin-bottom: 8px;
     }
@@ -422,9 +414,9 @@
 
     .sidebar {
       width: 260px;
-      background: rgba(20, 20, 20, 0.8);
+      background: rgba(32, 33, 35, 0.95);
       backdrop-filter: blur(16px);
-      border-right: 1px solid rgba(167, 71, 254, 0.2);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       height: 100%;
@@ -459,24 +451,23 @@
     }
 
     .conversation-item {
-      padding: 12px;
+      padding: 12px 16px;
+      margin: 2px 8px;
       border-radius: 8px;
-      cursor: pointer;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
       display: flex;
       align-items: center;
       gap: 12px;
-      color: white;
-      text-decoration: none;
-      transition: all 0.2s;
-      margin-bottom: 4px;
     }
 
     .conversation-item:hover {
-      background: rgba(147, 51, 234, 0.1);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .conversation-item.active {
-      background: rgba(147, 51, 234, 0.2);
+      background: rgba(147, 51, 234, 0.15);
+      color: white;
     }
 
     .main-content {
@@ -491,13 +482,65 @@
       flex: 1;
       overflow-y: auto;
       padding: 24px;
+      padding-bottom: 120px;
     }
 
     .input-container {
+      position: fixed;
+      bottom: 0;
+      left: 260px; /* Sidebar width */
+      right: 0;
       padding: 24px;
-      background: rgba(20, 20, 20, 0.8);
+      background: rgba(20, 20, 20, 0.95);
       backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(167, 71, 254, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .input-wrapper {
+      max-width: 780px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .prompt-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      resize: none;
+      min-height: 24px;
+      max-height: 200px;
+      transition: all 0.3s;
+      padding-right: 40px;
+    }
+
+    .prompt-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .send-button {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      background: transparent;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      transition: all 0.2s;
+      opacity: 0.7;
+    }
+
+    .send-button:hover {
+      opacity: 1;
+      transform: scale(1.1);
     }
 
     .model-selector {
@@ -512,39 +555,14 @@
       z-index: 100;
     }
 
-    .prompt-input {
-      width: 100%;
-      max-width: 768px;
-      margin: 0 auto;
-      display: block;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(167, 71, 254, 0.2);
-      border-radius: 12px;
-      padding: 16px;
-      color: white;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      resize: none;
-      min-height: 60px;
-      max-height: 200px;
-      transition: all 0.3s;
-    }
-
-    .prompt-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
     .model-badge {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(147, 51, 234, 0.2);
-      padding: 4px 8px;
-      border-radius: 4px;
       font-size: 12px;
+      padding: 2px 8px;
+      background: rgba(147, 51, 234, 0.1);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 4px;
       color: rgba(255, 255, 255, 0.8);
+      margin-left: auto;
     }
 
     .error-message {
@@ -557,6 +575,70 @@
     .error-message .message-content {
       display: flex;
       align-items: center;
+    }
+
+    .chat-message + .chat-message[data-role="assistant"],
+    .chat-message + .chat-message[data-role="user"] {
+      margin-top: 4px;
+    }
+
+    .chat-message:not(:first-child)[data-role="assistant"],
+    .chat-message:not(:first-child)[data-role="user"] {
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    .model-badge {
+      font-size: 12px;
+      padding: 2px 6px;
+      background: rgba(147, 51, 234, 0.15);
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 8px;
+    }
+
+    .message-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 4px;
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    .chat-message:hover .message-actions {
+      opacity: 1;
+    }
+
+    .message-content pre {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .message-content code {
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+    }
+
+    .message-content p {
+      margin: 0 0 12px 0;
+    }
+
+    .message-content p:last-child {
+      margin-bottom: 0;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -613,13 +695,20 @@
       </div>
 
       <div class="input-container">
-        <textarea 
-          class="prompt-input" 
-          id="promptInput"
-          placeholder="Send a message..."
-          rows="1"
-          onInput="autoResize(this)"
-        ></textarea>
+        <div class="input-wrapper">
+          <textarea 
+            class="prompt-input" 
+            id="promptInput"
+            placeholder="Send a message..."
+            rows="1"
+            onInput="autoResize(this)"
+          ></textarea>
+          <button class="send-button" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -720,12 +809,23 @@
 
           this.showTypingIndicator();
 
+          // Get conversation context (last 5 messages)
+          const context = conversation.messages
+            .slice(-5)
+            .map(m => ({
+              role: m.role,
+              parts: [{ text: m.content }]
+            }));
+
+          // Add current message
+          context.push({
+            role: 'user',
+            parts: [{ text }]
+          });
+
           const requestBody = {
             model: this.currentModel,
-            contents: [{
-              role: 'user',
-              parts: [{ text }]
-            }]
+            contents: context
           };
 
           const response = await fetch(endpoint, {
@@ -864,23 +964,68 @@
 
       displayMessage(message) {
         const messagesContainer = document.getElementById('messagesContainer');
+        const lastMessage = messagesContainer.lastElementChild;
+        const shouldGroup = lastMessage && 
+          lastMessage.getAttribute('data-role') === message.role &&
+          Date.now() - new Date(message.timestamp).getTime() < 60000;
+
         const messageDiv = document.createElement('div');
         messageDiv.className = `chat-message ${message.role}-message`;
+        messageDiv.setAttribute('data-role', message.role);
+        messageDiv.setAttribute('data-timestamp', message.timestamp);
+        
+        // Add message header (only for model badge)
+        if (message.model) {
+          const header = document.createElement('div');
+          header.className = 'message-header';
+          
+          const modelBadge = document.createElement('div');
+          modelBadge.className = 'model-badge';
+          modelBadge.textContent = message.model.split('-')[0];
+          header.appendChild(modelBadge);
+          messageDiv.appendChild(header);
+        }
         
         const content = document.createElement('div');
         content.className = 'message-content';
         content.innerHTML = marked.parse(message.content);
         
-        if (message.model) {
-          const modelBadge = document.createElement('div');
-          modelBadge.className = 'model-badge';
-          modelBadge.textContent = message.model.split('-')[0];
-          messageDiv.appendChild(modelBadge);
-        }
+        // Add timestamp
+        const timestamp = document.createElement('div');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = this.formatTimestamp(message.timestamp);
+        content.appendChild(timestamp);
 
         messageDiv.appendChild(content);
+        
+        // Add message actions
+        const actions = document.createElement('div');
+        actions.className = 'message-actions';
+        actions.innerHTML = `
+          <button onclick="copyMessage('${message.id}')" class="message-action-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+          </button>
+        `;
+        messageDiv.appendChild(actions);
+
         messagesContainer.appendChild(messageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+
+        if (diff < 60000) return 'Just now';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+        if (date.toDateString() === now.toDateString()) return 'Today';
+        if (date.toDateString() === new Date(now - 86400000).toDateString()) return 'Yesterday';
+        
+        return date.toLocaleDateString();
       }
 
       loadConversations() {
@@ -987,6 +1132,17 @@
       setTimeout(() => {
         toast.classList.remove('visible');
       }, duration);
+    }
+
+    // Add this new function
+    function sendMessage() {
+      const promptInput = document.getElementById('promptInput');
+      const message = promptInput.value.trim();
+      if (message) {
+        chatManager.sendMessage(message);
+        promptInput.value = '';
+        promptInput.style.height = 'auto';
+      }
     }
 
     // Initialize the chat interface

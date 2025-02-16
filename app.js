@@ -1095,6 +1095,21 @@ async function playSelectedTrack(videoId, title) {
         audio.crossOrigin = "anonymous";
         window.currentAudio = audio;
         
+        // iOS-specific loading
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            await audio.load();
+            // Add play attempt with user interaction check
+            const playAttempt = setInterval(() => {
+                audio.play()
+                    .then(() => {
+                        clearInterval(playAttempt);
+                    })
+                    .catch(error => {
+                        console.log('Playback failed, waiting for user interaction:', error);
+                    });
+            }, 1000);
+        }
+        
         // Add music controls
         updateMusicControls(audio, title);
         
@@ -1204,7 +1219,24 @@ function initVoiceCommands() {
 // Add this to initialize voice commands
 document.addEventListener('DOMContentLoaded', () => {
     initVoiceCommands();
-    // Rest of your DOMContentLoaded handlers...
+    // Check if running on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+        initializeIOSAudio();
+        
+        // Fix for iOS audio context
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        
+        // Ensure audio playback works on iOS
+        document.addEventListener('touchstart', function() {
+            if (window.currentAudio) {
+                window.currentAudio.load();
+            }
+        }, { once: true });
+    }
+    
+    // ... rest of your initialization code ...
 });
 
 // Update the music controls function
@@ -1276,204 +1308,213 @@ function updateMusicControls(audio, title) {
     const playIcon = playPauseButton.querySelector('.play-icon');
     const pauseIcon = playPauseButton.querySelector('.pause-icon');
 
-    // Setup audio context and analyzer
-    let audioContext, analyser;
-    if (!audio.audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        const source = audioContext.createMediaElementSource(audio);
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
-        
-        audio.audioContext = audioContext;
-        audio.analyser = analyser;
-    } else {
-        analyser = audio.analyser;
-    }
-
-    // Configure analyser
-    analyser.fftSize = 256;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    // Setup canvas
-    const canvasCtx = visualizerCanvas.getContext('2d');
+    // Check if running on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     
-    // Handle canvas resize
-    function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = visualizerCanvas.getBoundingClientRect();
-        
-        visualizerCanvas.width = rect.width * dpr;
-        visualizerCanvas.height = rect.height * dpr;
-        
-        canvasCtx.scale(dpr, dpr);
-        
-        // Reset canvas properties after resize
-        canvasCtx.imageSmoothingEnabled = true;
-        canvasCtx.imageSmoothingQuality = 'high';
-    }
-
-    // Initial resize
-    resizeCanvas();
-    
-    // Listen for resize
-    new ResizeObserver(resizeCanvas).observe(visualizerCanvas);
-
-    // Visualizer animation
-    function drawVisualizer() {
-        requestAnimationFrame(drawVisualizer);
-
-        analyser.getByteFrequencyData(dataArray);
-        const width = visualizerCanvas.width;
-        const height = visualizerCanvas.height;
-        const barWidth = (width / bufferLength) * 2.5;
-
-        // Clear canvas with a gradient background
-        const bgGradient = canvasCtx.createLinearGradient(0, 0, 0, height);
-        bgGradient.addColorStop(0, 'rgba(20, 20, 20, 0.95)');
-        bgGradient.addColorStop(1, 'rgba(20, 20, 20, 0.85)');
-        canvasCtx.fillStyle = bgGradient;
-        canvasCtx.fillRect(0, 0, width, height);
-
-        // Draw frequency bars
-        let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * height * 0.8; // Reduced height for better aesthetics
-
-            // Create gradient for each bar
-            const gradient = canvasCtx.createLinearGradient(0, height, 0, height - barHeight);
-            gradient.addColorStop(0, 'rgba(147, 51, 234, 0.8)');  // More transparent at bottom
-            gradient.addColorStop(0.5, 'rgba(157, 61, 244, 0.9)'); // Middle color
-            gradient.addColorStop(1, 'rgba(167, 71, 254, 1)');     // Solid at top
-
-            canvasCtx.fillStyle = gradient;
+    if (!isIOS) {
+        // Only setup audio context on non-iOS devices
+        let audioContext, analyser;
+        if (!audio.audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
             
-            // Draw rounded bars
-            canvasCtx.beginPath();
-            canvasCtx.roundRect(x, height - barHeight, barWidth, barHeight, [2]);
-            canvasCtx.fill();
+            audio.audioContext = audioContext;
+            audio.analyser = analyser;
+        }
 
-            // Add glow effect
-            canvasCtx.shadowColor = 'rgba(147, 51, 234, 0.5)';
-            canvasCtx.shadowBlur = 15;
-            canvasCtx.shadowOffsetX = 0;
-            canvasCtx.shadowOffsetY = 0;
+        // Configure analyser
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
 
-            x += barWidth + 1;
+        // Setup canvas
+        const canvasCtx = visualizerCanvas.getContext('2d');
+        
+        // Handle canvas resize
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = visualizerCanvas.getBoundingClientRect();
+            
+            visualizerCanvas.width = rect.width * dpr;
+            visualizerCanvas.height = rect.height * dpr;
+            
+            canvasCtx.scale(dpr, dpr);
+            
+            // Reset canvas properties after resize
+            canvasCtx.imageSmoothingEnabled = true;
+            canvasCtx.imageSmoothingQuality = 'high';
+        }
+
+        // Initial resize
+        resizeCanvas();
+        
+        // Listen for resize
+        new ResizeObserver(resizeCanvas).observe(visualizerCanvas);
+
+        // Visualizer animation
+        function drawVisualizer() {
+            requestAnimationFrame(drawVisualizer);
+
+            analyser.getByteFrequencyData(dataArray);
+            const width = visualizerCanvas.width;
+            const height = visualizerCanvas.height;
+            const barWidth = (width / bufferLength) * 2.5;
+
+            // Clear canvas with a gradient background
+            const bgGradient = canvasCtx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, 'rgba(20, 20, 20, 0.95)');
+            bgGradient.addColorStop(1, 'rgba(20, 20, 20, 0.85)');
+            canvasCtx.fillStyle = bgGradient;
+            canvasCtx.fillRect(0, 0, width, height);
+
+            // Draw frequency bars
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const barHeight = (dataArray[i] / 255) * height * 0.8; // Reduced height for better aesthetics
+
+                // Create gradient for each bar
+                const gradient = canvasCtx.createLinearGradient(0, height, 0, height - barHeight);
+                gradient.addColorStop(0, 'rgba(147, 51, 234, 0.8)');  // More transparent at bottom
+                gradient.addColorStop(0.5, 'rgba(157, 61, 244, 0.9)'); // Middle color
+                gradient.addColorStop(1, 'rgba(167, 71, 254, 1)');     // Solid at top
+
+                canvasCtx.fillStyle = gradient;
+                
+                // Draw rounded bars
+                canvasCtx.beginPath();
+                canvasCtx.roundRect(x, height - barHeight, barWidth, barHeight, [2]);
+                canvasCtx.fill();
+
+                // Add glow effect
+                canvasCtx.shadowColor = 'rgba(147, 51, 234, 0.5)';
+                canvasCtx.shadowBlur = 15;
+                canvasCtx.shadowOffsetX = 0;
+                canvasCtx.shadowOffsetY = 0;
+
+                x += barWidth + 1;
+            }
+        }
+
+        // Start visualizer
+        drawVisualizer();
+
+        // Update play/pause button state
+        function updatePlayPauseButton() {
+            if (audio.paused) {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            } else {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            }
+        }
+
+        // Initial button state
+        updatePlayPauseButton();
+
+        // Event listeners
+        audio.addEventListener('play', updatePlayPauseButton);
+        audio.addEventListener('pause', updatePlayPauseButton);
+        
+        playPauseButton.onclick = () => {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        };
+
+        // Update duration when metadata is loaded
+        audio.addEventListener('loadedmetadata', () => {
+            durationSpan.textContent = formatTime(audio.duration);
+        });
+
+        // Update progress and time
+        audio.addEventListener('timeupdate', () => {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            currentTimeSpan.textContent = formatTime(audio.currentTime);
+            
+            if (audio.buffered.length > 0) {
+                const buffered = (audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100;
+                progressBuffer.style.width = `${buffered}%`;
+            }
+        });
+
+        // Handle volume
+        volumeSlider.value = audio.volume;
+        volumeSlider.addEventListener('input', () => {
+            audio.volume = volumeSlider.value;
+        });
+
+        // Previous/Next buttons
+        previousButton.onclick = () => {
+            if (currentPlayingIndex > 0) {
+                currentPlayingIndex--;
+                const prevVideo = currentSearchResults[currentPlayingIndex];
+                playSelectedTrack(prevVideo.videoId, prevVideo.title);
+            }
+        };
+
+        nextButton.onclick = () => {
+            if (currentPlayingIndex < currentSearchResults.length - 1) {
+                currentPlayingIndex++;
+                const nextVideo = currentSearchResults[currentPlayingIndex];
+                playSelectedTrack(nextVideo.videoId, nextVideo.title);
+            }
+        };
+
+        // Click on progress bar to seek
+        const progressContainer = document.querySelector('.progress-container');
+        progressContainer.addEventListener('click', (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pos * audio.duration;
+        });
+
+        // Update the audio ended event handler
+        audio.addEventListener('ended', () => {
+            const endMessages = [
+                "How did you like that track? 🎵",
+                "Hope you enjoyed the music! 🎧",
+                "That was a good one, wasn't it? ✨",
+                "Want to hear another song? Just ask! 🎶",
+                "Music makes everything better! 🎼",
+                "That was fun! Ready for another? 🎹"
+            ];
+            
+            const randomMessage = endMessages[Math.floor(Math.random() * endMessages.length)];
+            
+            // Show end message in speech bubble
+            speechBubble.textContent = randomMessage;
+            speechBubble.classList.add('active');
+            
+            // Set happy emotion
+            orbContainer.setAttribute('data-emotion', 'happy');
+            
+            // Hide message after 4 seconds
+            setTimeout(() => {
+                speechBubble.classList.remove('active');
+                orbContainer.setAttribute('data-emotion', 'neutral');
+            }, 4000);
+            
+            // Auto-play next track if enabled
+            if (autoPlayEnabled && currentPlayingIndex < currentSearchResults.length - 1) {
+                currentPlayingIndex++;
+                const nextVideo = currentSearchResults[currentPlayingIndex];
+                playSelectedTrack(nextVideo.videoId, nextVideo.title);
+            }
+        });
+    } else {
+        // Simplified visualization for iOS
+        const visualizerCanvas = document.querySelector('.music-visualizer');
+        if (visualizerCanvas) {
+            visualizerCanvas.style.display = 'none';
         }
     }
-
-    // Start visualizer
-    drawVisualizer();
-
-    // Update play/pause button state
-    function updatePlayPauseButton() {
-        if (audio.paused) {
-            playIcon.style.display = 'block';
-            pauseIcon.style.display = 'none';
-        } else {
-            playIcon.style.display = 'none';
-            pauseIcon.style.display = 'block';
-        }
-    }
-
-    // Initial button state
-    updatePlayPauseButton();
-
-    // Event listeners
-    audio.addEventListener('play', updatePlayPauseButton);
-    audio.addEventListener('pause', updatePlayPauseButton);
-    
-    playPauseButton.onclick = () => {
-        if (audio.paused) {
-            audio.play();
-        } else {
-            audio.pause();
-        }
-    };
-
-    // Update duration when metadata is loaded
-    audio.addEventListener('loadedmetadata', () => {
-        durationSpan.textContent = formatTime(audio.duration);
-    });
-
-    // Update progress and time
-    audio.addEventListener('timeupdate', () => {
-        const progress = (audio.currentTime / audio.duration) * 100;
-        progressBar.style.width = `${progress}%`;
-        currentTimeSpan.textContent = formatTime(audio.currentTime);
-        
-        if (audio.buffered.length > 0) {
-            const buffered = (audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100;
-            progressBuffer.style.width = `${buffered}%`;
-        }
-    });
-
-    // Handle volume
-    volumeSlider.value = audio.volume;
-    volumeSlider.addEventListener('input', () => {
-        audio.volume = volumeSlider.value;
-    });
-
-    // Previous/Next buttons
-    previousButton.onclick = () => {
-        if (currentPlayingIndex > 0) {
-            currentPlayingIndex--;
-            const prevVideo = currentSearchResults[currentPlayingIndex];
-            playSelectedTrack(prevVideo.videoId, prevVideo.title);
-        }
-    };
-
-    nextButton.onclick = () => {
-        if (currentPlayingIndex < currentSearchResults.length - 1) {
-            currentPlayingIndex++;
-            const nextVideo = currentSearchResults[currentPlayingIndex];
-            playSelectedTrack(nextVideo.videoId, nextVideo.title);
-        }
-    };
-
-    // Click on progress bar to seek
-    const progressContainer = document.querySelector('.progress-container');
-    progressContainer.addEventListener('click', (e) => {
-        const rect = progressContainer.getBoundingClientRect();
-        const pos = (e.clientX - rect.left) / rect.width;
-        audio.currentTime = pos * audio.duration;
-    });
-
-    // Update the audio ended event handler
-    audio.addEventListener('ended', () => {
-        const endMessages = [
-            "How did you like that track? 🎵",
-            "Hope you enjoyed the music! 🎧",
-            "That was a good one, wasn't it? ✨",
-            "Want to hear another song? Just ask! 🎶",
-            "Music makes everything better! 🎼",
-            "That was fun! Ready for another? 🎹"
-        ];
-        
-        const randomMessage = endMessages[Math.floor(Math.random() * endMessages.length)];
-        
-        // Show end message in speech bubble
-        speechBubble.textContent = randomMessage;
-        speechBubble.classList.add('active');
-        
-        // Set happy emotion
-        orbContainer.setAttribute('data-emotion', 'happy');
-        
-        // Hide message after 4 seconds
-        setTimeout(() => {
-            speechBubble.classList.remove('active');
-            orbContainer.setAttribute('data-emotion', 'neutral');
-        }, 4000);
-        
-        // Auto-play next track if enabled
-        if (autoPlayEnabled && currentPlayingIndex < currentSearchResults.length - 1) {
-            currentPlayingIndex++;
-            const nextVideo = currentSearchResults[currentPlayingIndex];
-            playSelectedTrack(nextVideo.videoId, nextVideo.title);
-        }
-    });
 }
 
 // Add disco lights
@@ -1534,7 +1575,7 @@ const loadingMessages = [
     "Tuning the strings... 🎸",
     "Warming up the speakers... 🔊",
     "Preparing something special... 🎧",
-    "This is going to be good... 🎶",
+    "This is going to be good... ��",
     "Just adding the final touches... 🎼",
     "Loading your musical journey... 🌟",
     "Getting the rhythm right... 🥁",
@@ -1715,3 +1756,17 @@ function createRunes() {
 // Initialize
 createParticles();
 createRunes();
+
+// Add this function near the top of your script
+function initializeIOSAudio() {
+    // Create and load a silent audio file for iOS
+    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
+    silentAudio.load();
+
+    // Play silent audio on first user interaction
+    document.addEventListener('touchstart', function initAudioContext() {
+        silentAudio.play().then(() => {
+            document.removeEventListener('touchstart', initAudioContext);
+        }).catch(error => console.log('iOS audio init error:', error));
+    }, { once: true });
+}
