@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stormy Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: rgb(147, 51, 234);
+            --primary-glow: rgba(147, 51, 234, 0.3);
+            --background-dark: #000000;
+            --text-light: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --hover-transform: translateY(-2px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #2d1b4e, var(--background-dark));
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 1.2rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            font-size: 1.4rem;
+            background: linear-gradient(45deg, var(--primary-color), #9c27b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--background-gray);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .share-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .share-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            padding: 2rem;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .chat-container {
+            background-color: white;
+            border-radius: 0.5rem;
+        }
+
+        .chat-message {
+            padding: 1.5rem;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Rich text formatting */
+        .chat-content {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .chat-content p {
+            margin-bottom: 1rem;
+        }
+
+        .chat-content strong {
+            font-weight: 600;
+        }
+
+        .chat-content em {
+            font-style: italic;
+        }
+
+        .chat-content ul, .chat-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .chat-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-content code {
+            background-color: var(--background-gray);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .chat-content pre {
+            background-color: var(--background-gray);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .chat-content pre code {
+            background-color: transparent;
+            padding: 0;
+            white-space: pre;
+        }
+
+        .chat-content blockquote {
+            border-left: 4px solid var(--primary-blue);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-secondary);
+        }
+
+        /* Follow-up section */
+        .follow-up-section {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .follow-up-input {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .follow-up-input input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+        }
+
+        .follow-up-input input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .follow-up-input button {
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, var(--primary-color), #9c27b0);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .follow-up-input button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--primary-glow);
+        }
+
+        .follow-up-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .suggest-follows {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .suggest-follows button {
+            padding: 0.8rem 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggest-follows button:hover {
+            background: rgba(147, 51, 234, 0.2);
+            box-shadow: 0 0 15px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Hide empty sections */
+        .side-card:empty,
+        .source-links:empty,
+        .image-grid:empty,
+        .video-preview:empty {
+            display: none;
+        }
+
+        .loading-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            gap: 1.5rem;
+        }
+
+        .spinner {
+            width: 70px;
+            height: 70px;
+            border-width: 4px;
+            border-top-color: var(--primary-color);
+            border-right-color: #9c27b0;
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .loading-animation p {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px var(--primary-glow);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .source-links {
+            display: none;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .image-grid img:hover {
+            transform: scale(1.02);
+        }
+
+        .side-content {
+            position: sticky;
+            top: 100px;
+        }
+
+        .side-card {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .side-card:hover {
+            transform: var(--hover-transform);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .side-card h3 {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px var(--primary-glow);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .sources-card {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .source-item-compact {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .source-item-compact:hover {
+            background: rgba(147, 51, 234, 0.15);
+            transform: translateX(8px);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .source-favicon {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+
+        .source-item span {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .image-item {
+            position: relative;
+            padding-top: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .image-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .image-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        /* Update responsive styles */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .side-content {
+                position: static;
+                margin-top: 2rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .image-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .user-question {
+            margin: 2.5rem 0 1.5rem;
+            padding: 1rem 1.5rem;
+            background: rgba(147, 51, 234, 0.1);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 16px 16px 0;
+            font-weight: 500;
+        }
+
+        .user-question strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .error-message {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 0, 0, 0.1);
+            border-radius: 12px;
+            color: #ff4444;
+        }
+
+        /* Update combined-content style */
+        .combined-content {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .ai-response {
+            background: rgba(147, 51, 234, 0.05);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.1);
+            margin-top: 2rem;
+        }
+
+        /* Add smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Add custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, var(--primary-color), #9c27b0);
+            border-radius: 5px;
+        }
+
+        /* Add loading pulse animation */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .thinking {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Update the content grid layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .main-content {
+            min-width: 0;
+        }
+
+        /* Add these styles to ensure proper visibility */
+        .side-card {
+            display: none; /* Hide by default */
+        }
+
+        .side-card:has(> div:not(:empty)) {
+            display: block; /* Show when content exists */
+        }
+
+        .sources-card {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Enhanced markdown formatting */
+        .combined-content h1, .ai-response h1 {
+            font-size: 1.8rem;
+            margin: 1.5rem 0 1rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .combined-content h2, .ai-response h2 {
+            font-size: 1.5rem;
+            margin: 1.3rem 0 0.8rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .combined-content h3, .ai-response h3 {
+            font-size: 1.2rem;
+            margin: 1.1rem 0 0.6rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .combined-content ul, .combined-content ol,
+        .ai-response ul, .ai-response ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .combined-content li, .ai-response li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .combined-content blockquote, .ai-response blockquote {
+            border-left: 4px solid var(--primary-color);
+            margin: 1rem 0;
+            padding: 0.5rem 0 0.5rem 1rem;
+            background: rgba(147, 51, 234, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .combined-content code, .ai-response code {
+            background: rgba(147, 51, 234, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+
+        .combined-content pre, .ai-response pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .combined-content pre code, .ai-response pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Enhanced source items */
+        .source-item-compact {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .source-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .source-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .source-domain {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .sources-card {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="research-progress-container">
+        <div class="research-progress"></div>
+    </div>
+
+    <header class="header">
+        <div class="header-left">Stormy Research</div>
+        <div class="header-right">
+            <button class="share-button">Share Results</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="loading-animation" id="researchLoader">
+            <div class="spinner"></div>
+            <p>Gathering insights from multiple sources...</p>
+        </div>
+
+        <div class="content-grid">
+            <div class="main-content">
+                <div id="resultsContainer">
+                    <div id="combinedResults"></div>
+                    <div class="follow-up-section">
+                        <div class="follow-up-input">
+                            <input type="text" placeholder="Ask a follow-up question..." id="followUpInput">
+                            <button id="askFollowUp" disabled>Ask</button>
+                        </div>
+                        <div class="suggest-follows" id="suggestedFollows"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-content">
+                <div class="side-card sources-card">
+                    <h3>Sources</h3>
+                    <div id="sourcesList"></div>
+                </div>
+                
+                <div class="side-card images-card">
+                    <h3>Related Images</h3>
+                    <div class="image-grid" id="imageGrid"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        class ResearchManager {
+            constructor() {
+                this.apiEndpoints = {
+                    aoyo: 'https://api.paxsenix.biz.id/ai/aoyo',
+                    felo: 'https://api.paxsenix.biz.id/ai/felo',
+                    turboseek: 'https://api.paxsenix.biz.id/ai/turboseek',
+                    duckassist: 'https://api.paxsenix.biz.id/ai/duckassist'
+                };
+                this.loader = document.getElementById('researchLoader');
+                this.resultsContainer = document.getElementById('resultsContainer');
+                this.combinedResults = document.getElementById('combinedResults');
+                this.activeResponses = 0;
+                this.totalResponses = Object.keys(this.apiEndpoints).length;
+                this.sessionId = null;
+                this.contextContent = '';
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const query = urlParams.get('query');
+                if (query) {
+                    this.conductResearch(query);
+                }
+                
+                this.setupEventListeners();
+            }
+
+            async fetchFromAPI(endpoint, query) {
+                try {
+                    const response = await fetch(`${endpoint}?text=${encodeURIComponent(query)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': '*/*'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`Response from ${endpoint}:`, data);
+                    
+                    return {
+                        ok: data.ok,
+                        result: data.answer || data.result || data.text || JSON.stringify(data),
+                        sources: data.sources || []
+                    };
+                } catch (error) {
+                    console.error(`Error fetching from ${endpoint}:`, error);
+                    return { 
+                        ok: false,
+                        error: error.message || 'Failed to fetch results' 
+                    };
+                }
+            }
+
+            async fetchImages(query) {
+                try {
+                    const response = await fetch(`https://api.paxsenix.biz.id/ai/images?text=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    return data.images || [];
+                } catch (error) {
+                    console.error('Error fetching images:', error);
+                    return [];
+                }
+            }
+
+            async conductResearch(query) {
+                this.showLoader();
+                this.resultsContainer.style.display = 'block';
+                this.combinedResults.innerHTML = '<div class="generating-text">Generating response...</div>';
+                this.activeResponses = 0;
+                
+                let allSources = [];
+                let combinedContent = '';
+
+                for (const [key, endpoint] of Object.entries(this.apiEndpoints)) {
+                    this.fetchFromAPI(endpoint, query).then(data => {
+                        this.activeResponses++;
+                        
+                        if (data.ok) {
+                            // Add new content with a typing animation
+                            const newContent = this.formatMarkdown(data.result || data.answer);
+                            combinedContent += newContent;
+                            
+                            // Update the display with animation
+                            this.updateStreamingContent(combinedContent);
+                            
+                            // Collect sources from all possible locations
+                            if (data.sources) {
+                                allSources = [...allSources, ...data.sources];
+                            }
+                            if (data.source) {  // some APIs use 'source' instead of 'sources'
+                                allSources = [...allSources, ...data.source];
+                            }
+                            if (data.results) {  // some APIs include sources in 'results'
+                                const resultSources = data.results.filter(item => item.url && item.name);
+                                allSources = [...allSources, ...resultSources];
+                            }
+                        }
+
+                        // Update progress
+                        const progress = (this.activeResponses / this.totalResponses) * 100;
+                        this.updateProgress(progress);
+
+                        // If all responses are in, finalize the display
+                        if (this.activeResponses === this.totalResponses) {
+                            this.finalizeDisplay(combinedContent, allSources);
+                        }
+                    }).catch(error => {
+                        console.error(`Error with ${key}:`, error);
+                        this.activeResponses++;
+                        
+                        // Update progress even on error
+                        const progress = (this.activeResponses / this.totalResponses) * 100;
+                        this.updateProgress(progress);
+                    });
+                }
+            }
+
+            updateStreamingContent(content) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'combined-content fade-in';
+                wrapper.innerHTML = content;
+                
+                // Remove the "Generating" text if it exists
+                const generatingText = this.combinedResults.querySelector('.generating-text');
+                if (generatingText) {
+                    generatingText.remove();
+                }
+                
+                this.combinedResults.innerHTML = '';
+                this.combinedResults.appendChild(wrapper);
+            }
+
+            updateProgress(progress) {
+                const progressBar = document.querySelector('.research-progress');
+                if (progressBar) {
+                    progressBar.style.width = `${progress}%`;
+                }
+            }
+
+            updateSideContent(sources, images) {
+                // Update sources list
+                const sourcesList = document.getElementById('sourcesList');
+                if (sourcesList && sources && sources.length > 0) {
+                    // Filter and deduplicate sources
+                    const validSources = sources
+                        .filter(source => {
+                            return source && 
+                                   typeof source === 'object' && 
+                                   source.url && 
+                                   (source.name || source.title) && 
+                                   source.url.startsWith('http');
+                        })
+                        .reduce((acc, source) => {
+                            const normalizedSource = {
+                                url: source.url,
+                                name: source.name || source.title || new URL(source.url).hostname,
+                                domain: new URL(source.url).hostname
+                            };
+                            
+                            if (!acc.some(s => s.url === normalizedSource.url)) {
+                                acc.push(normalizedSource);
+                            }
+                            return acc;
+                        }, [])
+                        // Sort sources by domain for better organization
+                        .sort((a, b) => a.domain.localeCompare(b.domain));
+
+                    if (validSources.length > 0) {
+                        sourcesList.innerHTML = validSources.map(source => {
+                            const faviconUrl = `https://www.google.com/s2/favicons?domain=${source.domain}&sz=32`;
+                            return `
+                                <a href="${source.url}" class="source-item-compact" target="_blank" rel="noopener noreferrer">
+                                    <img src="${faviconUrl}" class="source-favicon" alt="" 
+                                        onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>'"/>
+                                    <div class="source-info">
+                                        <span class="source-name">${source.name}</span>
+                                        <span class="source-domain">${source.domain}</span>
+                                    </div>
+                                </a>
+                            `;
+                        }).join('');
+                        
+                        document.querySelector('.sources-card').style.display = 'block';
+                    }
+                }
+
+                // Update images grid
+                const imageGrid = document.getElementById('imageGrid');
+                if (imageGrid && images.length > 0) {
+                    imageGrid.innerHTML = images.map(image => `
+                        <div class="image-item">
+                            <img src="${image.url}" alt="${image.title || 'Related image'}" 
+                                loading="lazy" onerror="this.style.display='none'"/>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            async finalizeDisplay(content, sources) {
+                // Save the content for context
+                this.contextContent = content;
+                
+                // Hide loader and progress
+                this.hideLoader();
+                
+                // Update final content without sources (they'll be in sidebar)
+                this.updateStreamingContent(content);
+                
+                // Enable follow-up section
+                document.querySelector('.follow-up-section').style.opacity = '1';
+                
+                // Generate suggested follow-ups
+                this.generateSuggestedFollowUps(sources);
+
+                // Update side content with sources
+                const urlParams = new URLSearchParams(window.location.search);
+                const query = urlParams.get('query');
+                if (query) {
+                    const images = await this.fetchImages(query);
+                    this.updateSideContent(sources, images);
+                }
+            }
+
+            formatMarkdown(text) {
+                if (!text) return '';
+                
+                return text
+                    // Headers
+                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                    
+                    // Lists
+                    .replace(/^\* (.*$)/gm, '<li>$1</li>')
+                    .replace(/^- (.*$)/gm, '<li>$1</li>')
+                    .replace(/^(\d+\.) (.*$)/gm, '<li>$1 $2</li>')
+                    
+                    // Wrap lists in ul/ol
+                    .replace(/(<li>.*<\/li>)\n/g, '<ul>$1</ul>')
+                    
+                    // Bold and Italic
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    
+                    // Code blocks
+                    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    
+                    // Blockquotes
+                    .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+                    
+                    // Links
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                    
+                    // Paragraphs
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>')
+                    
+                    // Wrap in paragraph if not already wrapped
+                    .replace(/^(.+)$/gm, '<p>$1</p>');
+            }
+
+            formatSources(sources) {
+                if (!sources || !sources.length) return '';
+                
+                // Filter out invalid sources and deduplicate by URL
+                const validSources = sources
+                    .filter(source => source && source.url && source.name)
+                    .reduce((acc, source) => {
+                        if (!acc.some(s => s.url === source.url)) {
+                            acc.push(source);
+                        }
+                        return acc;
+                    }, []);
+
+                if (validSources.length === 0) return '';
+
+                return `
+                    <div class="source-links">
+                        <h4>Sources</h4>
+                        ${validSources.map(source => {
+                            const domain = new URL(source.url).hostname;
+                            const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+                            return `
+                                <a href="${source.url}" class="source-item" target="_blank" rel="noopener noreferrer">
+                                    <img src="${faviconUrl}" class="source-favicon" alt="" 
+                                        onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>'"/>
+                                    <span>${source.name}</span>
+                                </a>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            setupEventListeners() {
+                const followUpInput = document.getElementById('followUpInput');
+                const askFollowUpButton = document.getElementById('askFollowUp');
+
+                followUpInput.addEventListener('input', (e) => {
+                    askFollowUpButton.disabled = !e.target.value.trim();
+                });
+
+                askFollowUpButton.addEventListener('click', async () => {
+                    const query = followUpInput.value.trim();
+                    if (query) {
+                        // Save the question to the display
+                        const questionHtml = `
+                            <div class="user-question">
+                                <strong>Your question:</strong> ${query}
+                            </div>
+                        `;
+                        this.combinedResults.innerHTML += questionHtml;
+
+                        // Show loading state
+                        followUpInput.value = '';
+                        askFollowUpButton.disabled = true;
+                        askFollowUpButton.innerHTML = 'Thinking...';
+
+                        // Handle the follow-up
+                        await this.handleFollowUp(query);
+
+                        // Reset button
+                        askFollowUpButton.innerHTML = 'Ask';
+                    }
+                });
+
+                // Share button functionality
+                document.querySelector('.share-button').addEventListener('click', () => {
+                    navigator.clipboard.writeText(window.location.href)
+                        .then(() => alert('URL copied to clipboard!'))
+                        .catch(err => console.error('Failed to copy URL:', err));
+                });
+            }
+
+            generateSuggestedFollowUps(sources) {
+                const suggestions = sources.reduce((acc, source) => {
+                    if (source.similar_questions) {
+                        acc.push(...source.similar_questions);
+                    }
+                    return acc;
+                }, []).slice(0, 4);
+
+                const suggestedFollows = document.getElementById('suggestedFollows');
+                suggestedFollows.innerHTML = suggestions.map(suggestion => 
+                    `<button onclick="researchManager.conductResearch('${suggestion}')">${suggestion}</button>`
+                ).join('');
+            }
+
+            async handleFollowUp(query) {
+                try {
+                    const endpoint = 'https://api.paxsenix.biz.id/ai/gemini';
+                    
+                    // Prepare the context and query
+                    let messageText = query;
+                    if (!this.sessionId) {
+                        let truncatedContext = this.contextContent;
+                        if (truncatedContext.length > 1000) {
+                            truncatedContext = 
+                                truncatedContext.substring(0, 500) + 
+                                "\n...[content truncated]...\n" + 
+                                truncatedContext.substring(truncatedContext.length - 500);
+                        }
+                        messageText = `Previous research summary: ${this.contextContent} Follow-up question: ${query}`;
+                    }
+
+                    const requestBody = {
+                        model: "gemini-2.0-flash-thinking-exp",
+                        contents: [
+                            {
+                                role: "user",
+                                parts: [
+                                    {
+                                        text: messageText
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+
+                    if (this.sessionId) {
+                        requestBody.session_id = this.sessionId;
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.ok) {
+                        // Save session ID for future queries
+                        if (data.session_id) {
+                            this.sessionId = data.session_id;
+                        }
+                        
+                        // Get the response text from the message array
+                        let responseText = '';
+                        if (data.message && Array.isArray(data.message)) {
+                            responseText = data.message.map(msg => msg.text).join('\n');
+                        }
+                        
+                        if (!responseText) {
+                            throw new Error('No valid response content found');
+                        }
+
+                        // Update the display with the new response
+                        const formattedResponse = this.formatMarkdown(responseText);
+                        this.combinedResults.innerHTML += `
+                            <div class="ai-response">
+                                ${formattedResponse}
+                            </div>
+                        `;
+                        
+                        // Update sources if any
+                        if (data.sources && data.sources.length > 0) {
+                            this.updateSideContent(data.sources, []);
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to get response');
+                    }
+                } catch (error) {
+                    console.error('Follow-up error:', error);
+                    this.combinedResults.innerHTML += `
+                        <div class="error-message">
+                            Sorry, couldn't get an answer. Please try rephrasing your question.
+                        </div>
+                    `;
+                }
+            }
+
+            showLoader() {
+                this.loader.style.display = 'flex';
+                this.resultsContainer.style.display = 'none';
+            }
+
+            hideLoader() {
+                this.loader.style.display = 'none';
+                this.resultsContainer.style.display = 'block';
+            }
+        }
+
+        const researchManager = new ResearchManager();
+        window.researchManager = researchManager;
+    </script>
+</body>
+</html>
