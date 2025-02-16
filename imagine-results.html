@@ -3,140 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magical Imaginings ✨</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>✨ Magical Imaginings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #fff;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --primary: #9333ea;
+            --primary-light: #a855f7;
+            --primary-dark: #7928ca;
+            --background: #1a1a2e;
+            --surface: #16213e;
+            --text: #ffffff;
+            --text-secondary: #e9d5ff;
         }
 
-        .imagine-container {
-            max-width: 1200px;
-            margin: 2rem auto;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background), var(--surface));
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 1440px;
+            margin: 0 auto;
             padding: 2rem;
         }
 
-        .page-title {
+        .header-section {
+            position: relative;
+            padding: 3rem 2rem;
+            background: rgba(147, 51, 234, 0.05);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 3rem;
             text-align: center;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-            color: #9333ea;
-            text-shadow: 0 0 10px rgba(147, 51, 234, 0.3);
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.8s ease forwards;
+            border: 1px solid rgba(147, 51, 234, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+            animation: float 6s ease-in-out infinite;
         }
 
         .prompt-display {
-            text-align: center;
-            margin-bottom: 2rem;
             font-size: 1.2rem;
-            color: #a855f7;
-            opacity: 0;
-            animation: fadeIn 1s ease 0.3s forwards;
+            color: var(--text-secondary);
+            margin: 1.5rem 0;
+            max-width: 800px;
+            margin: 1rem auto;
+            line-height: 1.6;
+        }
+
+        .controls-section {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-button {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            color: var(--text);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1rem;
+        }
+
+        .control-button:hover {
+            background: rgba(147, 51, 234, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
+        }
+
+        .control-button svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .control-button:hover svg {
+            transform: scale(1.1);
         }
 
         .image-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 2rem;
-            margin-top: 2rem;
-            opacity: 0;
-            animation: fadeIn 1s ease 0.5s forwards;
+            padding: 1rem;
         }
 
         .image-card {
-            background: rgba(147, 51, 234, 0.1);
-            border-radius: 15px;
-            padding: 1rem;
-            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.2);
-            transition: all 0.3s ease;
+            background: rgba(147, 51, 234, 0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(147, 51, 234, 0.1);
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .image-wrapper {
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(147, 51, 234, 0.2);
+            aspect-ratio: 1;
         }
 
-        .image-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, rgba(147, 51, 234, 0.1), transparent);
-            z-index: -1;
-        }
-
-        .image-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3);
-        }
-
-        .image-card img {
+        .image-wrapper img {
             width: 100%;
-            height: 300px;
+            height: 100%;
             object-fit: cover;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            transition: transform 0.3s ease;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
 
-        .image-card:hover img {
+        .image-wrapper img.loaded {
+            opacity: 1;
+        }
+
+        .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(26, 26, 46, 0.2),
+                rgba(26, 26, 46, 0.8)
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .image-card:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .image-card:hover .image-wrapper img {
             transform: scale(1.05);
         }
 
-        .image-card .prompt {
-            color: #d8b4fe;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            line-height: 1.4;
-        }
-
-        .image-card .timestamp {
-            color: #a855f7;
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .card-actions {
+        .overlay-actions {
             display: flex;
             gap: 1rem;
-            margin-top: 1rem;
-            opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(20px);
             transition: all 0.3s ease;
         }
 
-        .image-card:hover .card-actions {
-            opacity: 1;
+        .image-card:hover .overlay-actions {
             transform: translateY(0);
         }
 
-        .action-button {
-            background: #9333ea;
-            color: white;
+        .overlay-btn {
+            background: rgba(147, 51, 234, 0.3);
             border: none;
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-            flex: 1;
             justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
-        .action-button:hover {
-            background: #7928ca;
+        .overlay-btn:hover {
+            background: rgba(147, 51, 234, 0.6);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .prompt-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .prompt {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: rgba(147, 51, 234, 0.8);
+            font-weight: 300;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: var(--text);
+            padding: 1rem 2rem;
+            border-radius: 99px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-20px);
         }
 
         .loading-container {
@@ -144,219 +250,285 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 400px;
-            position: relative;
+            min-height: 60vh;
+            gap: 2rem;
         }
 
-        .magical-loader {
-            width: 100px;
-            height: 100px;
-            border: 4px solid #9333ea;
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(147, 51, 234, 0.1);
+            border-left-color: var(--primary);
             border-radius: 50%;
-            border-top-color: transparent;
             animation: spin 1s linear infinite;
-            position: relative;
-        }
-
-        .magical-loader::before,
-        .magical-loader::after {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            right: -4px;
-            bottom: -4px;
-            border: 4px solid transparent;
-            border-top-color: #a855f7;
-            border-radius: 50%;
-            animation: spin 2s linear infinite reverse;
-        }
-
-        .magical-loader::after {
-            border-top-color: #d8b4fe;
-            animation-duration: 3s;
-        }
-
-        .loading-text {
-            margin-top: 2rem;
-            color: #9333ea;
-            font-size: 1.4rem;
-            text-align: center;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .back-button {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            background: rgba(147, 51, 234, 0.9);
-            color: white;
-            border: none;
-            padding: 1rem 1.5rem;
-            border-radius: 25px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            z-index: 100;
-        }
-
-        .back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
-            background: rgba(147, 51, 234, 1);
-        }
-
-        .magic-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .imagine-container {
+            .app-container {
                 padding: 1rem;
             }
 
-            .image-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1rem;
+            .header-section {
+                padding: 2rem 1rem;
+                margin-bottom: 2rem;
             }
 
             .page-title {
                 font-size: 2rem;
             }
 
-            .back-button {
-                top: 1rem;
-                left: 1rem;
-                padding: 0.8rem 1.2rem;
+            .control-button {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
             }
+
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+        }
+
+        /* Add new styles for input container */
+        .input-container {
+            background: rgba(147, 51, 234, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 800px;
+            border: 1px solid rgba(147, 51, 234, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+
+        .prompt-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .generate-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .generate-btn:disabled {
+            background: rgba(147, 51, 234, 0.3);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .suggestion-chip {
+            background: rgba(147, 51, 234, 0.1);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .suggestion-chip:hover {
+            background: rgba(147, 51, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .input-wrapper {
+                flex-direction: column;
+            }
+
+            .generate-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .suggestions {
+                justify-content: center;
+            }
+        }
+
+        /* Fullscreen modal styles */
+        .image-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .image-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .image-modal.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(147, 51, 234, 0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 10px;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+            transform: scale(1.1);
         }
     </style>
 </head>
 <body>
-    <div class="magic-particles"></div>
-    
-    <button class="back-button" onclick="window.location.href='index.html'">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        Back to Stormy
-    </button>
-
-    <div class="imagine-container">
-        <h1 class="page-title">✨ Magical Imaginings ✨</h1>
-        <div id="promptDisplay" class="prompt-display"></div>
-        
-        <div id="loadingContainer" class="loading-container">
-            <div class="magical-loader"></div>
-            <div class="loading-text">Conjuring your imagination...</div>
+    <div class="app-container">
+        <div class="header-section">
+            <h1 class="page-title">✨ Magical Imaginings ✨</h1>
+            <div id="promptDisplay" class="prompt-display">Create and explore magical worlds with AI-powered imagination</div>
         </div>
-        
-        <div id="imageGrid" class="image-grid"></div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="promptInput" 
+                    class="prompt-input" 
+                    placeholder="Describe your magical imagination..."
+                    maxlength="200"
+                >
+                <button id="generateBtn" class="generate-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Generate
+                </button>
+            </div>
+            <div class="suggestions">
+                <div class="suggestion-chip">A magical forest at sunset ✨</div>
+                <div class="suggestion-chip">Cyberpunk city with flying cars 🌆</div>
+                <div class="suggestion-chip">Crystal palace in the clouds ⛅</div>
+                <div class="suggestion-chip">Underwater kingdom of mermaids 🧜‍♀️</div>
+                <div class="suggestion-chip">Dragon's lair with treasures 🐉</div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <button class="control-button" id="downloadAllBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Download All
+            </button>
+            <button class="control-button" id="shareGalleryBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                Share Gallery
+            </button>
+        </div>
+
+        <div id="loadingContainer" class="loading-container" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Creating magical moments...</p>
+        </div>
+
+        <div id="imageGrid" class="image-grid">
+            <!-- Images will be loaded here -->
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Operation completed successfully!</div>
+
+    <div class="image-modal">
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Fullscreen Image">
+            <button class="modal-close">&times;</button>
+        </div>
     </div>
 
     <script src="imagine.js"></script>
-    <script>
-        // Add magical particle effect
-        function createMagicParticles() {
-            const container = document.querySelector('.magic-particles');
-            const colors = ['#9333ea', '#a855f7', '#d8b4fe'];
-            
-            setInterval(() => {
-                const particle = document.createElement('div');
-                particle.style.cssText = `
-                    position: absolute;
-                    width: 4px;
-                    height: 4px;
-                    background: ${colors[Math.floor(Math.random() * colors.length)]};
-                    border-radius: 50%;
-                    left: ${Math.random() * 100}vw;
-                    top: ${Math.random() * 100}vh;
-                    opacity: 0;
-                    pointer-events: none;
-                    transform: translateY(0);
-                    animation: floatUp 4s ease-in-out forwards;
-                `;
-                
-                container.appendChild(particle);
-                
-                // Remove particle after animation
-                setTimeout(() => particle.remove(), 4000);
-            }, 200);
-        }
-
-        // Add floating animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes floatUp {
-                0% {
-                    opacity: 0;
-                    transform: translateY(20px) scale(0);
-                }
-                20% {
-                    opacity: 0.5;
-                    transform: translateY(0) scale(1);
-                }
-                80% {
-                    opacity: 0.5;
-                }
-                100% {
-                    opacity: 0;
-                    transform: translateY(-100px) scale(0);
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Initialize particles on load
-        document.addEventListener('DOMContentLoaded', () => {
-            createMagicParticles();
-            
-            // Display current prompt if available
-            const urlParams = new URLSearchParams(window.location.search);
-            const prompt = urlParams.get('prompt');
-            if (prompt) {
-                const promptDisplay = document.getElementById('promptDisplay');
-                promptDisplay.textContent = `"${prompt}"`;
-            }
-        });
-    </script>
 </body>
-</html> 
+</html>
