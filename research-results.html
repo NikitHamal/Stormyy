@@ -416,6 +416,11 @@
         @media (max-width: 1024px) {
             .content-grid {
                 grid-template-columns: 1fr 280px;
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 1.5rem;
             }
         }
 
@@ -425,21 +430,307 @@
             }
 
             .main-container {
-                padding: 1rem;
-            }
-
-            .side-content {
-                position: static;
-                margin-top: 2rem;
+                padding: 0.8rem;
+                margin-top: 0.5rem;
             }
 
             .header {
+                padding: 0.8rem 1rem;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+
+            .header-left {
+                font-size: 1.2rem;
+            }
+
+            .share-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+
+            .combined-content {
+                padding: 1.2rem;
+                margin: 0.5rem 0;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                border-radius: 16px;
+            }
+
+            .follow-up-section {
                 padding: 1rem;
+                margin-top: 1rem;
+                border-radius: 16px;
+            }
+
+            .follow-up-input {
+                gap: 0.5rem;
+            }
+
+            .follow-up-input input {
+                padding: 0.8rem;
+                font-size: 0.95rem;
+                border-radius: 8px;
+            }
+
+            .side-card {
+                margin: 0.8rem 0;
+                padding: 1rem;
+                border-radius: 16px;
+            }
+
+            .side-card h3 {
+                font-size: 1rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .source-item-compact {
+                padding: 0.8rem;
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
+            }
+
+            .source-info {
+                max-width: calc(100% - 24px);
+            }
+
+            .source-name {
+                font-size: 0.9rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .image-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
             }
+
+            .user-question {
+                margin: 1.5rem 0 1rem;
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+                border-radius: 0 12px 12px 0;
+            }
+
+            .loading-animation {
+                min-height: 200px;
+            }
+
+            .spinner {
+                width: 50px;
+                height: 50px;
+                border-width: 3px;
+            }
+
+            .loading-animation p {
+                font-size: 1rem;
+            }
+
+            /* Improve touch targets */
+            .source-item-compact {
+                min-height: 44px;
+            }
+
+            button, 
+            input[type="button"], 
+            input[type="submit"] {
+                min-height: 44px;
+            }
+
+            /* Improve readability on mobile */
+            .combined-content h1, .ai-response h1 {
+                font-size: 1.5rem;
+            }
+
+            .combined-content h2, .ai-response h2 {
+                font-size: 1.3rem;
+            }
+
+            .combined-content h3, .ai-response h3 {
+                font-size: 1.1rem;
+            }
+
+            /* Prevent horizontal scroll on code blocks */
+            .combined-content pre, 
+            .ai-response pre {
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Additional small screen optimizations */
+        @media (max-width: 480px) {
+            .header {
+                padding: 0.6rem 0.8rem;
+            }
+
+            .header-left {
+                font-size: 1rem;
+            }
+
+            .share-button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            .main-container {
+                padding: 0.6rem;
+            }
+
+            .combined-content {
+                padding: 1rem;
+                font-size: 0.9rem;
+                line-height: 1.5;
+                border-radius: 12px;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .source-item-compact {
+                font-size: 0.85rem;
+            }
+
+            .source-domain {
+                font-size: 0.75rem;
+            }
+
+            /* Adjust headings for better hierarchy */
+            .combined-content h1, .ai-response h1 {
+                font-size: 1.3rem;
+                margin: 1rem 0 0.8rem;
+            }
+
+            .combined-content h2, .ai-response h2 {
+                font-size: 1.1rem;
+                margin: 0.8rem 0 0.6rem;
+            }
+
+            .combined-content h3, .ai-response h3 {
+                font-size: 1rem;
+                margin: 0.6rem 0 0.4rem;
+            }
+
+            /* Optimize follow-up section */
+            .follow-up-section {
+                padding: 0.8rem;
+            }
+
+            .suggest-follows {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 0.4rem;
+            }
+
+            .suggest-follows button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+                width: 100%;
+                text-align: left;
+            }
+
+            /* Improve source items for very small screens */
+            .source-item-compact {
+                padding: 0.6rem;
+                gap: 0.5rem;
+            }
+
+            .source-favicon {
+                width: 14px;
+                height: 14px;
+            }
+
+            /* Adjust user question display */
+            .user-question {
+                margin: 1.5rem 0 1rem;
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+                border-radius: 0 12px 12px 0;
+            }
+
+            /* Optimize error message */
+            .error-message {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+                margin: 0.8rem 0;
+            }
+
+            /* Improve code block readability */
+            .combined-content pre,
+            .ai-response pre {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+                border-radius: 8px;
+            }
+
+            .combined-content code,
+            .ai-response code {
+                font-size: 0.85rem;
+                padding: 0.2rem 0.4rem;
+            }
+        }
+
+        /* Additional optimizations for very small screens */
+        @media (max-width: 360px) {
+            .header-left {
+                font-size: 0.9rem;
+            }
+
+            .share-button {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .main-container {
+                padding: 0.5rem;
+            }
+
+            .combined-content {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+
+            .source-name {
+                max-width: 180px;
+            }
+        }
+
+        /* Fix for notched phones */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .header {
+                padding-top: max(0.8rem, env(safe-area-inset-top));
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+            }
+        }
+
+        /* Improve touch interaction */
+        @media (hover: none) and (pointer: coarse) {
+            .source-item-compact:active {
+                transform: translateX(4px);
+                background: rgba(147, 51, 234, 0.2);
+            }
+
+            .suggest-follows button:active {
+                transform: translateY(1px);
+                background: rgba(147, 51, 234, 0.15);
+            }
+        }
+
+        /* Fix for iOS Safari 100vh issue */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
+        }
+
+        /* Improve touch scrolling */
+        .sources-card {
+            -webkit-overflow-scrolling: touch;
         }
 
         .user-question {

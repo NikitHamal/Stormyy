@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Imaginings ✨</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .imagine-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            color: #9333ea;
+            text-shadow: 0 0 10px rgba(147, 51, 234, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .prompt-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            color: #a855f7;
+            opacity: 0;
+            animation: fadeIn 1s ease 0.3s forwards;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s ease 0.5s forwards;
+        }
+
+        .image-card {
+            background: rgba(147, 51, 234, 0.1);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
+        .image-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(147, 51, 234, 0.1), transparent);
+            z-index: -1;
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .image-card .prompt {
+            color: #d8b4fe;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .image-card .timestamp {
+            color: #a855f7;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .image-card:hover .card-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .action-button {
+            background: #9333ea;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .action-button:hover {
+            background: #7928ca;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .magical-loader {
+            width: 100px;
+            height: 100px;
+            border: 4px solid #9333ea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+
+        .magical-loader::before,
+        .magical-loader::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 4px solid transparent;
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .magical-loader::after {
+            border-top-color: #d8b4fe;
+            animation-duration: 3s;
+        }
+
+        .loading-text {
+            margin-top: 2rem;
+            color: #9333ea;
+            font-size: 1.4rem;
+            text-align: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: rgba(147, 51, 234, 0.9);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+            background: rgba(147, 51, 234, 1);
+        }
+
+        .magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .imagine-container {
+                padding: 1rem;
+            }
+
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .back-button {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.8rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="magic-particles"></div>
+    
+    <button class="back-button" onclick="window.location.href='index.html'">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Stormy
+    </button>
+
+    <div class="imagine-container">
+        <h1 class="page-title">✨ Magical Imaginings ✨</h1>
+        <div id="promptDisplay" class="prompt-display"></div>
+        
+        <div id="loadingContainer" class="loading-container">
+            <div class="magical-loader"></div>
+            <div class="loading-text">Conjuring your imagination...</div>
+        </div>
+        
+        <div id="imageGrid" class="image-grid"></div>
+    </div>
+
+    <script src="imagine.js"></script>
+    <script>
+        // Add magical particle effect
+        function createMagicParticles() {
+            const container = document.querySelector('.magic-particles');
+            const colors = ['#9333ea', '#a855f7', '#d8b4fe'];
+            
+            setInterval(() => {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: absolute;
+                    width: 4px;
+                    height: 4px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}vw;
+                    top: ${Math.random() * 100}vh;
+                    opacity: 0;
+                    pointer-events: none;
+                    transform: translateY(0);
+                    animation: floatUp 4s ease-in-out forwards;
+                `;
+                
+                container.appendChild(particle);
+                
+                // Remove particle after animation
+                setTimeout(() => particle.remove(), 4000);
+            }, 200);
+        }
+
+        // Add floating animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes floatUp {
+                0% {
+                    opacity: 0;
+                    transform: translateY(20px) scale(0);
+                }
+                20% {
+                    opacity: 0.5;
+                    transform: translateY(0) scale(1);
+                }
+                80% {
+                    opacity: 0.5;
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(-100px) scale(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize particles on load
+        document.addEventListener('DOMContentLoaded', () => {
+            createMagicParticles();
+            
+            // Display current prompt if available
+            const urlParams = new URLSearchParams(window.location.search);
+            const prompt = urlParams.get('prompt');
+            if (prompt) {
+                const promptDisplay = document.getElementById('promptDisplay');
+                promptDisplay.textContent = `"${prompt}"`;
+            }
+        });
+    </script>
+</body>
+</html> 

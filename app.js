@@ -145,7 +145,10 @@ function initializeSpeechRecognition() {
             orbContainer.classList.remove('listening');
             speechBubble.classList.remove('listening');
             
-            if (transcript.toLowerCase().includes('play')) {
+            if (transcript.toLowerCase().includes('imagine')) {
+                const query = transcript.replace(/imagine/i, '').trim();
+                handleUserInput(`imagine ${query}`);
+            } else if (transcript.toLowerCase().includes('play')) {
                 const query = transcript.replace(/play/i, '').trim();
                 handlePlayCommand(query);
             } else {
@@ -175,6 +178,27 @@ async function handleUserInput(directInput) {
     const input = directInput || userInput.value.trim();
     if (!input) return;
 
+    // Check for imagine command
+    const imagineCommand = input.toLowerCase().match(/^(imagine)\s+(.+)/);
+    if (imagineCommand) {
+        const query = imagineCommand[2];
+        
+        // Save the imagine command to chat history
+        saveMessage(`${imagineCommand[1]}: ${query}`, 'user');
+        
+        // Show thinking animation
+        orbContainer.classList.add('thinking');
+        speechBubble.textContent = "Let me imagine that for you...";
+        speechBubble.classList.add('active');
+        
+        // Clear input if it was typed
+        if (!directInput) userInput.value = '';
+        
+        // Redirect to imagine results page
+        window.location.href = `imagine-results.html?prompt=${encodeURIComponent(query)}`;
+        return;
+    }
+    
     // Check for research command
     const researchCommand = input.toLowerCase().match(/^(search|research)\s+(.+)/);
     if (researchCommand) {
@@ -1115,7 +1139,7 @@ async function playSelectedTrack(videoId, title) {
             speechBubble.textContent = "Hope you enjoyed that!";
             setTimeout(() => speechBubble.classList.remove('active'), 2000);
             
-            // Auto-play next song if enabled
+            // Auto-play next track if enabled
             if (autoPlayEnabled) {
                 currentPlayingIndex++;
                 tryPlayNext();
