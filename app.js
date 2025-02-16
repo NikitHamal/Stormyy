@@ -1686,3 +1686,32 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Create magical particles
+function createParticles() {
+  const container = document.querySelector('.magical-background');
+  for (let i = 0; i < 50; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'magical-particle';
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.animationDelay = `${Math.random() * 8}s`;
+    container.appendChild(particle);
+  }
+}
+
+// Create floating runes
+function createRunes() {
+  const container = document.querySelector('.floating-runes');
+  for (let i = 0; i < 20; i++) {
+    const rune = document.createElement('div');
+    rune.className = 'rune';
+    rune.style.left = `${Math.random() * 100}%`;
+    rune.style.top = `${Math.random() * 100}%`;
+    rune.style.animationDelay = `${Math.random() * 10}s`;
+    container.appendChild(rune);
+  }
+}
+
+// Initialize
+createParticles();
+createRunes();

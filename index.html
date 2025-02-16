@@ -1,163 +1,136 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Original orb structure -->
-  <div id="orb-container" class="orb-container">
-    <div class="magical-orb">
-      <div class="thunder-wave"></div>
-      <div class="thunder-wave" style="animation-delay: -1.5s"></div>
-      <div class="orb-inner"></div>
-      <div class="eyes-container">
-        <div class="eye eye-left">
-          <div class="pupil"></div>
-        </div>
-        <div class="eye eye-right">
-          <div class="pupil"></div>
-        </div>
-      </div>
-      <div class="emotion-particles"></div>
-      <div class="lightning-effect"></div>
-    </div>
-  </div>
-
-  <!-- Add this after the orb structure but before the chat container -->
-  <div class="speech-bubble" id="speechBubble"></div>
-
-  <!-- Add this after the orb structure -->
-  <div class="idle-message" id="idleMessage">Click me to chat!</div>
-
-  <!-- Add this after the orb container but before the chat container -->
-  <div class="keyboard-icon" id="keyboardIcon" title="Toggle keyboard input">
-    <svg viewBox="0 0 24 24">
-      <path d="M20,5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M20,17H4V7h16V17z"/>
-      <path d="M11,8h2v2h-2V8z"/>
-      <path d="M8,8h2v2H8V8z"/>
-      <path d="M5,8h2v2H5V8z"/>
-      <path d="M14,8h2v2h-2V8z"/>
-      <path d="M17,8h2v2h-2V8z"/>
-      <path d="M8,11h2v2H8V11z"/>
-      <path d="M11,11h2v2h-2V11z"/>
-      <path d="M14,11h2v2h-2V11z"/>
-      <path d="M17,11h2v2h-2V11z"/>
-      <path d="M8,14h8v2H8V14z"/>
-    </svg>
-  </div>
-
-  <!-- Add this after the keyboard icon but before the chat container -->
-  <div class="thunderbolt-icon" id="thunderboltIcon" title="Strike with lightning">
-    <svg viewBox="0 0 24 24">
-      <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
-    </svg>
-  </div>
-
-  <!-- Add this before the chat container -->
-  <a href="chat-history.html" class="chat-history-icon" title="View Chat History">
-    <svg viewBox="0 0 24 24">
-      <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,16H6l-2,2V4h16V16z"/>
-    </svg>
-  </a>
-
-  <!-- Update the chat container to remove chat history -->
-  <div class="chat-container" id="chatContainer">
-    <div class="input-group">
-      <input type="text" class="chat-input" id="userInput" placeholder="Ask Stormy anything...">
-      <button class="send-button" id="sendButton">Send</button>
-    </div>
-  </div>
-
-  <div id="captionContainer" class="caption-container">
-    <div class="caption-text"></div>
-  </div>
-
-  <!-- Add these new icons after the thunderbolt icon -->
-  <div class="tickle-icon" id="tickleIcon" title="Tickle the orb">
-    <svg viewBox="0 0 24 24">
-      <path d="M19.59 7L12 14.59 6.41 9H10V7H3v7h2V9.41L12 16.41 19.59 9H16V7h7v7h-2V9.41L14.41 16 21 22.59 19.59 21 13 14.41 6.41 21 5 22.59 6.41 16 13z"/>
-    </svg>
-  </div>
-
-  <div class="love-icon" id="loveIcon" title="Show some love">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-    </svg>
-  </div>
-
-  <div class="dizzy-icon" id="dizzyIcon" title="Make the orb dizzy">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-      <path d="M15 16H9v-2h6v2zm0-4H9v-2h6v2zm0-4H9V6h6v2z"/>
-    </svg>
-  </div>
-
-  <!-- Add these new interaction icons -->
-  <div class="sleep-icon" id="sleepIcon" title="Make the orb sleepy">
-    <svg viewBox="0 0 24 24">
-      <path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26 c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
-    </svg>
-  </div>
-
-  <div class="party-icon" id="partyIcon" title="Start a party!">
-    <svg viewBox="0 0 24 24">
-      <path d="M2,22l14-14L14,6l-2,2l-2-2L8,8l-2-2L4,8L2,22z M14,6l8-4l-4,8L14,6z"/>
-    </svg>
-  </div>
-
-  <div class="sneeze-icon" id="sneezeIcon" title="Make the orb sneeze">
-    <svg viewBox="0 0 24 24">
-      <path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8 S16.41,20,12,20z"/>
-      <path d="M9.59,8.59L12,11l2.41-2.41L16,10l-4,4l-4-4L9.59,8.59z"/>
-    </svg>
-  </div>
-
-  <!-- Add these elements after the chat container -->
-  <div id="musicControls" class="music-controls">
-    <div class="music-info">
-      <div id="nowPlaying" class="now-playing"></div>
-      <div class="time-info">
-        <span id="currentTime">0:00</span>
-        <span>/</span>
-        <span id="duration">0:00</span>
-      </div>
-    </div>
-    <div id="progressContainer" class="progress-container">
-      <div id="progressBar" class="progress-bar"></div>
-      <div id="progressBuffer" class="progress-buffer"></div>
-    </div>
-    <div class="controls-buttons">
-      <button id="previousButton" class="control-button">
-      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-    </button>
-      <button id="playPauseButton" class="control-button">
-      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </button>
-      <button id="nextButton" class="control-button">
-      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-    </button>
-      <div class="volume-control">
-        <button id="volumeButton" class="control-button">
-          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+  <div class="app-container">
+    <!-- Top navigation bar -->
+    <nav class="top-nav">
+      <div class="nav-group left">
+        <button class="nav-icon keyboard-icon" id="keyboardIcon" title="Toggle keyboard input">
+          <svg viewBox="0 0 24 24">
+            <path d="M20,5H4C2.9,5,2,5.9,2,7v10c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V7C22,5.9,21.1,5,20,5z M20,17H4V7h16V17z"/>
+            <path d="M11,8h2v2h-2V8z M8,8h2v2H8V8z M5,8h2v2H5V8z M14,8h2v2h-2V8z M17,8h2v2h-2V8z M8,11h2v2H8V11z M11,11h2v2h-2V11z M14,11h2v2h-2V11z M17,11h2v2h-2V11z M8,14h8v2H8V14z"/>
+          </svg>
         </button>
-        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
-    </div>
+        <button class="nav-icon thunderbolt-icon" id="thunderboltIcon" title="Strike with lightning">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="nav-group right">
+        <button class="nav-icon settings-icon" id="settingsIcon" title="Settings">
+          <svg viewBox="0 0 24 24">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.04,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+          </svg>
+        </button>
+        <a href="chat-history.html" class="nav-icon chat-history-icon" title="View Chat History">
+          <svg viewBox="0 0 24 24">
+            <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M20,16H6l-2,2V4h16V16z"/>
+          </svg>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main content area -->
+    <main class="main-content">
+      <!-- Orb container -->
+      <div class="orb-wrapper">
+        <div id="orb-container" class="orb-container">
+          <div class="magical-orb">
+            <div class="thunder-wave"></div>
+            <div class="thunder-wave" style="animation-delay: -1.5s"></div>
+            <div class="orb-inner"></div>
+            <div class="eyes-container">
+              <div class="eye eye-left"><div class="pupil"></div></div>
+              <div class="eye eye-right"><div class="pupil"></div></div>
+            </div>
+            <div class="emotion-particles"></div>
+            <div class="lightning-effect"></div>
+          </div>
+        </div>
+        <div class="speech-bubble" id="speechBubble"></div>
+        <div class="idle-message" id="idleMessage">Click me to chat!</div>
+      </div>
+
+      <!-- Interaction toolbar -->
+      <div class="interaction-toolbar">
+        <button class="toolbar-icon" id="tickleIcon" title="Tickle">
+          <svg viewBox="0 0 24 24"><path d="M19.59 7L12 14.59 6.41 9H10V7H3v7h2V9.41L12 16.41 19.59 9H16V7h7v7h-2V9.41L14.41 16 21 22.59 19.59 21 13 14.41 6.41 21 5 22.59 6.41 16 13z"/></svg>
+        </button>
+        <button class="toolbar-icon" id="loveIcon" title="Love">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
+        <button class="toolbar-icon" id="dizzyIcon" title="Dizzy">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+        </button>
+        <button class="toolbar-icon" id="sleepIcon" title="Sleep">
+          <svg viewBox="0 0 24 24"><path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26 c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg>
+        </button>
+        <button class="toolbar-icon" id="partyIcon" title="Party">
+          <svg viewBox="0 0 24 24"><path d="M2,22l14-14L14,6l-2,2l-2-2L8,8l-2-2L4,8L2,22z M14,6l8-4l-4,8L14,6z"/></svg>
+        </button>
+        <button class="toolbar-icon" id="sneezeIcon" title="Sneeze">
+          <svg viewBox="0 0 24 24"><path d="M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z"/></svg>
+        </button>
+      </div>
+    </main>
+<div class="magical-background">
+  <div class="magical-mist"></div>
+  <div class="floating-runes"></div>
+    <!-- Bottom controls -->
+    <div class="bottom-controls">
+      <!-- Chat interface -->
+      <div class="chat-container" id="chatContainer">
+        <div class="input-group">
+          <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything...">
+          <button class="send-button" id="sendButton">Send</button>
+        </div>
+      </div>
+
+      <!-- Music player -->
+      <div id="musicControls" class="music-controls">
+        <div class="music-info">
+          <div id="nowPlaying" class="now-playing"></div>
+          <div class="time-info">
+            <span id="currentTime">0:00</span>
+            <span>/</span>
+            <span id="duration">0:00</span>
+          </div>
+        </div>
+        <div id="progressContainer" class="progress-container">
+          <div id="progressBar" class="progress-bar"></div>
+          <div id="progressBuffer" class="progress-buffer"></div>
+        </div>
+        <div class="controls-buttons">
+          <button id="previousButton" class="control-button">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button id="playPauseButton" class="control-button">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button id="nextButton" class="control-button">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+          <div class="volume-control">
+            <button id="volumeButton" class="control-button">
+              <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.1" value="1">
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="disco-container" id="discoContainer"></div>
-  <div class="visualizer-container" id="visualizerContainer"></div>
-
-  <!-- Add this after the chat-history-icon -->
-  <div class="settings-icon" id="settingsIcon" title="Settings">
-    <svg viewBox="0 0 24 24">
-      <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.04,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-    </svg>
-  </div>
-
+  <!-- Overlays and modals -->
   <div class="settings-menu" id="settingsMenu">
     <div class="settings-section">
       <div class="settings-title">Music Settings</div>
@@ -169,8 +142,6 @@
         </label>
       </div>
     </div>
-
-    <!-- Add new recognition settings section -->
     <div class="settings-section">
       <div class="settings-title">Recognition Settings</div>
       <div class="settings-option">
@@ -181,6 +152,15 @@
           <option value="ne-NP">Nepali</option>
         </select>
       </div>
+    </div>
+  </div>
+
+  <!-- Visual effects containers -->
+  <div class="effects-container">
+    <div class="disco-container" id="discoContainer"></div>
+    <div class="visualizer-container" id="visualizerContainer"></div>
+    <div id="captionContainer" class="caption-container">
+      <div class="caption-text"></div>
     </div>
   </div>
 

@@ -82,7 +82,7 @@ const AI_MODELS = {
     }
 };
 
-// Update generateImage function to strictly separate NSFW mode
+// Update generateImage function to fix NSFW image loading
 async function generateImage(prompt) {
     const loadingContainer = document.getElementById('loadingContainer');
     const imageGrid = document.getElementById('imageGrid');
@@ -148,14 +148,33 @@ async function generateImage(prompt) {
                     if (result.ok && (result.url || result.result?.url)) {
                         success = true;
                         const imageUrl = result.url || result.result.url;
-                        bundle.images.push({
+                        const imageData = {
                             prompt,
                             imageUrl,
                             modelName: AI_MODELS.NSFW.name,
                             modelIcon: AI_MODELS.NSFW.icon,
                             isNSFW: true,
                             timestamp: new Date().toISOString()
-                        });
+                        };
+                        
+                        // Create and save single image instead of bundle for NSFW
+                        const history = loadImageHistory();
+                        history.unshift(imageData);
+                        if (history.length > 50) history.pop();
+                        localStorage.setItem('stormyImageHistory', JSON.stringify(history));
+                        
+                        // Update UI
+                        const card = createImageCard(imageData);
+                        if (imageGrid.firstChild) {
+                            imageGrid.insertBefore(card, imageGrid.firstChild);
+                        } else {
+                            imageGrid.appendChild(card);
+                        }
+                        
+                        // Remove loading bundle card if it exists
+                        const bundleCard = document.getElementById(bundleCardId);
+                        if (bundleCard) bundleCard.remove();
+                        
                         showToast(`${AI_MODELS.NSFW.icon} NSFW image generated!`);
                     }
                 } catch (error) {
@@ -274,11 +293,57 @@ function saveImageBundle(images) {
     }
 }
 
-// Update createImageCard to handle bundles
+// Update createImageCard function to fix button styles
 function createImageCard(imageData) {
     if (imageData.type === 'bundle') {
         return createBundleCard(imageData);
     }
+
+    // Move styles to the main stylesheet
+    if (!document.querySelector('#action-buttons-styles')) {
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'action-buttons-styles';
+        styleSheet.textContent = `
+            .action-buttons {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(147, 51, 234, 0.1);
+            }
+
+            .action-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                border: 1px solid rgba(147, 51, 234, 0.2);
+                background: rgba(147, 51, 234, 0.05);
+                color: var(--text);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+            }
+
+            .action-btn:hover {
+                background: rgba(147, 51, 234, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .action-btn.delete-btn {
+                border-color: rgba(255, 0, 0, 0.2);
+                background: rgba(255, 0, 0, 0.05);
+            }
+
+            .action-btn.delete-btn:hover {
+                background: rgba(255, 0, 0, 0.1);
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    }
+
     const card = document.createElement('div');
     card.className = 'image-card';
     
@@ -291,44 +356,6 @@ function createImageCard(imageData) {
                 loading="lazy"
                 style="opacity: 0; transition: opacity 0.3s ease;"
             >
-            <div class="image-overlay">
-                <div class="overlay-actions">
-                    <button class="overlay-btn download-btn" title="Download Image">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                        </svg>
-                    </button>
-                    <button class="overlay-btn share-btn" title="Share Image">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="18" cy="5" r="3"/>
-                            <circle cx="6" cy="12" r="3"/>
-                            <circle cx="18" cy="19" r="3"/>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                    </button>
-                    <button class="overlay-btn fullscreen-btn" title="View Fullscreen">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                        </svg>
-                    </button>
-                    <button class="overlay-btn regenerate-btn" title="Regenerate Image">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                        </svg>
-                    </button>
-                    <button class="overlay-btn upscale-btn" title="Upscale Image">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M7 17L17 7M7 7h10v10"/>
-                        </svg>
-                    </button>
-                    <button class="overlay-btn delete-btn" title="Delete Image">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
             ${imageData.modelName ? `
                 <div class="model-badge ${imageData.isNSFW ? 'nsfw' : ''}">
                     ${imageData.modelIcon} ${imageData.modelName}
@@ -339,6 +366,32 @@ function createImageCard(imageData) {
             <div class="prompt-section">
                 <p class="prompt">${imageData.prompt}</p>
                 <span class="timestamp">${new Date(imageData.timestamp).toLocaleString()}</span>
+                <div class="action-buttons">
+                    <button class="action-btn download-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Download
+                    </button>
+                    <button class="action-btn fullscreen-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                        Fullscreen
+                    </button>
+                    <button class="action-btn upscale-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 17L17 7M7 7h10v10"/>
+                        </svg>
+                        Upscale
+                    </button>
+                    <button class="action-btn delete-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -368,7 +421,7 @@ function createImageCard(imageData) {
         `;
     });
 
-    // Update download handler
+    // Download button handler
     card.querySelector('.download-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
         try {
@@ -393,67 +446,38 @@ function createImageCard(imageData) {
         }
     });
 
-    // Update share handler
-    card.querySelector('.share-btn').addEventListener('click', (e) => {
+    // Delete button handler
+    card.querySelector('.delete-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (navigator.share) {
-            navigator.share({
-                title: 'Stormy\'s Imagination',
-                text: `Check out what Stormy imagined: ${imageData.prompt}`,
-                url: imageData.imageUrl
-            }).catch(() => {
-                copyToClipboard(imageData.imageUrl);
-            });
-        } else {
-            copyToClipboard(imageData.imageUrl);
+        if (confirm('Are you sure you want to delete this image?')) {
+            try {
+                const history = loadImageHistory();
+                const updatedHistory = history.filter(item => {
+                    if (item.type === 'bundle') {
+                        return item.images.every(img => img.imageUrl !== imageData.imageUrl);
+                    }
+                    return item.imageUrl !== imageData.imageUrl;
+                });
+                localStorage.setItem('stormyImageHistory', JSON.stringify(updatedHistory));
+                card.remove();
+                showToast('Image deleted successfully ✨');
+            } catch (error) {
+                console.error('Delete failed:', error);
+                showToast('Failed to delete image 😔');
+            }
         }
     });
 
-    // Add event listeners
-    card.querySelector('.fullscreen-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openImageModal(imageData);
-    });
-
-    // Add delete handler
-    card.querySelector('.delete-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm('Delete this image?')) {
-            const history = loadImageHistory();
-            const updatedHistory = history.filter(item => 
-                item.imageUrl !== imageData.imageUrl
-            );
-            localStorage.setItem('stormyImageHistory', JSON.stringify(updatedHistory));
-            card.remove();
-            showToast('Image deleted');
-        }
-    });
-
-    // Add regenerate handler
-    card.querySelector('.regenerate-btn').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const loadingSpinner = card.querySelector('.loading-spinner');
-        loadingSpinner.style.display = 'block';
-        
-        try {
-            await generateImage(imageData.prompt);
-            showToast('Image regenerated! ✨');
-        } catch (error) {
-            console.error('Regeneration failed:', error);
-            showToast('Failed to regenerate image 😔');
-        } finally {
-            loadingSpinner.style.display = 'none';
-        }
-    });
-
-    // Add upscale handler
+    // Upscale button handler
     card.querySelector('.upscale-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
         const loadingSpinner = card.querySelector('.loading-spinner');
-        loadingSpinner.style.display = 'block';
+        if (!loadingSpinner) return;
         
         try {
-            showToast('Starting upscale...');
+            loadingSpinner.style.display = 'block';
+            showToast('Starting upscale process...');
+            
             const response = await fetch(
                 `https://api.paxsenix.biz.id/tools/upscale?url=${encodeURIComponent(imageData.imageUrl)}`,
                 {
@@ -476,8 +500,16 @@ function createImageCard(imageData) {
                     imageUrl: upscaledUrl,
                     isUpscaled: true
                 };
+                
+                // Create and insert upscaled card
                 const upscaledCard = createImageCard(upscaledData);
                 card.parentNode.insertBefore(upscaledCard, card.nextSibling);
+                
+                // Save to history
+                const history = loadImageHistory();
+                history.unshift(upscaledData);
+                localStorage.setItem('stormyImageHistory', JSON.stringify(history));
+                
                 showToast('Image upscaled successfully! ✨');
             }
         } catch (error) {
@@ -485,6 +517,42 @@ function createImageCard(imageData) {
             showToast('Failed to upscale image 😔');
         } finally {
             loadingSpinner.style.display = 'none';
+        }
+    });
+
+    // Fullscreen button handler
+    card.querySelector('.fullscreen-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const modal = document.querySelector('.image-modal');
+        const modalImg = document.getElementById('modalImage');
+        
+        if (modal && modalImg) {
+            modalImg.src = imageData.imageUrl;
+            modalImg.alt = imageData.prompt;
+            modal.classList.add('visible');
+            
+            // Close modal when clicking outside or on close button
+            const closeModal = () => {
+                modal.classList.remove('visible');
+                modalImg.src = '';
+            };
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            
+            modal.querySelector('.modal-close')?.addEventListener('click', closeModal);
+            
+            // Add keyboard support
+            const handleKeyboard = (e) => {
+                if (e.key === 'Escape') closeModal();
+            };
+            document.addEventListener('keydown', handleKeyboard);
+            modal.addEventListener('transitionend', () => {
+                if (!modal.classList.contains('visible')) {
+                    document.removeEventListener('keydown', handleKeyboard);
+                }
+            });
         }
     });
 
