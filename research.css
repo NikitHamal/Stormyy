@@ -37,6 +37,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .header-left {
@@ -46,6 +48,74 @@ body {
     background-clip: text;
     color: transparent;
     text-shadow: 0 0 15px var(--primary-glow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-button {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-2px);
+}
+
+.back-button svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.research-title {
+    color: var(--text-light);
+    font-size: 1.2rem;
+    margin-left: 0.5rem;
+}
+
+.title-input {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-light);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 1rem;
+    max-width: 300px;
+    transition: all 0.3s ease;
+}
+
+.title-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.start-research {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.start-research:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px var(--primary-glow);
 }
 
 .user-info {
@@ -663,12 +733,40 @@ body {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
+
+    .back-button {
+        width: 32px;
+        height: 32px;
+    }
+
+    .back-button svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .research-title {
+        font-size: 1rem;
+    }
+
+    .title-input {
+        max-width: 200px;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .start-research {
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+    }
 }
 
 /* Additional small screen optimizations */
 @media (max-width: 480px) {
     .header {
         padding: 0.6rem 0.8rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
     }
 
     .header-left {
@@ -775,6 +873,14 @@ body {
     .ai-response code {
         font-size: 0.85rem;
         padding: 0.2rem 0.4rem;
+    }
+
+    .title-input {
+        max-width: 100%;
+    }
+
+    .header-right {
+        justify-content: space-between;
     }
 }
 

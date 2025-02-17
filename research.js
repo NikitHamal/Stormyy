@@ -1,3 +1,38 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const titleSetup = document.getElementById('titleSetup');
+    const titleInput = titleSetup.querySelector('.title-input');
+    const startResearchBtn = titleSetup.querySelector('.start-research');
+    const currentTitle = document.getElementById('currentTitle');
+
+    // Check if there's already a research topic
+    const currentTopic = sessionStorage.getItem('researchTopic');
+    if (currentTopic) {
+        showResearchTitle(currentTopic);
+    }
+
+    startResearchBtn.addEventListener('click', function() {
+        const topic = titleInput.value.trim();
+        if (topic) {
+            showResearchTitle(topic);
+            sessionStorage.setItem('researchTopic', topic);
+            // Start your research process here
+            // startResearch(topic);
+        }
+    });
+
+    titleInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            startResearchBtn.click();
+        }
+    });
+
+    function showResearchTitle(topic) {
+        titleSetup.style.display = 'none';
+        currentTitle.textContent = topic;
+        currentTitle.style.display = 'block';
+    }
+});
+
 class ResearchManager {
             constructor() {
                 this.apiEndpoints = {
