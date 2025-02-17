@@ -1,60 +1,131 @@
-// Add iOS detection
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const isIOSSafari = isIOS && isSafari;
 
-// Initialize audio context with iOS compatibility
-function initAudioContext() {
-    // ...existing code...
-    
-    // iOS requires AudioContext to be initialized on user interaction
-    if (isIOSSafari) {
-        const resumeAudio = () => {
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            document.removeEventListener('touchstart', resumeAudio);
-            document.removeEventListener('click', resumeAudio);
-        };
-        document.addEventListener('touchstart', resumeAudio);
-        document.addEventListener('click', resumeAudio);
-    }
-    
-    // ...existing code...
-}
+let audioContext = null;
+let isSpeechInitialized = false;
 
-// Handle iOS microphone permissions
-async function requestMicrophoneAccess() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        return stream;
-    } catch (error) {
-        if (isIOSSafari) {
-            console.warn('iOS Safari requires microphone permission via Settings');
-            // Show user instruction for iOS settings
-            showIOSPermissionInstructions();
-        }
-        throw error;
-    }
-}
+// Initialize audio on first user interaction
+function initAudioForIOS() {
+    if (!isIOSSafari) return;
 
-// Initialize speech synthesis with iOS workaround
-function initSpeechSynthesis() {
-    if (isIOSSafari) {
-        // iOS Safari requires user interaction to start speech
-        const startSpeech = () => {
-            // Create and play a silent utterance to initialize speech
+    const initOnInteraction = async () => {
+        try {
+            // Create audio context on user interaction
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            await audioContext.resume();
+
+            // Initialize speech synthesis
             const utterance = new SpeechSynthesisUtterance('');
             utterance.volume = 0;
             speechSynthesis.speak(utterance);
-            document.removeEventListener('touchstart', startSpeech);
-            document.removeEventListener('click', startSpeech);
-        };
-        document.addEventListener('touchstart', startSpeech);
-        document.addEventListener('click', startSpeech);
-    }
-    // ...existing code...
+            
+            isSpeechInitialized = true;
+            
+            // Remove listeners after successful initialization
+            document.removeEventListener('touchstart', initOnInteraction);
+            document.removeEventListener('click', initOnInteraction);
+        } catch (error) {
+            console.error('Failed to initialize audio:', error);
+        }
+    };
+
+    document.addEventListener('touchstart', initOnInteraction);
+    document.addEventListener('click', initOnInteraction);
 }
+
+// Handle microphone access with proper iOS support
+async function startVoiceInput() {
+    if (isIOSSafari && !isSpeechInitialized) {
+        showIOSPermissionInstructions();
+        return false;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: true,
+            video: false
+        });
+        
+        // Additional iOS specific stream handling
+        if (isIOSSafari) {
+            const audioTracks = stream.getAudioTracks();
+            if (audioTracks.length > 0) {
+                audioTracks[0].onended = () => {
+                    console.log('Audio track ended');
+                    // Handle track end
+                };
+            }
+        }
+        
+        return stream;
+    } catch (error) {
+        if (error.name === 'NotAllowedError' && isIOSSafari) {
+            showIOSPermissionInstructions();
+        } else {
+            console.error('Microphone access error:', error);
+        }
+        return false;
+    }
+}
+
+// Enhanced speech synthesis for iOS
+function speak(text) {
+    if (!isSpeechInitialized && isIOSSafari) {
+        const speakOnInteraction = () => {
+            performSpeak(text);
+            document.removeEventListener('touchstart', speakOnInteraction);
+            document.removeEventListener('click', speakOnInteraction);
+        };
+        
+        document.addEventListener('touchstart', speakOnInteraction);
+        document.addEventListener('click', speakOnInteraction);
+        return;
+    }
+    
+    performSpeak(text);
+}
+
+function performSpeak(text) {
+    if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // iOS specific utterance settings
+    if (isIOSSafari) {
+        utterance.onstart = () => console.log('Speech started');
+        utterance.onend = () => console.log('Speech ended');
+        utterance.onerror = (event) => console.error('Speech error:', event);
+    }
+
+    speechSynthesis.speak(utterance);
+}
+
+// Initialize everything
+document.addEventListener('DOMContentLoaded', () => {
+    if (isIOSSafari) {
+        initAudioForIOS();
+        // Show initial instruction for iOS users
+        const instructions = document.createElement('div');
+        instructions.className = 'ios-instruction';
+        instructions.textContent = 'Tap anywhere to enable voice features';
+        document.body.appendChild(instructions);
+        
+        // Remove instruction after first interaction
+        const removeInstruction = () => {
+            instructions.remove();
+            document.removeEventListener('touchstart', removeInstruction);
+            document.removeEventListener('click', removeInstruction);
+        };
+        document.addEventListener('touchstart', removeInstruction);
+        document.addEventListener('click', removeInstruction);
+    }
+});
 
 // Add iOS permission instructions UI
 function showIOSPermissionInstructions() {

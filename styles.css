@@ -3290,3 +3290,40 @@ body {
 .dismiss-btn:hover {
     background: rgba(147, 51, 234, 0.5);
 }
+
+/* ...existing code... */
+
+.ios-instruction {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(147, 51, 234, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Ensure buttons are more tappable on iOS */
+button,
+.toolbar-icon,
+.nav-icon,
+.control-button {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Fix iOS double-tap zoom */
+* {
+    touch-action: manipulation;
+}
+
+/* Fix iOS audio slider */
+input[type="range"] {
+    -webkit-appearance: none;
+    background: transparent;
+}
