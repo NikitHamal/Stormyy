@@ -431,13 +431,7 @@ window.addEventListener('load', () => {
 const keyboardIcon = document.getElementById('keyboardIcon');
 
 keyboardIcon.addEventListener('click', () => {
-    if (isListening) {
-        // Stop listening if active
-        recognition.stop();
-    }
-    chatContainer.classList.toggle('visible');
-    keyboardIcon.classList.toggle('active');
-    
+    toggleChat();
     if (chatContainer.classList.contains('visible')) {
         userInput.focus();
     }
@@ -1760,7 +1754,7 @@ createRunes();
 // Add this function near the top of your script
 function initializeIOSAudio() {
     // Create and load a silent audio file for iOS
-    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
+    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
     silentAudio.load();
 
     // Play silent audio on first user interaction
@@ -1770,3 +1764,344 @@ function initializeIOSAudio() {
         }).catch(error => console.log('iOS audio init error:', error));
     }, { once: true });
 }
+
+// When opening chat input
+function showChat() {
+    const chatContainer = document.querySelector('.chat-container');
+    chatContainer.classList.add('visible');
+  }
+  
+  // When closing chat input
+  function hideChat() {
+    const chatContainer = document.querySelector('.chat-container');
+    chatContainer.classList.remove('visible');
+  }
+  
+  // Send button click handler
+  document.querySelector('.send-button').addEventListener('click', (e) => {
+    e.preventDefault();
+    hideChat();
+    
+    // Add your message sending logic here
+    const input = document.querySelector('.chat-input');
+    const message = input.value;
+    input.value = '';
+    
+    // After sending message, show interaction tools again
+    setTimeout(() => {
+      const interactionToolbar = document.querySelector('.interaction-toolbar');
+      interactionToolbar.style.opacity = '1';
+      interactionToolbar.style.bottom = '60px';
+    }, 300);
+  });
+  
+  // Toggle chat visibility (attach this to your chat trigger button)
+  function toggleChat() {
+    const chatContainer = document.querySelector('.chat-container');
+    const interactionToolbar = document.querySelector('.interaction-toolbar');
+    
+    if (chatContainer.classList.contains('visible')) {
+        chatContainer.classList.remove('visible');
+        interactionToolbar.style.opacity = '1';
+        interactionToolbar.style.bottom = '60px';
+    } else {
+        chatContainer.classList.add('visible');
+        interactionToolbar.style.opacity = '0';
+        interactionToolbar.style.bottom = '-100px';
+    }
+  }
+
+// Add this at the beginning of your script
+document.addEventListener('DOMContentLoaded', () => {
+  // Start reveal animation
+  const revealAnimation = document.getElementById('revealAnimation');
+  const orbContainer = document.getElementById('orb-container');
+  
+  // Create sparkles
+  for (let i = 0; i < 20; i++) {
+    createRevealSparkle();
+  }
+  
+  // Create magical runes
+  for (let i = 0; i < 8; i++) {
+    createRevealRune();
+  }
+  
+  // Create energy waves
+  for (let i = 0; i < 3; i++) {
+    createRevealWave(i);
+  }
+  
+  // Reveal the orb
+  setTimeout(() => {
+    orbContainer.classList.add('revealed');
+    revealAnimation.style.opacity = '0';
+    
+    // Remove reveal animation element after it fades out
+    setTimeout(() => {
+      revealAnimation.remove();
+    }, 1500);
+  }, 500);
+});
+
+function createRevealSparkle() {
+  const sparkle = document.createElement('div');
+  sparkle.className = 'reveal-sparkle';
+  
+  // Random position around the center
+  const angle = Math.random() * Math.PI * 2;
+  const distance = 100 + Math.random() * 100;
+  const x = Math.cos(angle) * distance;
+  const y = Math.sin(angle) * distance;
+  
+  sparkle.style.left = `calc(50% + ${x}px)`;
+  sparkle.style.top = `calc(50% + ${y}px)`;
+  sparkle.style.animationDelay = `${Math.random() * 1.5}s`;
+  
+  document.getElementById('revealAnimation').appendChild(sparkle);
+  
+  // Remove sparkle after animation
+  setTimeout(() => sparkle.remove(), 2000);
+}
+
+function createRevealRune() {
+  const rune = document.createElement('div');
+  rune.className = 'reveal-rune';
+  
+  // Random position around the center
+  const angle = Math.random() * Math.PI * 2;
+  const distance = 150 + Math.random() * 100;
+  const x = Math.cos(angle) * distance;
+  const y = Math.sin(angle) * distance;
+  
+  rune.style.left = `calc(50% + ${x}px)`;
+  rune.style.top = `calc(50% + ${y}px)`;
+  rune.style.animationDelay = `${Math.random()}s`;
+  
+  document.getElementById('revealAnimation').appendChild(rune);
+  
+  // Remove rune after animation
+  setTimeout(() => rune.remove(), 2500);
+}
+
+function createRevealWave(index) {
+  const wave = document.createElement('div');
+  wave.className = 'reveal-wave';
+  
+  wave.style.left = '50%';
+  wave.style.top = '50%';
+  wave.style.transform = 'translate(-50%, -50%)';
+  wave.style.animationDelay = `${index * 0.3}s`;
+  
+  document.getElementById('revealAnimation').appendChild(wave);
+  
+  // Remove wave after animation
+  setTimeout(() => wave.remove(), 2500);
+}
+
+// Add these variables at the top of your script
+let currentTheme = localStorage.getItem('theme') || 'default';
+let snowflakeInterval;
+let fireworkInterval;
+let leafInterval;
+let petalInterval;
+let sunrayInterval;
+
+// Add theme initialization
+function initializeTheme() {
+  const body = document.body;
+  body.classList.add(`theme-${currentTheme}`);
+  
+  // Clear any existing effects
+  clearThemeEffects();
+  
+  // Start theme-specific effects
+  switch(currentTheme) {
+    case 'newyear':
+      startFireworks();
+      break;
+    case 'summer':
+      startSummerEffects();
+      break;
+    case 'winter':
+      startWinterEffects();
+      break;
+    case 'leafy':
+      startLeafyEffects();
+      break;
+    case 'sakura':
+      startSakuraEffects();
+      break;
+  }
+}
+
+// Add these new effect functions
+function clearThemeEffects() {
+  clearInterval(snowflakeInterval);
+  clearInterval(fireworkInterval);
+  clearInterval(leafInterval);
+  clearInterval(petalInterval);
+  clearInterval(sunrayInterval);
+  
+  // Remove all theme-specific elements
+  document.querySelectorAll('.snowflake, .firework, .leaf, .petal, .sun-ray').forEach(el => el.remove());
+}
+
+function startFireworks() {
+  const container = document.querySelector('.magical-background');
+  
+  function createFirework() {
+    const firework = document.createElement('div');
+    firework.className = 'firework';
+    firework.style.left = `${Math.random() * 100}%`;
+    firework.style.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+    container.appendChild(firework);
+    
+    // Create multiple particles for each firework
+    for(let i = 0; i < 10; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'firework-particle';
+      particle.style.backgroundColor = firework.style.color;
+      firework.appendChild(particle);
+    }
+    
+    setTimeout(() => firework.remove(), 2000);
+  }
+  
+  fireworkInterval = setInterval(createFirework, 1000);
+}
+
+function startSummerEffects() {
+  const container = document.querySelector('.magical-background');
+  
+  function createSunRay() {
+    const ray = document.createElement('div');
+    ray.className = 'sun-ray';
+    ray.style.left = `${Math.random() * 100}%`;
+    ray.style.top = `${Math.random() * 100}%`;
+    ray.style.transform = `rotate(${Math.random() * 360}deg)`;
+    container.appendChild(ray);
+    
+    setTimeout(() => ray.remove(), 4000);
+  }
+  
+  sunrayInterval = setInterval(createSunRay, 200);
+}
+
+function startWinterEffects() {
+  const container = document.querySelector('.magical-background');
+  
+  function createSnowflake() {
+    const snowflake = document.createElement('div');
+    snowflake.className = 'snowflake';
+    snowflake.style.left = `${Math.random() * 100}%`;
+    snowflake.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    snowflake.style.opacity = Math.random();
+    snowflake.style.transform = `scale(${Math.random() * 0.5 + 0.5})`;
+    container.appendChild(snowflake);
+    
+    setTimeout(() => snowflake.remove(), 5000);
+  }
+  
+  // Create more snowflakes
+  snowflakeInterval = setInterval(createSnowflake, 50);
+}
+
+function startLeafyEffects() {
+  const container = document.querySelector('.magical-background');
+  
+  function createLeaf() {
+    const leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    leaf.style.left = `${Math.random() * 100}%`;
+    leaf.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    container.appendChild(leaf);
+    
+    setTimeout(() => leaf.remove(), 10000);
+  }
+  
+  leafInterval = setInterval(createLeaf, 300);
+}
+
+function startSakuraEffects() {
+  const container = document.querySelector('.magical-background');
+  
+  function createPetal() {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    petal.style.left = `${Math.random() * 100}%`;
+    petal.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    container.appendChild(petal);
+    
+    setTimeout(() => petal.remove(), 10000);
+  }
+  
+  petalInterval = setInterval(createPetal, 200);
+}
+
+// Update theme switching code
+function switchTheme(newTheme) {
+  const body = document.body;
+  
+  // Remove old theme
+  body.classList.remove(`theme-${currentTheme}`);
+  
+  // Clear current effects
+  clearThemeEffects();
+  
+  // Apply new theme
+  currentTheme = newTheme;
+  body.classList.add(`theme-${currentTheme}`);
+  
+  // Start new theme effects
+  initializeTheme();
+  
+  // Save preference
+  localStorage.setItem('theme', currentTheme);
+}
+
+// Theme switcher functionality
+const themeSwitcher = document.getElementById('themeSwitcher');
+const themeMenu = document.getElementById('themeMenu');
+
+// Toggle theme menu when clicking the theme switcher
+themeSwitcher.addEventListener('click', () => {
+  themeMenu.classList.toggle('active');
+});
+
+// Close theme menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!themeMenu.contains(e.target) && !themeSwitcher.contains(e.target)) {
+    themeMenu.classList.remove('active');
+  }
+});
+
+// Handle theme selection
+const themeOptions = document.querySelectorAll('.theme-option');
+themeOptions.forEach(option => {
+  option.addEventListener('click', () => {
+    const newTheme = option.dataset.theme;
+    
+    // Update active state in menu
+    themeOptions.forEach(opt => opt.classList.remove('active'));
+    option.classList.add('active');
+    
+    // Switch theme
+    switchTheme(newTheme);
+    
+    // Close menu
+    themeMenu.classList.remove('active');
+  });
+});
+
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', () => {
+  // Set initial theme
+  initializeTheme();
+  
+  // Mark active theme in menu
+  const activeThemeOption = document.querySelector(`.theme-option[data-theme="${currentTheme}"]`);
+  if (activeThemeOption) {
+    activeThemeOption.classList.add('active');
+  }
+});

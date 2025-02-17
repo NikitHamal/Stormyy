@@ -1,646 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat History</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: rgb(147, 51, 234);
-      --primary-dark: rgb(126, 34, 206);
-      --bg-dark: rgb(20, 20, 20);
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #000;
-      font-family: 'Poppins', system-ui, sans-serif;
-      color: white;
-      overflow-x: hidden;
-      perspective: 1000px;
-      line-height: 1.5;
-    }
-
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 64px;
-      background: rgba(147, 51, 234, 0.15);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      z-index: 1000;
-      border-bottom: 1px solid rgba(167, 71, 254, 0.2);
-      box-shadow: 0 4px 30px rgba(147, 51, 234, 0.15);
-      justify-content: space-between;
-    }
-
-    .back-button {
-      background: rgba(147, 51, 234, 0.1);
-      border: 1px solid rgba(147, 51, 234, 0.2);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 15px;
-      padding: 8px 16px;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-
-    .back-button:hover {
-      background: rgba(147, 51, 234, 0.2);
-      transform: translateY(-1px);
-    }
-
-    .back-button:active {
-      transform: translateY(1px);
-    }
-
-    .chat-container {
-      max-width: 850px;
-      margin: 84px auto 24px;
-      padding: 24px;
-      position: relative;
-      background: rgba(20, 20, 20, 0.6);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 24px;
-      border: 1px solid rgba(167, 71, 254, 0.15);
-      box-shadow: 0 8px 32px rgba(147, 51, 234, 0.15);
-    }
-
-    .chat-message {
-      padding: 24px;
-      max-width: 100%;
-      transition: background-color 0.2s;
-      border-radius: 0;
-      border: none;
-      margin: 0;
-    }
-
-    .chat-message:hover {
-      background-color: rgba(255, 255, 255, 0.02);
-    }
-
-    .user-message {
-      background: rgba(52, 53, 65, 0.7);
-    }
-
-    .bot-message {
-      background: rgba(68, 70, 84, 0.7);
-    }
-
-    .timestamp {
-      font-size: 12px;
-      opacity: 0.6;
-      margin-top: 8px;
-      font-weight: 500;
-    }
-
-    .magical-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background: radial-gradient(circle at center, 
-        rgba(40, 0, 80, 0.8) 0%,
-        rgba(20, 0, 40, 1) 100%);
-      overflow: hidden;
-    }
-
-    .magical-mist {
-      position: absolute;
-      width: 150%;
-      height: 150%;
-      background: linear-gradient(45deg,
-        rgba(147, 51, 234, 0.05) 0%,
-        rgba(167, 71, 254, 0.05) 25%,
-        rgba(147, 51, 234, 0.05) 50%,
-        rgba(187, 91, 254, 0.05) 75%,
-        rgba(147, 51, 234, 0.05) 100%);
-      filter: blur(50px);
-      animation: mistFlow 40s linear infinite;
-      opacity: 0.8;
-    }
-
-    .scroll-indicator {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      width: 48px;
-      height: 48px;
-      background: rgba(147, 51, 234, 0.2);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid rgba(167, 71, 254, 0.2);
-      box-shadow: 0 4px 20px rgba(147, 51, 234, 0.2);
-    }
-
-    .scroll-indicator.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .scroll-indicator:hover {
-      transform: translateY(-2px) scale(1.05);
-      background: rgba(147, 51, 234, 0.3);
-    }
-
-    @keyframes messageSlide {
-      from { 
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to { 
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes mistFlow {
-      0% { transform: translate(-25%, -25%) rotate(0deg); }
-      100% { transform: translate(-25%, -25%) rotate(360deg); }
-    }
-
-    @media (max-width: 768px) {
-      .chat-container {
-        margin: 74px 12px 12px;
-        padding: 16px;
-      }
-
-      .chat-message {
-        max-width: 90%;
-        padding: 12px 16px;
-      }
-
-      .header {
-        padding: 0 16px;
-      }
-    }
-
-    /* Message content styling */
-    .message-content {
-      max-width: 780px;
-      margin: 0 auto;
-      font-size: 15px;
-      line-height: 1.6;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    /* Loading indicator */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      width: fit-content;
-      margin: 12px 0;
-    }
-
-    .typing-dot {
-      width: 8px;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      animation: typingBounce 1s infinite;
-    }
-
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes typingBounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-4px); }
-    }
-
-    .message-header {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .message-actions {
-      display: flex;
-      gap: 8px;
-      opacity: 0;
-      transition: opacity 0.2s;
-      position: absolute;
-      right: 16px;
-      top: 16px;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 4px;
-      border-radius: 8px;
-      backdrop-filter: blur(4px);
-    }
-
-    .chat-message:hover .message-actions {
-      opacity: 1;
-    }
-
-    .message-action-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 6px;
-      padding: 4px 8px;
-      color: white;
-      cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
-    }
-
-    .message-action-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .message-reactions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .reaction {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .reaction:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .date-separator {
-      text-align: center;
-      margin: 24px 0;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-    }
-
-    .search-container {
-      position: fixed;
-      top: 64px;
-      left: 0;
-      right: 0;
-      padding: 12px 24px;
-      background: rgba(20, 20, 20, 0.8);
-      backdrop-filter: blur(12px);
-      display: flex;
-      gap: 12px;
-      z-index: 900;
-      transform: translateY(-100%);
-      transition: transform 0.3s;
-    }
-
-    .search-container.visible {
-      transform: translateY(0);
-    }
-
-    .search-input {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 8px 16px;
-      color: white;
-      font-size: 14px;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .message-highlight {
-      background: rgba(147, 51, 234, 0.3);
-      border-radius: 2px;
-      padding: 0 2px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .action-btn {
-      background: rgba(147, 51, 234, 0.15);
-      border: 1px solid rgba(147, 51, 234, 0.2);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-    }
-
-    .action-btn:hover {
-      background: rgba(147, 51, 234, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .action-btn.danger {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    .action-btn.danger:hover {
-      background: rgba(239, 68, 68, 0.25);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 14px;
-      z-index: 1000;
-      opacity: 0;
-      transition: all 0.3s;
-    }
-
-    .toast.visible {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      opacity: 0.6;
-    }
-
-    /* Add new styles */
-    .app-container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-    }
-
-    .sidebar {
-      width: 260px;
-      background: rgba(32, 33, 35, 0.95);
-      backdrop-filter: blur(16px);
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding-top: 64px;
-    }
-
-    .new-chat-btn {
-      margin: 16px;
-      padding: 12px;
-      background: var(--primary);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-    }
-
-    .new-chat-btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .conversations-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-    }
-
-    .conversation-item {
-      padding: 12px 16px;
-      margin: 2px 8px;
-      border-radius: 8px;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .conversation-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .conversation-item.active {
-      background: rgba(147, 51, 234, 0.15);
-      color: white;
-    }
-
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding-top: 64px;
-    }
-
-    .messages-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      padding-bottom: 120px;
-    }
-
-    .input-container {
-      position: fixed;
-      bottom: 0;
-      left: 260px; /* Sidebar width */
-      right: 0;
-      padding: 24px;
-      background: rgba(20, 20, 20, 0.95);
-      backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .input-wrapper {
-      max-width: 780px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .prompt-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 16px;
-      color: white;
-      font-family: 'Poppins', sans-serif;
-      font-size: 15px;
-      resize: none;
-      min-height: 24px;
-      max-height: 200px;
-      transition: all 0.3s;
-      padding-right: 40px;
-    }
-
-    .prompt-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .send-button {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      background: transparent;
-      border: none;
-      color: var(--primary);
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 50%;
-      transition: all 0.2s;
-      opacity: 0.7;
-    }
-
-    .send-button:hover {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-
-    .model-selector {
-      position: absolute;
-      top: 64px;
-      right: 24px;
-      background: rgba(20, 20, 20, 0.8);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(167, 71, 254, 0.2);
-      border-radius: 8px;
-      padding: 8px;
-      z-index: 100;
-    }
-
-    .model-badge {
-      font-size: 12px;
-      padding: 2px 8px;
-      background: rgba(147, 51, 234, 0.1);
-      border: 1px solid rgba(147, 51, 234, 0.2);
-      border-radius: 4px;
-      color: rgba(255, 255, 255, 0.8);
-      margin-left: auto;
-    }
-
-    .error-message {
-      background: rgba(239, 68, 68, 0.15) !important;
-      border-color: rgba(239, 68, 68, 0.2) !important;
-      color: #fff;
-      margin: 8px 0;
-    }
-
-    .error-message .message-content {
-      display: flex;
-      align-items: center;
-    }
-
-    .chat-message + .chat-message[data-role="assistant"],
-    .chat-message + .chat-message[data-role="user"] {
-      margin-top: 4px;
-    }
-
-    .chat-message:not(:first-child)[data-role="assistant"],
-    .chat-message:not(:first-child)[data-role="user"] {
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-
-    .model-badge {
-      font-size: 12px;
-      padding: 2px 6px;
-      background: rgba(147, 51, 234, 0.15);
-      border-radius: 4px;
-      margin-left: auto;
-    }
-
-    .timestamp {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      margin-top: 8px;
-    }
-
-    .message-actions {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      opacity: 0;
-      transition: opacity 0.2s;
-      display: flex;
-      gap: 4px;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 4px;
-      border-radius: 6px;
-      backdrop-filter: blur(4px);
-    }
-
-    .chat-message:hover .message-actions {
-      opacity: 1;
-    }
-
-    .message-content pre {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
-      padding: 16px;
-      overflow-x: auto;
-      margin: 12px 0;
-    }
-
-    .message-content code {
-      font-family: 'Fira Code', monospace;
-      font-size: 14px;
-    }
-
-    .message-content p {
-      margin: 0 0 12px 0;
-    }
-
-    .message-content p:last-child {
-      margin-bottom: 0;
-    }
-  </style>
+  <link rel="stylesheet" href="chats.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
@@ -653,8 +18,15 @@
       <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
         <path d="M20,11H7.83l5.59-5.59L12,4l-8,8l8,8l1.41-1.41L7.83,13H20v-2z"/>
       </svg>
-      Back to Stormy
     </a>
+
+    <button class="sidebar-toggle-header" aria-label="Toggle Sidebar" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+      </svg>
+    </button>
+    
+    
     <div class="header-actions">
       <button class="action-btn" onclick="toggleSearch()">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
@@ -677,21 +49,60 @@
   </div>
 
   <div class="app-container">
-    <div class="sidebar">
-      <button class="new-chat-btn" onclick="startNewConversation()">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-        New Chat
-      </button>
-      <div class="conversations-list" id="conversationsList">
-        <!-- Conversations will be loaded here -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-chat-btn" onclick="startNewConversation()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          New Chat
+        </button>
+        <!-- Add settings button -->
+        <button class="settings-btn" aria-label="Settings" onclick="openSettings()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="sidebar-sections">
+        <div class="conversations-section">
+          <div class="section-header">Recent Conversations</div>
+          <div class="conversations-list" id="conversationsList">
+            <!-- Conversations loaded here -->
+          </div>
+        </div>
+        
+        <div class="sidebar-footer">
+          <button class="clear-data-btn" onclick="deleteAllMessages()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+            Clear All Data
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="main-content">
       <div class="messages-container" id="messagesContainer">
-        <!-- Messages will be loaded here -->
+        <!-- Welcome message shown when no conversation is selected -->
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-content">
+            <h1>Welcome to AI Chat</h1>
+            <p>Start a new conversation or try one of these examples:</p>
+            <div class="example-prompts">
+              <button class="example-prompt" onclick="useExamplePrompt(this)">
+                "Explain quantum computing in simple terms"
+              </button>
+              <button class="example-prompt" onclick="useExamplePrompt(this)">
+                "Help me write a professional email"
+              </button>
+              <button class="example-prompt" onclick="useExamplePrompt(this)">
+                "Give me creative writing prompts"
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="input-container">
@@ -702,24 +113,18 @@
             placeholder="Send a message..."
             rows="1"
             onInput="autoResize(this)"
+            aria-label="Message input"
           ></textarea>
-          <button class="send-button" onclick="sendMessage()">
+          <button class="send-button" onclick="sendMessage()" aria-label="Send message">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
           </button>
         </div>
+        <div class="input-footer">
+          <span class="input-tip">Press ⌘ + Enter to send</span>
+        </div>
       </div>
-    </div>
-
-    <div class="model-selector">
-      <select id="modelSelect" onchange="changeModel(this.value)">
-        <option value="gemini-2.0-flash-thinking-exp">Gemini Pro</option>
-        <option value="duckassist">DuckAssist</option>
-        <option value="turboseek">TurboSeek</option>
-        <option value="aoyo">Aoyo</option>
-        <option value="felo">Felo</option>
-      </select>
     </div>
   </div>
 
@@ -731,430 +136,38 @@
 
   <div class="toast" id="toast"></div>
 
-  <script>
-    class ChatManager {
-      constructor() {
-        this.currentModel = 'gemini-2.0-flash-thinking-exp';
-        this.conversations = JSON.parse(localStorage.getItem('conversations') || '[]');
-        this.currentConversationId = null;
-        this.setupEventListeners();
-        this.loadConversations();
-      }
-
-      setupEventListeners() {
-        const promptInput = document.getElementById('promptInput');
-        promptInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            this.sendMessage(promptInput.value);
-            promptInput.value = '';
-          }
-        });
-      }
-
-      async startNewConversation() {
-        const conversation = {
-          id: Date.now().toString(),
-          title: 'Untitled',
-          messages: [],
-          model: this.currentModel,
-          timestamp: new Date().toISOString()
-        };
-
-        this.conversations.unshift(conversation);
-        this.currentConversationId = conversation.id;
-        this.saveConversations();
-        this.loadConversations();
-        this.loadMessages(conversation.id);
-      }
-
-      async sendMessage(text) {
-        if (!text.trim()) return;
-
-        const message = {
-          id: Date.now().toString(),
-          role: 'user',
-          content: text,
-          timestamp: new Date().toISOString()
-        };
-
-        const conversation = this.conversations.find(c => c.id === this.currentConversationId);
-        if (!conversation) return;
-
-        conversation.messages.push(message);
-        this.saveConversations();
-        this.displayMessage(message);
-
-        // If this is the first message, get a title suggestion
-        if (conversation.messages.length === 1) {
-          this.suggestTitle(text, conversation.id);
-        }
-
-        // Get AI response
-        await this.getAIResponse(text, conversation);
-      }
-
-      async getAIResponse(text, conversation) {
-        try {
-          let endpoint = 'https://api.paxsenix.biz.id/ai/';
-          
-          // Adjust endpoint based on model
-          switch(this.currentModel) {
-            case 'gemini-2.0-flash-thinking-exp':
-              endpoint += 'gemini';
-              break;
-            default:
-              endpoint += this.currentModel;
-          }
-
-          this.showTypingIndicator();
-
-          // Get conversation context (last 5 messages)
-          const context = conversation.messages
-            .slice(-5)
-            .map(m => ({
-              role: m.role,
-              parts: [{ text: m.content }]
-            }));
-
-          // Add current message
-          context.push({
-            role: 'user',
-            parts: [{ text }]
-          });
-
-          const requestBody = {
-            model: this.currentModel,
-            contents: context
-          };
-
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (!data || !data.ok) {
-            throw new Error('Invalid response from server');
-          }
-
-          const aiResponse = data.message?.[0]?.text;
-
-          if (!aiResponse) {
-            throw new Error('No valid response content found');
-          }
-
-          const aiMessage = {
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: aiResponse,
-            model: this.currentModel,
-            timestamp: new Date().toISOString()
-          };
-
-          conversation.messages.push(aiMessage);
-          this.saveConversations();
-          this.displayMessage(aiMessage);
-
-        } catch (error) {
-          console.error('AI response error:', error);
-          this.displayErrorMessage(`Failed to get AI response: ${error.message}`);
-        } finally {
-          this.hideTypingIndicator();
-        }
-      }
-
-      async suggestTitle(firstMessage, conversationId) {
-        try {
-          const response = await fetch('https://api.paxsenix.biz.id/ai/gemini', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'gemini-2.0-flash-thinking-exp',
-              contents: [{
-                role: 'user',
-                parts: [{
-                  text: `Generate a very short (max 4 words) title for a conversation that starts with this message: "${firstMessage}". Response format: just the title, nothing else.`
-                }]
-              }],
-              temperature: 0.7
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (!data || !data.ok) {
-            throw new Error('Invalid response from server');
-          }
-          
-          const titleResponse = data.message?.[0]?.text;
-          if (titleResponse) {
-            const title = titleResponse.trim().substring(0, 50);
-            const conversation = this.conversations.find(c => c.id === conversationId);
-            if (conversation) {
-              conversation.title = title;
-              this.saveConversations();
-              this.loadConversations();
-            }
-          } else {
-            throw new Error('No valid title suggestion received');
-          }
-        } catch (error) {
-          console.error('Title suggestion error:', error);
-          // Set a default title if suggestion fails
-          const conversation = this.conversations.find(c => c.id === conversationId);
-          if (conversation) {
-            conversation.title = 'New Conversation';
-            this.saveConversations();
-            this.loadConversations();
-          }
-        }
-      }
-
-      showTypingIndicator() {
-        const messagesContainer = document.getElementById('messagesContainer');
-        const typingIndicator = document.createElement('div');
-        typingIndicator.className = 'typing-indicator';
-        typingIndicator.innerHTML = `
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        `;
-        typingIndicator.id = 'typingIndicator';
-        messagesContainer.appendChild(typingIndicator);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-
-      hideTypingIndicator() {
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (typingIndicator) {
-          typingIndicator.remove();
-        }
-      }
-
-      displayErrorMessage(message) {
-        const messagesContainer = document.getElementById('messagesContainer');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'chat-message error-message';
-        errorDiv.innerHTML = `
-          <div class="message-content">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right: 8px;">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-            </svg>
-            ${message}
+  <!-- Add settings modal -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings</h2>
+        <button class="close-btn" onclick="closeSettings()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h3>Model Selection</h3>
+          <div class="model-options">
+            <div class="model-option">
+              <input type="radio" id="gemini" name="model" value="gemini-2.0-flash-thinking-exp" checked>
+              <label for="gemini">
+                <span class="model-name">Gemini Pro</span>
+                <span class="model-description">Fastest responses, good for general tasks</span>
+              </label>
+            </div>
+            <div class="model-option">
+              <input type="radio" id="duckassist" name="model" value="duckassist">
+              <label for="duckassist">
+                <span class="model-name">DuckAssist</span>
+                <span class="model-description">Better at research and factual queries</span>
+              </label>
+            </div>
+            <!-- Add other model options -->
           </div>
-        `;
-        messagesContainer.appendChild(errorDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+        </div>
+      </div>
+    </div>
+  </div>
 
-      displayMessage(message) {
-        const messagesContainer = document.getElementById('messagesContainer');
-        const lastMessage = messagesContainer.lastElementChild;
-        const shouldGroup = lastMessage && 
-          lastMessage.getAttribute('data-role') === message.role &&
-          Date.now() - new Date(message.timestamp).getTime() < 60000;
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${message.role}-message`;
-        messageDiv.setAttribute('data-role', message.role);
-        messageDiv.setAttribute('data-timestamp', message.timestamp);
-        
-        // Add message header (only for model badge)
-        if (message.model) {
-          const header = document.createElement('div');
-          header.className = 'message-header';
-          
-          const modelBadge = document.createElement('div');
-          modelBadge.className = 'model-badge';
-          modelBadge.textContent = message.model.split('-')[0];
-          header.appendChild(modelBadge);
-          messageDiv.appendChild(header);
-        }
-        
-        const content = document.createElement('div');
-        content.className = 'message-content';
-        content.innerHTML = marked.parse(message.content);
-        
-        // Add timestamp
-        const timestamp = document.createElement('div');
-        timestamp.className = 'timestamp';
-        timestamp.textContent = this.formatTimestamp(message.timestamp);
-        content.appendChild(timestamp);
-
-        messageDiv.appendChild(content);
-        
-        // Add message actions
-        const actions = document.createElement('div');
-        actions.className = 'message-actions';
-        actions.innerHTML = `
-          <button onclick="copyMessage('${message.id}')" class="message-action-btn">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-            </svg>
-          </button>
-        `;
-        messageDiv.appendChild(actions);
-
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-
-      formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-        if (date.toDateString() === now.toDateString()) return 'Today';
-        if (date.toDateString() === new Date(now - 86400000).toDateString()) return 'Yesterday';
-        
-        return date.toLocaleDateString();
-      }
-
-      loadConversations() {
-        const conversationsList = document.getElementById('conversationsList');
-        conversationsList.innerHTML = this.conversations.map(conv => `
-          <div class="conversation-item ${conv.id === this.currentConversationId ? 'active' : ''}"
-               onclick="chatManager.loadMessages('${conv.id}')">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-            </svg>
-            ${conv.title}
-          </div>
-        `).join('');
-      }
-
-      loadMessages(conversationId) {
-        this.currentConversationId = conversationId;
-        const conversation = this.conversations.find(c => c.id === conversationId);
-        if (!conversation) return;
-
-        const messagesContainer = document.getElementById('messagesContainer');
-        messagesContainer.innerHTML = '';
-        conversation.messages.forEach(message => this.displayMessage(message));
-        this.loadConversations(); // Refresh sidebar to show active state
-      }
-
-      changeModel(modelId) {
-        this.currentModel = modelId;
-        if (this.currentConversationId) {
-          const conversation = this.conversations.find(c => c.id === this.currentConversationId);
-          if (conversation) {
-            conversation.model = modelId;
-            this.saveConversations();
-          }
-        }
-      }
-
-      saveConversations() {
-        localStorage.setItem('conversations', JSON.stringify(this.conversations));
-      }
-    }
-
-    const chatManager = new ChatManager();
-    window.chatManager = chatManager;
-
-    // Utility functions
-    function autoResize(textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
-    }
-
-    function startNewConversation() {
-      chatManager.startNewConversation();
-    }
-
-    function changeModel(value) {
-      chatManager.changeModel(value);
-    }
-
-    function toggleSearch() {
-      const searchContainer = document.getElementById('searchContainer');
-      searchContainer.classList.toggle('visible');
-      if (searchContainer.classList.contains('visible')) {
-        searchContainer.querySelector('input').focus();
-      }
-    }
-
-    function searchMessages(query) {
-      const messages = document.querySelectorAll('.chat-message');
-      messages.forEach(message => {
-        const content = message.querySelector('.message-content').textContent;
-        if (content.toLowerCase().includes(query.toLowerCase())) {
-          message.style.display = 'flex';
-          highlightText(message, query);
-        } else {
-          message.style.display = 'none';
-        }
-      });
-    }
-
-    function highlightText(message, query) {
-      const content = message.querySelector('.message-content');
-      const text = content.textContent;
-      const highlightedText = text.replace(
-        new RegExp(query, 'gi'),
-        match => `<span class="message-highlight">${match}</span>`
-      );
-      content.innerHTML = highlightedText;
-    }
-
-    function deleteAllMessages() {
-      if (confirm('Are you sure you want to delete all conversations? This action cannot be undone.')) {
-        localStorage.removeItem('conversations');
-        window.location.reload(); // Reload the page to reset everything
-        showToast('All conversations cleared');
-      }
-    }
-
-    function showToast(message, duration = 3000) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('visible');
-      
-      setTimeout(() => {
-        toast.classList.remove('visible');
-      }, duration);
-    }
-
-    // Add this new function
-    function sendMessage() {
-      const promptInput = document.getElementById('promptInput');
-      const message = promptInput.value.trim();
-      if (message) {
-        chatManager.sendMessage(message);
-        promptInput.value = '';
-        promptInput.style.height = 'auto';
-      }
-    }
-
-    // Initialize the chat interface
-    document.addEventListener('DOMContentLoaded', () => {
-      // Start a new conversation if there are no existing ones
-      if (chatManager.conversations.length === 0) {
-        chatManager.startNewConversation();
-      } else {
-        // Load the most recent conversation
-        chatManager.loadMessages(chatManager.conversations[0].id);
-      }
-    });
-  </script>
+<script src="chats.js"></script>
 </body>
 </html>
