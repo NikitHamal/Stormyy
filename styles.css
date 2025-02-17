@@ -20,6 +20,9 @@ body {
 audio {
   width: 100%;
   max-width: 300px;
+  /* Fix iOS audio control styling */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Fix for iOS button styling */
@@ -27,6 +30,11 @@ button {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  /* Ensure buttons are more tappable on iOS */
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* Fix for iOS input styling */

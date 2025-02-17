@@ -925,6 +925,18 @@ sleepIcon.addEventListener('click', () => {
 async function handlePlayCommand(query) {
     console.log('Handling play command for:', query);
     
+    // Ensure audio is initialized for iOS
+    if (!isAudioInitialized) {
+        try {
+            await initializeIOSAudio();
+        } catch (error) {
+            console.error('Failed to initialize audio:', error);
+            speechBubble.textContent = "Please tap again to enable audio";
+            speechBubble.classList.add('active');
+            return;
+        }
+    }
+    
     // Show searching animation and message
     orbContainer.setAttribute('data-emotion', 'thinking');
     speechBubble.textContent = `Searching for "${query}"...`;
@@ -1141,11 +1153,13 @@ async function playSelectedTrack(videoId, title) {
         // Create audio player with the audio URL
         const audio = new Audio(audioUrl);
         audio.crossOrigin = "anonymous";
-        window.currentAudio = audio;
         
-        // iOS-specific loading
+        // iOS-specific setup
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
             await audio.load();
+            audio.playsinline = true;
+            audio.controls = true;
+            
             // Add play attempt with user interaction check
             const playAttempt = setInterval(() => {
                 audio.play()
@@ -1157,6 +1171,8 @@ async function playSelectedTrack(videoId, title) {
                     });
             }, 1000);
         }
+        
+        window.currentAudio = audio;
         
         // Add music controls
         updateMusicControls(audio, title);
@@ -1706,27 +1722,12 @@ function startListening() {
 
 // Update the speak function for better iOS compatibility
 function speak(text) {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
     // Cancel any ongoing speech
     speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    
-    // Try to use a female voice if available
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-        voice.name.includes('Female') || 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Google UK English Female')
-    );
-    
-    if (femaleVoice) {
-        utterance.voice = femaleVoice;
-    }
     
     // iOS-specific handling
     if (isIOS) {
@@ -1747,6 +1748,20 @@ function speak(text) {
         
         // Speak first chunk
         utterance.text = chunks[0];
+    } else {
+        utterance.text = text;
+    }
+    
+    // Select voice
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Google UK English Female')
+    );
+    
+    if (femaleVoice) {
+        utterance.voice = femaleVoice;
     }
     
     speechSynthesis.speak(utterance);
@@ -1849,18 +1864,29 @@ function createRunes() {
 createParticles();
 createRunes();
 
-// Add this function near the top of your script
+// Add these variables at the top
+let audioContext = null;
+let isAudioInitialized = false;
+
+// Add this function for iOS audio initialization
 function initializeIOSAudio() {
-    // Create and load a silent audio file for iOS
-    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
-    silentAudio.load();
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
-    // Play silent audio on first user interaction
-    document.addEventListener('touchstart', function initAudioContext() {
-        silentAudio.play().then(() => {
-            document.removeEventListener('touchstart', initAudioContext);
-        }).catch(error => console.log('iOS audio init error:', error));
-    }, { once: true });
+    // Create and play a silent buffer to unlock audio
+    const buffer = audioContext.createBuffer(1, 1, 22050);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+    
+    // Resume audio context
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    
+    isAudioInitialized = true;
 }
 
 // When opening chat input
@@ -2202,4 +2228,35 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activeThemeOption) {
     activeThemeOption.classList.add('active');
   }
+});
+
+// Add this to your initialization code
+document.addEventListener('DOMContentLoaded', () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    if (isIOS) {
+        // Show initial instruction for iOS users
+        const instructions = document.createElement('div');
+        instructions.className = 'ios-instruction';
+        instructions.textContent = 'Tap anywhere to enable voice features';
+        document.body.appendChild(instructions);
+        
+        // Initialize audio on first user interaction
+        document.addEventListener('touchstart', function initAudio() {
+            initializeIOSAudio();
+            instructions.remove();
+            document.removeEventListener('touchstart', initAudio);
+        }, { once: true });
+        
+        // Handle iOS-specific audio session
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && window.currentAudio) {
+                window.currentAudio.pause();
+            }
+        });
+    }
+    
+    // Initialize other features
+    initializeSpeechRecognition();
+    initializeSpeechSynthesis();
 });
