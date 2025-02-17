@@ -385,6 +385,20 @@ input {
   }
 }
 
+.eye {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+} 
+.eye-left {
+  left: 25%;
+}
+.eye-right {
+  right: 25%;
+}
+
+
 /* Update music controls styles */
 .music-controls {
   position: relative;

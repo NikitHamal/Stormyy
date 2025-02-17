@@ -23,29 +23,43 @@ const magicalOrb = document.querySelector('.magical-orb');
 
 // Toggle chat on orb click
 orbContainer.addEventListener('click', (e) => {
-  // Check if click is on a result item
-  const resultItem = e.target.closest('.result-item');
-  if (resultItem) {
-    // Prevent starting voice recognition
-    e.stopPropagation();
-    return;
-  }
-
-  if (!isDragging) {
-    if (!isListening && recognition) {
-      isListening = true;
-      recognition.start();
-      orbContainer.classList.add('listening');
-      speechBubble.classList.add('listening');
-      speechBubble.textContent = "I'm listening...";
-      chatContainer.classList.remove('visible');
-      keyboardIcon.classList.remove('active');
-    } else if (isListening) {
-      isListening = false;
-      recognition.stop();
+    // Check if click is on a result item
+    const resultItem = e.target.closest('.result-item');
+    if (resultItem) {
+        e.stopPropagation();
+        return;
     }
-    idleMessage.classList.remove('visible');
-  }
+
+    if (!isDragging) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        if (!isListening && recognition) {
+            // For iOS, we need to ensure audio context is ready
+            if (isIOS) {
+                initializeIOSAudio();
+            }
+            
+            try {
+                isListening = true;
+                recognition.start();
+                orbContainer.classList.add('listening');
+                speechBubble.classList.add('listening');
+                speechBubble.textContent = "I'm listening...";
+                chatContainer.classList.remove('visible');
+                keyboardIcon.classList.remove('active');
+            } catch (error) {
+                console.error('Recognition start error:', error);
+                // Handle iOS-specific errors
+                if (isIOS) {
+                    speechBubble.textContent = "Please tap again to start listening";
+                }
+            }
+        } else if (isListening) {
+            isListening = false;
+            recognition.stop();
+        }
+        idleMessage.classList.remove('visible');
+    }
 });
 
 // API configuration
@@ -95,13 +109,28 @@ function saveMessage(text, type) {
 let speechSynthesis = window.speechSynthesis;
 let voices = [];
 
-function loadVoices() {
-  voices = speechSynthesis.getVoices();
-}
-
-// Load voices when they're available
-if (speechSynthesis.onvoiceschanged !== undefined) {
-  speechSynthesis.onvoiceschanged = loadVoices;
+function initializeSpeechSynthesis() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // Initialize speech synthesis
+    speechSynthesis = window.speechSynthesis;
+    
+    // Load voices and handle iOS quirks
+    function loadVoices() {
+        voices = speechSynthesis.getVoices();
+        
+        if (isIOS && voices.length === 0) {
+            // iOS sometimes needs a moment to load voices
+            setTimeout(loadVoices, 100);
+        }
+    }
+    
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    // Initial load attempt
+    loadVoices();
 }
 
 // Add these variables at the top with other initializations
@@ -123,11 +152,28 @@ languageSelect.addEventListener('change', (e) => {
 });
 
 function initializeSpeechRecognition() {
+    // Check for iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = currentLanguage;
+        
+        // Add iOS-specific setup
+        if (isIOS) {
+            // Ensure shorter timeout for iOS
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            
+            // Handle iOS timeout differently
+            setTimeout(() => {
+                if (isListening) {
+                    recognition.stop();
+                }
+            }, 7000); // iOS has a shorter timeout
+        }
         
         recognition.onstart = () => {
             orbContainer.classList.add('listening');
@@ -1658,10 +1704,15 @@ function startListening() {
     // ... existing code ...
 }
 
-// The speak function remains in English
+// Update the speak function for better iOS compatibility
 function speak(text) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // Cancel any ongoing speech
+    speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US'; // Keep TTS in English
+    utterance.lang = 'en-US';
     utterance.rate = 1;
     utterance.pitch = 1;
     
@@ -1677,12 +1728,51 @@ function speak(text) {
         utterance.voice = femaleVoice;
     }
     
-    window.speechSynthesis.speak(utterance);
+    // iOS-specific handling
+    if (isIOS) {
+        // Break text into smaller chunks for iOS
+        const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
+        let currentChunk = 0;
+        
+        utterance.onend = () => {
+            currentChunk++;
+            if (currentChunk < chunks.length) {
+                const nextUtterance = new SpeechSynthesisUtterance(chunks[currentChunk]);
+                nextUtterance.voice = utterance.voice;
+                nextUtterance.rate = utterance.rate;
+                nextUtterance.pitch = utterance.pitch;
+                speechSynthesis.speak(nextUtterance);
+            }
+        };
+        
+        // Speak first chunk
+        utterance.text = chunks[0];
+    }
+    
+    speechSynthesis.speak(utterance);
 }
 
-// Initialize speech recognition on page load
+// Initialize everything on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeSpeechRecognition();
+    initializeSpeechSynthesis();
+    
+    // Check if running on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+        initializeIOSAudio();
+        
+        // Fix for iOS audio context
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        
+        // Ensure audio playback works on iOS
+        document.addEventListener('touchstart', function() {
+            if (window.currentAudio) {
+                window.currentAudio.load();
+            }
+        }, { once: true });
+    }
 });
 
 // Add this to handle voice commands
@@ -1764,7 +1854,7 @@ function initializeIOSAudio() {
     // Create and load a silent audio file for iOS
     const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
     silentAudio.load();
-
+    
     // Play silent audio on first user interaction
     document.addEventListener('touchstart', function initAudioContext() {
         silentAudio.play().then(() => {
