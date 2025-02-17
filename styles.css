@@ -3335,3 +3335,45 @@ input[type="range"] {
     -webkit-appearance: none;
     background: transparent;
 }
+
+/* iOS instruction styles */
+.ios-instruction {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(147, 51, 234, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* iOS audio player styles */
+audio::-webkit-media-controls-panel {
+    background: rgba(147, 51, 234, 0.1);
+}
+
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+    background-color: rgba(147, 51, 234, 0.2);
+    border-radius: 50%;
+}
+
+/* Ensure elements are tappable */
+button,
+.toolbar-icon,
+.nav-icon,
+.control-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 12px;
+}
+
+/* Prevent double-tap zoom */
+* {
+    touch-action: manipulation;
+}

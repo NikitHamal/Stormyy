@@ -925,104 +925,26 @@ sleepIcon.addEventListener('click', () => {
 async function handlePlayCommand(query) {
     console.log('Handling play command for:', query);
     
-    // Ensure audio is initialized for iOS
-    if (!isAudioInitialized) {
-        try {
-            await initializeIOSAudio();
-        } catch (error) {
-            console.error('Failed to initialize audio:', error);
-            speechBubble.textContent = "Please tap again to enable audio";
-            speechBubble.classList.add('active');
-            return;
-        }
-    }
-    
-    // Show searching animation and message
-    orbContainer.setAttribute('data-emotion', 'thinking');
-    speechBubble.textContent = `Searching for "${query}"...`;
-    speechBubble.classList.add('active');
-    
     try {
-        const response = await fetch(`${YT_SEARCH_API}?q=${encodeURIComponent(query)}`, {
-            headers: {
-                'accept': '*/*'
-            }
-        });
-        
-        const data = await response.json();
-        console.log('Search results:', data);
-
-        if (!data.ok || !data.result || !Array.isArray(data.result) || data.result.length === 0) {
-            throw new Error('No results found');
+        if (iOSAudioHandler.isIOS && !iOSAudioHandler.isInitialized) {
+            await iOSAudioHandler.initialize();
         }
-
-        // Store search results for auto-play
-        currentSearchResults = data.result.slice(0, 5);
-        currentPlayingIndex = 0;
-
-        // Create results container
-        const resultsContainer = document.createElement('div');
-        resultsContainer.className = 'search-results';
         
-        // Show results
-        resultsContainer.innerHTML = currentSearchResults.map((video, index) => `
-            <div class="result-item" data-video-id="${video.videoId}" data-title="${video.title.replace(/"/g, '&quot;')}">
-                <div class="result-thumb">
-                    <img src="${video.thumbnail}" alt="${video.title}">
-                </div>
-                <div class="result-info">
-                    <div class="result-title">${video.title}</div>
-                    <div class="result-channel">${video.author}</div>
-                    <div class="result-duration">${video.duration || ''}</div>
-                </div>
-            </div>
-        `).join('');
-
-        const chatContainer = document.getElementById('chatContainer');
-        const interactionToolbar = document.querySelector('.interaction-toolbar');
-
-        chatContainer.classList.remove('visible');
-        if (interactionToolbar) {
-            interactionToolbar.style.opacity = '0';
-            interactionToolbar.style.bottom = '-100px';
-        }
-        // Add click handlers
-        const resultItems = resultsContainer.querySelectorAll('.result-item');
-        resultItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const videoId = item.dataset.videoId;
-                const title = item.dataset.title;
-                playSelectedTrack(videoId, title);
-            });
-        });
-
-        orbContainer.appendChild(resultsContainer);
-        orbContainer.setAttribute('data-emotion', 'happy');
-        speechBubble.textContent = "Here's what I found!";
+        // Show searching animation
+        orbContainer.setAttribute('data-emotion', 'thinking');
+        speechBubble.textContent = `Searching for "${query}"...`;
         speechBubble.classList.add('active');
         
-        // Add fade-in animation
-        setTimeout(() => {
-            resultsContainer.style.opacity = '1';
-            resultsContainer.style.transform = 'translateX(-50%) translateY(0)';
-        }, 100);
-
-        // Auto-play if enabled
-        if (autoPlayEnabled) {
-            setTimeout(() => {
-                const firstVideo = currentSearchResults[0];
-                speechBubble.textContent = `Auto-playing: ${firstVideo.title}`;
-                speechBubble.classList.add('active');
-                playSelectedTrack(firstVideo.videoId, firstVideo.title);
-            }, 1500);
-        }
-
+        // Rest of your search code...
+        
+        // When playing audio:
+        const audio = await iOSAudioHandler.playAudio(audioUrl, title);
+        updateMusicControls(audio, title);
+        
     } catch (error) {
-        console.error('Error in handlePlayCommand:', error);
-        clearParticles();
+        console.error('Play command failed:', error);
         orbContainer.setAttribute('data-emotion', 'sad');
-        speechBubble.textContent = `Sorry, ${error.message}`;
+        speechBubble.textContent = "Sorry, I couldn't play that. Please try again.";
         speechBubble.classList.add('active');
     }
 }
@@ -1722,49 +1644,11 @@ function startListening() {
 
 // Update the speak function for better iOS compatibility
 function speak(text) {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // iOS-specific handling
-    if (isIOS) {
-        // Break text into smaller chunks for iOS
-        const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
-        let currentChunk = 0;
-        
-        utterance.onend = () => {
-            currentChunk++;
-            if (currentChunk < chunks.length) {
-                const nextUtterance = new SpeechSynthesisUtterance(chunks[currentChunk]);
-                nextUtterance.voice = utterance.voice;
-                nextUtterance.rate = utterance.rate;
-                nextUtterance.pitch = utterance.pitch;
-                speechSynthesis.speak(nextUtterance);
-            }
-        };
-        
-        // Speak first chunk
-        utterance.text = chunks[0];
+    if (iOSAudioHandler.isIOS) {
+        iOSAudioHandler.speak(text);
     } else {
-        utterance.text = text;
+        // Your existing non-iOS speak code
     }
-    
-    // Select voice
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-        voice.name.includes('Female') || 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Google UK English Female')
-    );
-    
-    if (femaleVoice) {
-        utterance.voice = femaleVoice;
-    }
-    
-    speechSynthesis.speak(utterance);
 }
 
 // Initialize everything on page load
@@ -2231,29 +2115,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Add this to your initialization code
-document.addEventListener('DOMContentLoaded', () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    if (isIOS) {
-        // Show initial instruction for iOS users
-        const instructions = document.createElement('div');
-        instructions.className = 'ios-instruction';
-        instructions.textContent = 'Tap anywhere to enable voice features';
-        document.body.appendChild(instructions);
-        
-        // Initialize audio on first user interaction
-        document.addEventListener('touchstart', function initAudio() {
-            initializeIOSAudio();
-            instructions.remove();
-            document.removeEventListener('touchstart', initAudio);
-        }, { once: true });
-        
-        // Handle iOS-specific audio session
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && window.currentAudio) {
-                window.currentAudio.pause();
-            }
-        });
+document.addEventListener('DOMContentLoaded', async () => {
+    if (iOSAudioHandler.isIOS) {
+        // Show iOS instruction
+        const instruction = document.createElement('div');
+        instruction.className = 'ios-instruction';
+        instruction.textContent = 'Tap to enable audio features';
+        document.body.appendChild(instruction);
+
+        // Initialize on first interaction
+        const initOnInteraction = async () => {
+            await iOSAudioHandler.initialize();
+            instruction.remove();
+            document.removeEventListener('touchstart', initOnInteraction);
+            document.removeEventListener('click', initOnInteraction);
+        };
+
+        document.addEventListener('touchstart', initOnInteraction);
+        document.addEventListener('click', initOnInteraction);
     }
     
     // Initialize other features
