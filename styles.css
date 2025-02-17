@@ -20,9 +20,6 @@ body {
 audio {
   width: 100%;
   max-width: 300px;
-  /* Fix iOS audio control styling */
-  -webkit-appearance: none;
-  appearance: none;
 }
 
 /* Fix for iOS button styling */
@@ -30,11 +27,6 @@ button {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-  /* Ensure buttons are more tappable on iOS */
-  min-width: 44px;
-  min-height: 44px;
 }
 
 /* Fix for iOS input styling */
@@ -3241,139 +3233,4 @@ body {
   box-shadow: 
     0 0 20px color-mix(in srgb, var(--theme-primary) 20%, transparent),
     inset 0 0 10px color-mix(in srgb, var(--theme-primary) 10%, transparent);
-}
-
-/* iOS Permission Instructions */
-.ios-permission-instructions {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-}
-
-.instructions-content {
-    background: rgba(147, 51, 234, 0.1);
-    backdrop-filter: blur(10px);
-    padding: 20px;
-    border-radius: 15px;
-    color: white;
-    max-width: 300px;
-    text-align: center;
-    border: 1px solid rgba(167, 71, 254, 0.2);
-    box-shadow: 
-        0 0 20px rgba(147, 51, 234, 0.2),
-        inset 0 0 10px rgba(147, 51, 234, 0.1);
-}
-
-.instructions-content h3 {
-    margin-bottom: 15px;
-}
-
-.instructions-content ol {
-    text-align: left;
-    margin: 15px 0;
-    padding-left: 20px;
-}
-
-.instructions-content li {
-    margin-bottom: 8px;
-}
-
-.dismiss-btn {
-    background: rgba(147, 51, 234, 0.3);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.dismiss-btn:hover {
-    background: rgba(147, 51, 234, 0.5);
-}
-
-/* ...existing code... */
-
-.ios-instruction {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(147, 51, 234, 0.2);
-    backdrop-filter: blur(10px);
-    padding: 20px;
-    border-radius: 15px;
-    color: white;
-    text-align: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Ensure buttons are more tappable on iOS */
-button,
-.toolbar-icon,
-.nav-icon,
-.control-button {
-    min-width: 44px;
-    min-height: 44px;
-}
-
-/* Fix iOS double-tap zoom */
-* {
-    touch-action: manipulation;
-}
-
-/* Fix iOS audio slider */
-input[type="range"] {
-    -webkit-appearance: none;
-    background: transparent;
-}
-
-/* iOS instruction styles */
-.ios-instruction {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(147, 51, 234, 0.2);
-    backdrop-filter: blur(10px);
-    padding: 20px;
-    border-radius: 15px;
-    color: white;
-    text-align: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* iOS audio player styles */
-audio::-webkit-media-controls-panel {
-    background: rgba(147, 51, 234, 0.1);
-}
-
-audio::-webkit-media-controls-play-button,
-audio::-webkit-media-controls-mute-button {
-    background-color: rgba(147, 51, 234, 0.2);
-    border-radius: 50%;
-}
-
-/* Ensure elements are tappable */
-button,
-.toolbar-icon,
-.nav-icon,
-.control-button {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 12px;
-}
-
-/* Prevent double-tap zoom */
-* {
-    touch-action: manipulation;
 }

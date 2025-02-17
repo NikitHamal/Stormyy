@@ -23,43 +23,29 @@ const magicalOrb = document.querySelector('.magical-orb');
 
 // Toggle chat on orb click
 orbContainer.addEventListener('click', (e) => {
-    // Check if click is on a result item
-    const resultItem = e.target.closest('.result-item');
-    if (resultItem) {
-        e.stopPropagation();
-        return;
-    }
+  // Check if click is on a result item
+  const resultItem = e.target.closest('.result-item');
+  if (resultItem) {
+    // Prevent starting voice recognition
+    e.stopPropagation();
+    return;
+  }
 
-    if (!isDragging) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        
-        if (!isListening && recognition) {
-            // For iOS, we need to ensure audio context is ready
-            if (isIOS) {
-                initializeIOSAudio();
-            }
-            
-            try {
-                isListening = true;
-                recognition.start();
-                orbContainer.classList.add('listening');
-                speechBubble.classList.add('listening');
-                speechBubble.textContent = "I'm listening...";
-                chatContainer.classList.remove('visible');
-                keyboardIcon.classList.remove('active');
-            } catch (error) {
-                console.error('Recognition start error:', error);
-                // Handle iOS-specific errors
-                if (isIOS) {
-                    speechBubble.textContent = "Please tap again to start listening";
-                }
-            }
-        } else if (isListening) {
-            isListening = false;
-            recognition.stop();
-        }
-        idleMessage.classList.remove('visible');
+  if (!isDragging) {
+    if (!isListening && recognition) {
+      isListening = true;
+      recognition.start();
+      orbContainer.classList.add('listening');
+      speechBubble.classList.add('listening');
+      speechBubble.textContent = "I'm listening...";
+      chatContainer.classList.remove('visible');
+      keyboardIcon.classList.remove('active');
+    } else if (isListening) {
+      isListening = false;
+      recognition.stop();
     }
+    idleMessage.classList.remove('visible');
+  }
 });
 
 // API configuration
@@ -109,28 +95,13 @@ function saveMessage(text, type) {
 let speechSynthesis = window.speechSynthesis;
 let voices = [];
 
-function initializeSpeechSynthesis() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-    // Initialize speech synthesis
-    speechSynthesis = window.speechSynthesis;
-    
-    // Load voices and handle iOS quirks
-    function loadVoices() {
-        voices = speechSynthesis.getVoices();
-        
-        if (isIOS && voices.length === 0) {
-            // iOS sometimes needs a moment to load voices
-            setTimeout(loadVoices, 100);
-        }
-    }
-    
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
-    }
-    
-    // Initial load attempt
-    loadVoices();
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+}
+
+// Load voices when they're available
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = loadVoices;
 }
 
 // Add these variables at the top with other initializations
@@ -152,28 +123,11 @@ languageSelect.addEventListener('change', (e) => {
 });
 
 function initializeSpeechRecognition() {
-    // Check for iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = currentLanguage;
-        
-        // Add iOS-specific setup
-        if (isIOS) {
-            // Ensure shorter timeout for iOS
-            recognition.interimResults = true;
-            recognition.maxAlternatives = 1;
-            
-            // Handle iOS timeout differently
-            setTimeout(() => {
-                if (isListening) {
-                    recognition.stop();
-                }
-            }, 7000); // iOS has a shorter timeout
-        }
         
         recognition.onstart = () => {
             orbContainer.classList.add('listening');
@@ -925,26 +879,92 @@ sleepIcon.addEventListener('click', () => {
 async function handlePlayCommand(query) {
     console.log('Handling play command for:', query);
     
+    // Show searching animation and message
+    orbContainer.setAttribute('data-emotion', 'thinking');
+    speechBubble.textContent = `Searching for "${query}"...`;
+    speechBubble.classList.add('active');
+    
     try {
-        if (iOSAudioHandler.isIOS && !iOSAudioHandler.isInitialized) {
-            await iOSAudioHandler.initialize();
-        }
+        const response = await fetch(`${YT_SEARCH_API}?q=${encodeURIComponent(query)}`, {
+            headers: {
+                'accept': '*/*'
+            }
+        });
         
-        // Show searching animation
-        orbContainer.setAttribute('data-emotion', 'thinking');
-        speechBubble.textContent = `Searching for "${query}"...`;
+        const data = await response.json();
+        console.log('Search results:', data);
+
+        if (!data.ok || !data.result || !Array.isArray(data.result) || data.result.length === 0) {
+            throw new Error('No results found');
+        }
+
+        // Store search results for auto-play
+        currentSearchResults = data.result.slice(0, 5);
+        currentPlayingIndex = 0;
+
+        // Create results container
+        const resultsContainer = document.createElement('div');
+        resultsContainer.className = 'search-results';
+        
+        // Show results
+        resultsContainer.innerHTML = currentSearchResults.map((video, index) => `
+            <div class="result-item" data-video-id="${video.videoId}" data-title="${video.title.replace(/"/g, '&quot;')}">
+                <div class="result-thumb">
+                    <img src="${video.thumbnail}" alt="${video.title}">
+                </div>
+                <div class="result-info">
+                    <div class="result-title">${video.title}</div>
+                    <div class="result-channel">${video.author}</div>
+                    <div class="result-duration">${video.duration || ''}</div>
+                </div>
+            </div>
+        `).join('');
+
+        const chatContainer = document.getElementById('chatContainer');
+        const interactionToolbar = document.querySelector('.interaction-toolbar');
+
+        chatContainer.classList.remove('visible');
+        if (interactionToolbar) {
+            interactionToolbar.style.opacity = '0';
+            interactionToolbar.style.bottom = '-100px';
+        }
+        // Add click handlers
+        const resultItems = resultsContainer.querySelectorAll('.result-item');
+        resultItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const videoId = item.dataset.videoId;
+                const title = item.dataset.title;
+                playSelectedTrack(videoId, title);
+            });
+        });
+
+        orbContainer.appendChild(resultsContainer);
+        orbContainer.setAttribute('data-emotion', 'happy');
+        speechBubble.textContent = "Here's what I found!";
         speechBubble.classList.add('active');
         
-        // Rest of your search code...
-        
-        // When playing audio:
-        const audio = await iOSAudioHandler.playAudio(audioUrl, title);
-        updateMusicControls(audio, title);
-        
+        // Add fade-in animation
+        setTimeout(() => {
+            resultsContainer.style.opacity = '1';
+            resultsContainer.style.transform = 'translateX(-50%) translateY(0)';
+        }, 100);
+
+        // Auto-play if enabled
+        if (autoPlayEnabled) {
+            setTimeout(() => {
+                const firstVideo = currentSearchResults[0];
+                speechBubble.textContent = `Auto-playing: ${firstVideo.title}`;
+                speechBubble.classList.add('active');
+                playSelectedTrack(firstVideo.videoId, firstVideo.title);
+            }, 1500);
+        }
+
     } catch (error) {
-        console.error('Play command failed:', error);
+        console.error('Error in handlePlayCommand:', error);
+        clearParticles();
         orbContainer.setAttribute('data-emotion', 'sad');
-        speechBubble.textContent = "Sorry, I couldn't play that. Please try again.";
+        speechBubble.textContent = `Sorry, ${error.message}`;
         speechBubble.classList.add('active');
     }
 }
@@ -1075,13 +1095,11 @@ async function playSelectedTrack(videoId, title) {
         // Create audio player with the audio URL
         const audio = new Audio(audioUrl);
         audio.crossOrigin = "anonymous";
+        window.currentAudio = audio;
         
-        // iOS-specific setup
+        // iOS-specific loading
         if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
             await audio.load();
-            audio.playsinline = true;
-            audio.controls = true;
-            
             // Add play attempt with user interaction check
             const playAttempt = setInterval(() => {
                 audio.play()
@@ -1093,8 +1111,6 @@ async function playSelectedTrack(videoId, title) {
                     });
             }, 1000);
         }
-        
-        window.currentAudio = audio;
         
         // Add music controls
         updateMusicControls(audio, title);
@@ -1642,36 +1658,31 @@ function startListening() {
     // ... existing code ...
 }
 
-// Update the speak function for better iOS compatibility
+// The speak function remains in English
 function speak(text) {
-    if (iOSAudioHandler.isIOS) {
-        iOSAudioHandler.speak(text);
-    } else {
-        // Your existing non-iOS speak code
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US'; // Keep TTS in English
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    
+    // Try to use a female voice if available
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice => 
+        voice.name.includes('Female') || 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Google UK English Female')
+    );
+    
+    if (femaleVoice) {
+        utterance.voice = femaleVoice;
     }
+    
+    window.speechSynthesis.speak(utterance);
 }
 
-// Initialize everything on page load
+// Initialize speech recognition on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeSpeechRecognition();
-    initializeSpeechSynthesis();
-    
-    // Check if running on iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-    if (isIOS) {
-        initializeIOSAudio();
-        
-        // Fix for iOS audio context
-        window.AudioContext = window.AudioContext || window.webkitAudioContext;
-        
-        // Ensure audio playback works on iOS
-        document.addEventListener('touchstart', function() {
-            if (window.currentAudio) {
-                window.currentAudio.load();
-            }
-        }, { once: true });
-    }
 });
 
 // Add this to handle voice commands
@@ -1748,29 +1759,18 @@ function createRunes() {
 createParticles();
 createRunes();
 
-// Add these variables at the top
-let audioContext = null;
-let isAudioInitialized = false;
-
-// Add this function for iOS audio initialization
+// Add this function near the top of your script
 function initializeIOSAudio() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    
-    // Create and play a silent buffer to unlock audio
-    const buffer = audioContext.createBuffer(1, 1, 22050);
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    source.start(0);
-    
-    // Resume audio context
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    
-    isAudioInitialized = true;
+    // Create and load a silent audio file for iOS
+    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
+    silentAudio.load();
+
+    // Play silent audio on first user interaction
+    document.addEventListener('touchstart', function initAudioContext() {
+        silentAudio.play().then(() => {
+            document.removeEventListener('touchstart', initAudioContext);
+        }).catch(error => console.log('iOS audio init error:', error));
+    }, { once: true });
 }
 
 // When opening chat input
@@ -2112,30 +2112,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activeThemeOption) {
     activeThemeOption.classList.add('active');
   }
-});
-
-// Add this to your initialization code
-document.addEventListener('DOMContentLoaded', async () => {
-    if (iOSAudioHandler.isIOS) {
-        // Show iOS instruction
-        const instruction = document.createElement('div');
-        instruction.className = 'ios-instruction';
-        instruction.textContent = 'Tap to enable audio features';
-        document.body.appendChild(instruction);
-
-        // Initialize on first interaction
-        const initOnInteraction = async () => {
-            await iOSAudioHandler.initialize();
-            instruction.remove();
-            document.removeEventListener('touchstart', initOnInteraction);
-            document.removeEventListener('click', initOnInteraction);
-        };
-
-        document.addEventListener('touchstart', initOnInteraction);
-        document.addEventListener('click', initOnInteraction);
-    }
-    
-    // Initialize other features
-    initializeSpeechRecognition();
-    initializeSpeechSynthesis();
 });
