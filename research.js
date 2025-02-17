@@ -345,6 +345,43 @@ class ResearchManager {
                         .then(() => alert('URL copied to clipboard!'))
                         .catch(err => console.error('Failed to copy URL:', err));
                 });
+
+                // Add touch event handling
+                followUpInput.addEventListener('touchstart', (e) => {
+                    e.target.focus();
+                });
+
+                // Improve mobile scrolling
+                document.querySelectorAll('.sources-card, .image-grid').forEach(element => {
+                    let touchStartY;
+                    
+                    element.addEventListener('touchstart', (e) => {
+                        touchStartY = e.touches[0].clientY;
+                    }, { passive: true });
+
+                    element.addEventListener('touchmove', (e) => {
+                        const touchY = e.touches[0].clientY;
+                        const scrollTop = element.scrollTop;
+                        const scrollHeight = element.scrollHeight;
+                        const clientHeight = element.clientHeight;
+
+                        if (scrollTop === 0 && touchY > touchStartY) {
+                            e.preventDefault();
+                        }
+
+                        if (scrollTop + clientHeight >= scrollHeight && touchY < touchStartY) {
+                            e.preventDefault();
+                        }
+                    }, { passive: false });
+                });
+
+                // Handle orientation changes
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        this.updateLayout();
+                    }, 100);
+                });
             }
 
             generateSuggestedFollowUps(sources) {
@@ -557,6 +594,21 @@ class ResearchManager {
                 toast.textContent = message;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
+            }
+
+            // Add new method for layout updates
+            updateLayout() {
+                const isMobile = window.innerWidth <= 768;
+                const sourcesList = document.getElementById('sourcesList');
+                const imageGrid = document.getElementById('imageGrid');
+
+                if (isMobile) {
+                    sourcesList.style.maxHeight = '200px';
+                    imageGrid.style.maxHeight = '300px';
+                } else {
+                    sourcesList.style.maxHeight = '';
+                    imageGrid.style.maxHeight = '';
+                }
             }
         }
 

@@ -1030,3 +1030,108 @@ html {
     max-height: 500px;
     overflow-y: auto;
 }
+
+/* Mobile-First Media Queries */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .side-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .main-container {
+        padding: 1rem;
+    }
+
+    .combined-content {
+        padding: 1.5rem;
+    }
+
+    .follow-up-input {
+        flex-direction: column;
+    }
+
+    .follow-up-input button {
+        width: 100%;
+    }
+
+    .suggest-follows {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .side-content {
+        grid-template-columns: 1fr;
+    }
+
+    .source-item-compact {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-left {
+        font-size: 1.2rem;
+    }
+
+    .share-button {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .combined-content {
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .image-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .source-domain {
+        display: none;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .source-item-compact,
+    .follow-up-input button,
+    .share-button {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sources-card {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* iOS Safari Fixes */
+@supports (-webkit-touch-callout: none) {
+    body {
+        min-height: -webkit-fill-available;
+    }
+
+    .main-container {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* High DPI Screen Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .combined-content,
+    .side-card {
+        backdrop-filter: blur(40px);
+    }
+}
