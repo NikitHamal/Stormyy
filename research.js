@@ -53,17 +53,6 @@ class ResearchManager {
                 }
             }
 
-            async fetchImages(query) {
-                try {
-                    const response = await fetch(`https://api.paxsenix.biz.id/ai/images?text=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    return data.images || [];
-                } catch (error) {
-                    console.error('Error fetching images:', error);
-                    return [];
-                }
-            }
-
             async conductResearch(query) {
                 this.showLoader();
                 this.resultsContainer.style.display = 'block';
@@ -140,7 +129,7 @@ class ResearchManager {
             }
 
             updateSideContent(sources, images) {
-                // Update sources list
+                // Update sources list with infinite scroll
                 const sourcesList = document.getElementById('sourcesList');
                 if (sourcesList && sources && sources.length > 0) {
                     // Filter and deduplicate sources
@@ -164,7 +153,6 @@ class ResearchManager {
                             }
                             return acc;
                         }, [])
-                        // Sort sources by domain for better organization
                         .sort((a, b) => a.domain.localeCompare(b.domain));
 
                     if (validSources.length > 0) {
@@ -186,15 +174,38 @@ class ResearchManager {
                     }
                 }
 
-                // Update images grid
+                // Update images grid with infinite scroll and modal
                 const imageGrid = document.getElementById('imageGrid');
-                if (imageGrid && images.length > 0) {
-                    imageGrid.innerHTML = images.map(image => `
+                if (imageGrid && images && images.length > 0) {
+                    // Deduplicate images by URL
+                    const uniqueImages = [...new Set(images)];
+                    
+                    imageGrid.innerHTML = uniqueImages.map(imageUrl => `
                         <div class="image-item">
-                            <img src="${image.url}" alt="${image.title || 'Related image'}" 
-                                loading="lazy" onerror="this.style.display='none'"/>
+                            <img src="${imageUrl}" 
+                                 alt="Related content" 
+                                 loading="lazy" 
+                                 onerror="this.parentElement.style.display='none'"
+                                 onclick="window.researchManager.showImageModal('${imageUrl}')"
+                            />
+                            <div class="image-actions">
+                                <button onclick="window.researchManager.downloadImage('${imageUrl}')" title="Download">
+                                    <svg viewBox="0 0 24 24" width="24" height="24">
+                                        <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="window.researchManager.copyImageUrl('${imageUrl}')" title="Copy URL">
+                                    <svg viewBox="0 0 24 24" width="24" height="24">
+                                        <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     `).join('');
+                    
+                    document.querySelector('.images-card').style.display = 'block';
+                } else {
+                    document.querySelector('.images-card').style.display = 'none';
                 }
             }
 
@@ -214,12 +225,13 @@ class ResearchManager {
                 // Generate suggested follow-ups
                 this.generateSuggestedFollowUps(sources);
 
-                // Update side content with sources
-                const urlParams = new URLSearchParams(window.location.search);
-                const query = urlParams.get('query');
-                if (query) {
-                    const images = await this.fetchImages(query);
-                    this.updateSideContent(sources, images);
+                // Update side content with sources and crawl images
+                if (sources && sources.length > 0) {
+                    // Call the new image crawling endpoint
+                    const imageUrls = await this.crawlImagesFromSources(sources);
+                    
+                    // Update the display with both sources and images
+                    this.updateSideContent(sources, imageUrls);
                 }
             }
 
@@ -419,9 +431,13 @@ class ResearchManager {
                             </div>
                         `;
                         
-                        // Update sources if any
+                        // If there are sources, crawl images from them
                         if (data.sources && data.sources.length > 0) {
-                            this.updateSideContent(data.sources, []);
+                            // Call the new image crawling endpoint
+                            const imageUrls = await this.crawlImagesFromSources(data.sources);
+                            
+                            // Update the display with both sources and images
+                            this.updateSideContent(data.sources, imageUrls);
                         }
                     } else {
                         throw new Error(data.message || 'Failed to get response');
@@ -436,6 +452,46 @@ class ResearchManager {
                 }
             }
 
+            // Add new method to crawl images from sources
+            async crawlImagesFromSources(sources) {
+                try {
+                    // Filter valid URLs from sources
+                    const sourceUrls = sources
+                        .filter(source => source.url)
+                        .map(source => source.url);
+
+                    console.log('Source URLs to crawl:', sourceUrls); // Debug log
+
+                    if (sourceUrls.length === 0) {
+                        console.log('No valid source URLs found'); // Debug log
+                        return [];
+                    }
+
+                    // Fix: Change the endpoint URL back to /crawl-images
+                    const response = await fetch('http://127.0.0.1:5000/crawl-images', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ urls: sourceUrls })
+                    });
+
+                    console.log('Crawler response status:', response.status); // Debug log
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to crawl images: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Crawler response data:', data); // Debug log
+                    return data.images || [];
+
+                } catch (error) {
+                    console.error('Error crawling images:', error);
+                    return [];
+                }
+            }
+
             showLoader() {
                 this.loader.style.display = 'flex';
                 this.resultsContainer.style.display = 'none';
@@ -444,6 +500,63 @@ class ResearchManager {
             hideLoader() {
                 this.loader.style.display = 'none';
                 this.resultsContainer.style.display = 'block';
+            }
+
+            // Add new methods for image actions
+            async downloadImage(url) {
+                try {
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = url.split('/').pop() || 'image';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(blobUrl);
+                } catch (error) {
+                    console.error('Error downloading image:', error);
+                }
+            }
+
+            async copyImageUrl(url) {
+                try {
+                    await navigator.clipboard.writeText(url);
+                    this.showToast('Image URL copied to clipboard!');
+                } catch (error) {
+                    console.error('Error copying URL:', error);
+                }
+            }
+
+            showImageModal(url) {
+                const modal = document.createElement('div');
+                modal.className = 'image-modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <img src="${url}" alt="Full size image">
+                        <div class="modal-actions">
+                            <button onclick="window.researchManager.downloadImage('${url}')">Download</button>
+                            <button onclick="window.researchManager.copyImageUrl('${url}')">Copy URL</button>
+                            <button onclick="this.closest('.image-modal').remove()">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-message';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
             }
         }
 
