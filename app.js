@@ -920,6 +920,14 @@ async function handlePlayCommand(query) {
             </div>
         `).join('');
 
+        const chatContainer = document.getElementById('chatContainer');
+        const interactionToolbar = document.querySelector('.interaction-toolbar');
+
+        chatContainer.classList.remove('visible');
+        if (interactionToolbar) {
+            interactionToolbar.style.opacity = '0';
+            interactionToolbar.style.bottom = '-100px';
+        }
         // Add click handlers
         const resultItems = resultsContainer.querySelectorAll('.result-item');
         resultItems.forEach(item => {
