@@ -9,20 +9,42 @@ CORS(app, resources={r"/crawl-images": {"origins": "*"}})
 
 async def fetch_images(session, url):
     try:
-        return await asyncio.create_task(
+        result = await asyncio.create_task(
             asyncio.to_thread(scrape_image_urls, url)
         )
+        return result
     except Exception as e:
-        print(f"Error fetching images from {url}: {e}")
-        return []
+        print(f"Error fetching content from {url}: {e}")
+        return {
+            'title': None,
+            'headline': None,
+            'content': None,
+            'images': []
+        }
 
 async def crawl_multiple_sites(urls):
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_images(session, url) for url in urls]
         results = await asyncio.gather(*tasks)
-        # Flatten the list of image URLs and remove duplicates
-        all_images = list(set([img for sublist in results for img in sublist]))
-        return all_images
+        
+        # Combine all images and remove duplicates
+        all_images = list(set([img for result in results for img in result['images']]))
+        
+        # Combine content from all sources
+        sources_content = []
+        for url, result in zip(urls, results):
+            if result['title'] or result['headline'] or result['content']:
+                sources_content.append({
+                    'url': url,
+                    'title': result['title'],
+                    'headline': result['headline'],
+                    'content': result['content']
+                })
+        
+        return {
+            'images': all_images,
+            'sources_content': sources_content
+        }
 
 @app.route('/crawl-images', methods=['POST'])
 def crawl_images():
@@ -36,7 +58,9 @@ def crawl_images():
             return jsonify({'error': 'No URLs provided'}), 400
 
         # Run the async crawling
-        images = asyncio.run(crawl_multiple_sites(urls))
+        results = asyncio.run(crawl_multiple_sites(urls))
+        images = results['images']
+        sources_content = results['sources_content']
         
         print(f"Found total of {len(images)} images")  # Debug log
         
@@ -46,6 +70,7 @@ def crawl_images():
         return jsonify({
             'success': True,
             'images': unique_images,
+            'sources_content': sources_content,
             'total_found': len(images),
             'total_returned': len(unique_images)
         })
