@@ -600,6 +600,7 @@ body {
 @media (max-width: 768px) {
     .content-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .main-container {
@@ -756,6 +757,89 @@ body {
     .start-research {
         padding: 0.4rem 1rem;
         font-size: 0.8rem;
+    }
+
+    .side-content {
+        position: relative;
+        margin-top: 1rem;
+    }
+
+    .side-card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+
+    .source-item-compact {
+        padding: 0.8rem;
+    }
+
+    .history-menu {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 20px 20px 0 0;
+        margin: 0;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+
+    .history-list {
+        max-height: 50vh;
+    }
+
+    .combined-content {
+        padding: 1rem;
+    }
+
+    .combined-content h1 {
+        font-size: 1.5rem;
+        margin: 1rem 0;
+    }
+
+    .combined-content h2 {
+        font-size: 1.3rem;
+        margin: 0.8rem 0;
+    }
+
+    .combined-content h3 {
+        font-size: 1.1rem;
+        margin: 0.6rem 0;
+    }
+
+    .combined-content p {
+        margin: 0.8rem 0;
+        line-height: 1.6;
+    }
+
+    .combined-content ul,
+    .combined-content ol {
+        margin: 0.8rem 0;
+        padding-left: 1.2rem;
+    }
+
+    .combined-content li {
+        margin: 0.4rem 0;
+    }
+
+    /* Improve touch targets */
+    .source-item-compact,
+    .history-item,
+    .example-prompt {
+        min-height: 44px;
+    }
+
+    .delete-history {
+        opacity: 0.7; /* Always show delete button on mobile */
+        padding: 0.8rem;
+    }
+
+    /* Add safe area insets for notched phones */
+    .history-menu {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     }
 }
 
@@ -1494,4 +1578,69 @@ html {
     .history-date {
         font-size: 0.75rem;
     }
+}
+
+/* Add slide up animation for mobile history menu */
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .history-menu.show {
+        animation: slideUp 0.3s ease;
+    }
+}
+
+/* Improve paragraph spacing */
+.combined-content p + p {
+    margin-top: 1em;
+}
+
+.combined-content h1 + p,
+.combined-content h2 + p,
+.combined-content h3 + p {
+    margin-top: 0.5em;
+}
+
+.combined-content ul + p,
+.combined-content ol + p {
+    margin-top: 1em;
+}
+
+/* Add proper spacing for lists */
+.combined-content ul,
+.combined-content ol {
+    margin: 1em 0;
+}
+
+/* Improve blockquote styling */
+.combined-content blockquote {
+    margin: 1.5em 0;
+    padding: 1em;
+    background: rgba(147, 51, 234, 0.1);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Improve code block readability */
+.combined-content pre {
+    margin: 1.5em 0;
+    padding: 1em;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.combined-content code {
+    font-family: 'Menlo', monospace;
+    font-size: 0.9em;
+    padding: 0.2em 0.4em;
+    background: rgba(147, 51, 234, 0.1);
+    border-radius: 4px;
 }
