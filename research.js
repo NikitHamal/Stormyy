@@ -603,11 +603,12 @@ class ResearchManager {
                 return [];
             }
 
-            // Fix: Change the endpoint URL back to /crawl-images
-            const response = await fetch('https://thestormy.vercel.app/research-results.html', {
+            // Update endpoint to use your domain
+            const response = await fetch('https://thestormy.vercel.app/crawl-images', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ urls: sourceUrls })
             });

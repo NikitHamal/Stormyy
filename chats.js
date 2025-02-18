@@ -618,30 +618,115 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = e.target.files[0];
         if (file) {
             try {
-                // Create FormData and upload to your server
-                const formData = new FormData();
-                formData.append('image', file);
+                // Show loading state
+                imagePreview.innerHTML = '<div class="upload-loading">Uploading...</div>';
+                imagePreview.style.display = 'flex';
+
+                // Convert file to base64
+                const base64String = await fileToBase64(file);
                 
-                const response = await fetch('YOUR_UPLOAD_ENDPOINT', {
+                // Create FormData for the API
+                const formData = new FormData();
+                formData.append('key', '6d207e02198a847aa98d0a2a901485a5');
+                formData.append('action', 'upload');
+                formData.append('source', base64String);
+                formData.append('format', 'json');
+
+                // Use a CORS proxy to make the request
+                const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+                const apiUrl = 'https://freeimage.host/api/1/upload';
+                
+                // Upload to Freeimage.host through CORS proxy
+                const response = await fetch(corsProxy + apiUrl, {
                     method: 'POST',
+                    headers: {
+                        'Origin': window.location.origin,
+                    },
                     body: formData
                 });
-                
+
                 const data = await response.json();
-                uploadedImageUrl = data.url; // Store the uploaded image URL
-                
-                // Show preview
-                imagePreview.innerHTML = `
-                    <img src="${URL.createObjectURL(file)}" alt="Preview">
-                    <button class="remove-image">&times;</button>
-                `;
-                imagePreview.style.display = 'flex';
+
+                if (data.status_code === 200) {
+                    uploadedImageUrl = data.image.url;
+                    
+                    // Show preview with uploaded image
+                    imagePreview.innerHTML = `
+                        <img src="${URL.createObjectURL(file)}" alt="Preview">
+                        <button class="remove-image">&times;</button>
+                        <div class="upload-success">✓ Uploaded</div>
+                    `;
+                } else {
+                    throw new Error(data.status_txt || 'Upload failed');
+                }
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('Failed to upload image. Please try again.');
+                imagePreview.innerHTML = `
+                    <div class="upload-error">
+                        Upload failed. Please try again.<br>
+                        <small>${error.message}</small>
+                        <button class="remove-image">&times;</button>
+                    </div>
+                `;
             }
         }
     });
+
+    // Helper function to convert File to base64
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                // Remove the "data:image/jpeg;base64," part
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // Add some styles for upload states
+    const uploadStyles = document.createElement('style');
+    uploadStyles.textContent = `
+        .upload-loading {
+            padding: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .upload-success {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .upload-error {
+            padding: 8px;
+            color: #f44336;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .image-preview {
+            position: relative;
+            max-width: 200px;
+            margin: 8px 0;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+    `;
+    document.head.appendChild(uploadStyles);
 
     // Replace the incorrect event listener with this correct version
     document.querySelector('.image-preview').addEventListener('click', (e) => {
