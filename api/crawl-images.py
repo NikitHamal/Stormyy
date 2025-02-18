@@ -3,6 +3,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from http.client import HTTPException
 
 def scrape_image_urls(url):
     try:
@@ -69,29 +70,32 @@ def scrape_image_urls(url):
             'images': []
         }
 
-def handler(event, context):
-    # Handle CORS preflight request
-    if event.get('httpMethod') == 'OPTIONS':
+async def handler(request):
+    if request.method == "OPTIONS":
         return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type, Accept',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
+            "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Content-Type, Accept",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Content-Type": "application/json"
             },
-            'body': ''
+            "body": ""
         }
     
     try:
         # Parse request body
-        body = json.loads(event.get('body', '{}'))
+        body = await request.json()
         urls = body.get('urls', [])
 
         if not urls:
             return {
-                'statusCode': 400,
-                'headers': {'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'error': 'No URLs provided'})
+                "statusCode": 400,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/json"
+                },
+                "body": json.dumps({"error": "No URLs provided"})
             }
 
         # Process each URL
@@ -127,9 +131,12 @@ def handler(event, context):
         unique_images = list(dict.fromkeys(all_images))[:12]
         
         return {
-            'statusCode': 200,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({
+            "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({
                 'success': True,
                 'images': unique_images,
                 'sources_content': sources_content,
@@ -138,12 +145,24 @@ def handler(event, context):
             })
         }
 
+    except json.JSONDecodeError:
+        return {
+            "statusCode": 400,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({"error": "Invalid JSON in request body"})
+        }
     except Exception as e:
         return {
-            'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({
-                'success': False,
-                'error': str(e)
+            "statusCode": 500,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({
+                "success": False,
+                "error": str(e)
             })
         } 

@@ -3,7 +3,7 @@
     "functions": {
         "api/crawl-images.py": {
             "memory": 1024,
-            "maxDuration": 10
+            "maxDuration": 30
         }
     },
     "routes": [
@@ -13,9 +13,14 @@
             "headers": {
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type, Accept",
-                "Access-Control-Allow-Methods": "POST, OPTIONS"
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Content-Type": "application/json"
             },
             "dest": "/api/crawl-images.py"
         }
-    ]
+    ],
+    "env": {
+        "PYTHONPATH": ".",
+        "PYTHONUNBUFFERED": "1"
+    }
 } 
