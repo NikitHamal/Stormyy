@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Tools Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js" defer></script>
+    <!-- Previous CSS styles remain the same until the end of </style> -->
+    <style>
+        /* Previous CSS remains exactly the same */
+        :root {
+            --primary: #8A2BE2;
+            --primary-light: #9B4DEB;
+            --primary-dark: #6A1B9A;
+            --background: #0F0F1A;
+            --card-bg: #1A1A2E;
+            --text: #ffffff;
+            --text-secondary: #B4B4C7;
+        }
+
+        * {
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.1) 0%, rgba(15, 15, 26, 0) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .orb-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .orb-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            transform-style: preserve-3d;
+            background: transparent;
+            margin: 0 auto;
+        }
+
+        .magical-orb {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: float 4s ease-in-out infinite;
+            border-radius: 100%;
+            box-shadow: 
+                        0 0 60px var(--primary),
+                        0 0 100px #8a2be24d;
+        }
+
+        .orb-inner {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+              rgb(147, 51, 234),
+              rgb(88, 28, 135));
+            box-shadow: 0 0 60px rgba(147, 51, 234, 0.4);
+            transform-style: preserve-3d;
+            animation: pulse 2s ease-in-out infinite;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        
+        .eyes-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            animation: eyesFloat 4s ease-in-out infinite;
+        }
+
+        .eye {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 35%;
+            animation: blink 4s infinite;
+            overflow: hidden;
+            transition: transform 0.3s ease-out;
+        }
+
+        .eye-left {
+            left: 25%;
+        }
+
+        .eye-right {
+            right: 25%;
+        }
+
+        .pupil {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            background: #000;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: lookAround 8s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-10px); }
+            50% { transform: translateY(10px); }
+        }
+
+        @keyframes blink {
+            0%, 48%, 52%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+
+        @keyframes lookAround {
+            0%, 100% { transform: translate(-50%, -50%); }
+            15% { transform: translate(-100%, -50%); }
+            30% { transform: translate(-50%, -100%); }
+            45% { transform: translate(0%, -50%); }
+            60% { transform: translate(-50%, 0%); }
+            75% { transform: translate(-50%, -50%); }
+        }
+
+        @keyframes eyesFloat {
+            0%, 100% { transform: translateY(-5px); }
+            50% { transform: translateY(5px); }
+        }
+        .header h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            margin-top: 2rem;
+            background: linear-gradient(135deg, #fff 0%, #B4B4C7 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            font-size: 1.1rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(138, 43, 226, 0.3);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 0 30px rgba(138, 43, 226, 0.1);
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(138, 43, 226, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: 0.5s;
+        }
+
+        .tool-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .tool-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(138, 43, 226, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-light);
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover .tool-icon {
+            background: rgba(138, 43, 226, 0.2);
+            transform: scale(1.1);
+        }
+
+        .tool-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .tool-description {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .badge {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(138, 43, 226, 0.1);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--primary-light);
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .tool-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+         <!-- Orb container -->
+      <div class="orb-wrapper">
+        <div id="orb-container" class="orb-container">
+          <div class="magical-orb">
+            <div class="orb-inner"></div>
+            <div class="eyes-container">
+              <div class="eye eye-left"><div class="pupil"></div></div>
+              <div class="eye eye-right"><div class="pupil"></div></div>
+            </div>
+        </div>
+        </div>
+        <p style="font-weight: 500; font-size: 22px;">Discover the power of AI with our enchanted collection</p>
+    </header>
+
+    <main class="tools-grid">
+        <div class="tool-card" onclick="window.location.href='upscaleimg.html'">
+            <div class="tool-icon">
+                <i icon-name="maximize"></i>
+            </div>
+            <span class="badge">Popular</span>
+            <h3 class="tool-title">Image Upscaler</h3>
+            <p class="tool-description">Transform your images into crystal-clear masterpieces with our AI-powered upscaling magic.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='removebg.html'">
+            <div class="tool-icon">
+                <i icon-name="eraser"></i>
+            </div>
+            <h3 class="tool-title">Background Remover</h3>
+            <p class="tool-description">Extract subjects from any image with perfect precision using our magical AI technology.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='chats.html'">
+            <div class="tool-icon">
+                <i icon-name="sparkles"></i>
+            </div>
+            <span class="badge">New</span>
+            <h3 class="tool-title">Orby Assistant</h3>
+            <p class="tool-description">Your intelligent companion powered by advanced AI, ready to assist with any task.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='chats.html'">
+            <div class="tool-icon">
+                <i icon-name="messages-square"></i>
+            </div>
+            <h3 class="tool-title">Magic Chat</h3>
+            <p class="tool-description">Experience natural conversations with our advanced AI chatbot that understands context.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='imagine.html'">
+            <div class="tool-icon">
+                <i icon-name="wand"></i>
+            </div>
+            <span class="badge">Trending</span>
+            <h3 class="tool-title">Image Generator</h3>
+            <p class="tool-description">Create stunning artwork from text descriptions using our state-of-the-art AI generation.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='research.html'">
+            <div class="tool-icon">
+                <i icon-name="book-open"></i>
+            </div>
+            <h3 class="tool-title">AI Researcher</h3>
+            <p class="tool-description">Access deep insights and analysis with our intelligent research assistant.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='instrument.html'">
+            <div class="tool-icon">
+                <i icon-name="music"></i>
+            </div>
+            <span class="badge">New</span>
+            <h3 class="tool-title">Instrument Generator</h3>
+            <p class="tool-description">Create magical 30-second instrument music using AI-powered generation.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='reverseimagesearch.html'">
+            <div class="tool-icon">
+                <i icon-name="search"></i>
+            </div>
+            <span class="badge">New</span>
+            <h3 class="tool-title">Reverse Image Search</h3>
+            <p class="tool-description">Find similar images and discover their origins with our AI-powered visual search.</p>
+        </div>
+
+        <div class="tool-card" onclick="window.location.href='aifilters.html'">
+            <div class="tool-icon">
+                <i icon-name="palette"></i>
+            </div>
+            <span class="badge">New</span>
+            <h3 class="tool-title">AI Filters</h3>
+            <p class="tool-description">Transform your photos with magical AI-powered filters including anime, cartoon, and artistic styles.</p>
+        </div>
+    </main>
+
+    <script>
+        // Wait for Lucide to load
+        window.addEventListener('load', function() {
+            // Initialize Lucide icons
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+
+        // Add scroll reveal animation
+        document.querySelectorAll('.tool-card').forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.transitionDelay = `${index * 0.1}s`;
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        });
+
+        // Add magical sparkle effect on hover
+        document.querySelectorAll('.tool-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const gradient = `
+                    radial-gradient(
+                        circle at ${x}px ${y}px, 
+                        rgba(138, 43, 226, 0.15), 
+                        var(--card-bg) 50%
+                    )
+                `;
+                
+                card.style.background = gradient;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.background = 'var(--card-bg)';
+            });
+        });
+    </script>
+</body>
+</html>

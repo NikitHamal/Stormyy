@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Reverse Image Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js" defer></script>
+    <style>
+        :root {
+            --primary: #8A2BE2;
+            --primary-light: #9B4DEB;
+            --primary-dark: #6A1B9A;
+            --background: #0F0F1A;
+            --card-bg: #1A1A2E;
+            --text: #ffffff;
+            --text-secondary: #B4B4C7;
+        }
+
+        * {
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.1) 0%, rgba(15, 15, 26, 0) 100%);
+        }
+
+        .header h1 {
+            font-weight: 600;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #fff 0%, #B4B4C7 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(138, 43, 226, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: rgba(26, 26, 46, 0.5);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(138, 43, 226, 0.1);
+        }
+
+        .drop-zone .icon {
+            font-size: 3rem;
+            color: var(--primary-light);
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone p {
+            color: var(--text-secondary);
+            margin: 1rem 0;
+        }
+
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+
+        .image-preview-container {
+            display: none;
+            width: 100%;
+            max-height: 300px;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .image-preview-container.active {
+            display: block;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 20px;
+            background: var(--card-bg);
+        }
+
+        .results-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .results-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .result-info {
+            padding: 1rem;
+        }
+
+        .result-title {
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .result-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--primary);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-button:hover {
+            background: rgba(138, 43, 226, 0.1);
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 15, 26, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .magical-loader {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            animation: pulse 1.5s ease-in-out infinite;
+            position: relative;
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-container {
+                padding: 1rem;
+            }
+
+            .drop-zone {
+                padding: 2rem;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Magical Reverse Image Search</h1>
+        <p>Discover similar images and their origins with our AI-powered visual search magic</p>
+    </header>
+
+    <main class="search-container">
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-content">
+                <div class="icon">
+                    <i icon-name="image-plus"></i>
+                </div>
+                <h2>Drop your image here</h2>
+                <p>or click to browse</p>
+                <p class="file-info">Supports JPG, PNG • Max 5MB</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="image-preview-container" id="previewContainer">
+            <img src="" alt="Preview" class="image-preview" id="imagePreview">
+        </div>
+
+        <div class="results-container" id="resultsContainer">
+            <h2>Similar Images Found</h2>
+            <div class="results-grid" id="resultsGrid">
+                <!-- Results will be added here dynamically -->
+            </div>
+        </div>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="magical-loader"></div>
+        <p class="loading-text">Searching for similar images...</p>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Event Listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Handle file drop
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        async function handleFile(file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewContainer.classList.add('active');
+            };
+            reader.readAsDataURL(file);
+
+            // Upload and search
+            try {
+                loadingOverlay.classList.add('active');
+                
+                // Upload to ImageBB
+                const uploadResult = await uploadToImageBB(file);
+                if (!uploadResult.url) {
+                    throw new Error('Failed to upload image');
+                }
+
+                // Search for similar images
+                const searchResults = await searchSimilarImages(uploadResult.url);
+                displayResults(searchResults);
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            } finally {
+                loadingOverlay.classList.remove('active');
+            }
+        }
+
+        // Upload to ImageBB
+        async function uploadToImageBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('expiration', 1000); // Set expiration to 1000 seconds
+            
+            try {
+                const API_KEY = 'cae25a5efbe778e17c1db8b6f4e44cd7';
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error?.message || 'Failed to upload image');
+                }
+                
+                return {
+                    url: data.data.url,
+                    deleteUrl: data.data.delete_url
+                };
+            } catch (error) {
+                throw new Error('Failed to upload image. Please try again.');
+            }
+        }
+
+        // Search for similar images
+        async function searchSimilarImages(imageUrl) {
+            try {
+                const response = await fetch(`https://api.paxsenix.biz.id/tools/reverseImageSearch?url=${encodeURIComponent(imageUrl)}`, {
+                    headers: {
+                        'accept': '*/*'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to search for similar images');
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw new Error('Failed to search for similar images. Please try again.');
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            resultsGrid.innerHTML = '';
+            
+            const allResults = [
+                ...(data.similar || []),
+                ...(data.related || []),
+                ...(data.duplicates || [])
+            ];
+
+            if (allResults.length === 0) {
+                resultsGrid.innerHTML = '<p class="no-results">No similar images found</p>';
+                return;
+            }
+
+            allResults.forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                
+                const sourceUrl = result.urlList?.[0]?.sourceUrl || '#';
+                const title = result.urlList?.[0]?.title || 'Untitled';
+                
+                card.innerHTML = `
+                    <img src="${result.proxyUrl}" alt="${title}" class="result-image">
+                    <div class="result-info">
+                        <h3 class="result-title">${title}</h3>
+                        <p class="result-meta">Similarity: ${(100 - result.distance * 100).toFixed(1)}%</p>
+                        <div class="result-actions">
+                            <a href="${sourceUrl}" target="_blank" class="action-button">
+                                <i icon-name="external-link"></i>
+                                Visit Source
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                resultsGrid.appendChild(card);
+            });
+
+            // Refresh Lucide icons for new elements
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            resultsContainer.classList.add('active');
+        }
+    </script>
+</body>
+</html>
