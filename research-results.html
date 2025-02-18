@@ -29,6 +29,21 @@
                 <button class="start-research">Research</button>
             </div>
             <h1 class="research-title" id="currentTitle" style="display: none;">Research Topic</h1>
+            <div class="history-dropdown">
+                <button class="history-button">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                    </svg>
+                </button>
+                <div class="history-menu" id="historyMenu">
+                    <div class="history-header">
+                        <h3>Research History</h3>
+                        <button class="clear-history">Clear All</button>
+                    </div>
+                    <div class="history-list" id="historyList"></div>
+                    <button class="new-research">+ New Research</button>
+                </div>
+            </div>
         </div>
         <div class="header-right">
             <button class="share-button">Share Results</button>
@@ -36,7 +51,18 @@
     </header>
 
     <main class="main-container">
-        <div class="loading-animation" id="researchLoader">
+        <div class="welcome-screen" id="welcomeScreen">
+            <h1>Research Assistant</h1>
+            <p>Enter any topic or question to get comprehensive insights</p>
+            <div class="example-prompts">
+                <h3>Try these examples:</h3>
+                <button class="example-prompt">What are the latest developments in quantum computing?</button>
+                <button class="example-prompt">Explain the impact of artificial intelligence on healthcare</button>
+                <button class="example-prompt">What are the most effective strategies for climate change mitigation?</button>
+            </div>
+        </div>
+
+        <div class="loading-animation" id="researchLoader" style="display: none;">
             <div class="spinner"></div>
             <p>Gathering insights from multiple sources...</p>
         </div>

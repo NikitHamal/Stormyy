@@ -3,11 +3,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const titleInput = titleSetup.querySelector('.title-input');
     const startResearchBtn = titleSetup.querySelector('.start-research');
     const currentTitle = document.getElementById('currentTitle');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const followUpSection = document.querySelector('.follow-up-section');
+    
+    // Initially hide the follow-up section
+    if (followUpSection) {
+        followUpSection.style.display = 'none';
+    }
+
+    // Handle example prompts
+    document.querySelectorAll('.example-prompt').forEach(button => {
+        button.addEventListener('click', () => {
+            titleInput.value = button.textContent;
+            startResearchBtn.click();
+        });
+    });
 
     // Check if there's already a research topic
     const currentTopic = sessionStorage.getItem('researchTopic');
     if (currentTopic) {
         showResearchTitle(currentTopic);
+        window.researchManager.conductResearch(currentTopic);
+        welcomeScreen.style.display = 'none';
     }
 
     startResearchBtn.addEventListener('click', function() {
@@ -15,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (topic) {
             showResearchTitle(topic);
             sessionStorage.setItem('researchTopic', topic);
-            // Start your research process here
-            // startResearch(topic);
+            welcomeScreen.style.display = 'none';
+            window.researchManager.conductResearch(topic);
         }
     });
 
@@ -56,6 +73,15 @@ class ResearchManager {
                 }
                 
                 this.setupEventListeners();
+
+                // Hide follow-up section initially
+                const followUpSection = document.querySelector('.follow-up-section');
+                if (followUpSection) {
+                    followUpSection.style.display = 'none';
+                }
+
+                this.history = JSON.parse(localStorage.getItem('researchHistory')) || [];
+                this.setupHistoryUI();
             }
 
             async fetchFromAPI(endpoint, query) {
@@ -89,6 +115,11 @@ class ResearchManager {
             }
 
             async conductResearch(query) {
+                const welcomeScreen = document.getElementById('welcomeScreen');
+                if (welcomeScreen) {
+                    welcomeScreen.style.display = 'none';
+                }
+
                 this.showLoader();
                 this.resultsContainer.style.display = 'block';
                 this.combinedResults.innerHTML = '<div class="generating-text">Generating response...</div>';
@@ -245,28 +276,56 @@ class ResearchManager {
             }
 
             async finalizeDisplay(content, sources) {
-                // Save the content for context
-                this.contextContent = content;
-                
-                // Hide loader and progress
-                this.hideLoader();
-                
-                // Update final content without sources (they'll be in sidebar)
-                this.updateStreamingContent(content);
-                
-                // Enable follow-up section
-                document.querySelector('.follow-up-section').style.opacity = '1';
-                
-                // Generate suggested follow-ups
-                this.generateSuggestedFollowUps(sources);
-
-                // Update side content with sources and crawl images
-                if (sources && sources.length > 0) {
-                    // Call the new image crawling endpoint
-                    const imageUrls = await this.crawlImagesFromSources(sources);
+                const followUpSection = document.querySelector('.follow-up-section');
+                if (content && content.trim()) {
+                    this.contextContent = content;
+                    this.hideLoader();
+                    this.updateStreamingContent(content);
                     
-                    // Update the display with both sources and images
-                    this.updateSideContent(sources, imageUrls);
+                    // Save to history
+                    const currentTopic = document.getElementById('currentTitle').textContent;
+                    const historyItem = {
+                        topic: currentTopic,
+                        date: new Date().toISOString(),
+                        content: content,
+                        sources: sources || [],
+                        images: sources ? await this.crawlImagesFromSources(sources) : []
+                    };
+                    
+                    // Update history
+                    const existingIndex = this.history.findIndex(item => item.topic === currentTopic);
+                    if (existingIndex !== -1) {
+                        this.history[existingIndex] = historyItem;
+                    } else {
+                        this.history.unshift(historyItem);
+                    }
+                    
+                    // Keep only last 20 items
+                    if (this.history.length > 20) {
+                        this.history = this.history.slice(0, 20);
+                    }
+                    
+                    localStorage.setItem('researchHistory', JSON.stringify(this.history));
+                    
+                    // Show and enable follow-up section
+                    if (followUpSection) {
+                        followUpSection.style.display = 'block';
+                        followUpSection.style.opacity = '1';
+                    }
+                    
+                    this.generateSuggestedFollowUps(sources);
+
+                    if (sources && sources.length > 0) {
+                        const imageUrls = await this.crawlImagesFromSources(sources);
+                        this.updateSideContent(sources, imageUrls);
+                    }
+                } else {
+                    // Hide follow-up section if no content
+                    if (followUpSection) {
+                        followUpSection.style.display = 'none';
+                    }
+                    this.hideLoader();
+                    this.combinedResults.innerHTML = '<div class="error-message">No results found. Please try a different query.</div>';
                 }
             }
 
@@ -643,6 +702,114 @@ class ResearchManager {
                 } else {
                     sourcesList.style.maxHeight = '';
                     imageGrid.style.maxHeight = '';
+                }
+            }
+
+            setupHistoryUI() {
+                const historyButton = document.querySelector('.history-button');
+                const historyMenu = document.getElementById('historyMenu');
+                const historyList = document.getElementById('historyList');
+                const clearHistoryBtn = document.querySelector('.clear-history');
+                const newResearchBtn = document.querySelector('.new-research');
+                const titleSetup = document.getElementById('titleSetup');
+
+                // Toggle history menu
+                historyButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    historyMenu.classList.toggle('show');
+                    this.updateHistoryList();
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!historyMenu.contains(e.target) && !historyButton.contains(e.target)) {
+                        historyMenu.classList.remove('show');
+                    }
+                });
+
+                // Clear history
+                clearHistoryBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to clear all research history?')) {
+                        this.history = [];
+                        localStorage.setItem('researchHistory', JSON.stringify(this.history));
+                        this.updateHistoryList();
+                    }
+                });
+
+                // New research
+                newResearchBtn.addEventListener('click', () => {
+                    titleSetup.style.display = 'flex';
+                    document.getElementById('currentTitle').style.display = 'none';
+                    document.getElementById('welcomeScreen').style.display = 'block';
+                    document.getElementById('researchLoader').style.display = 'none';
+                    document.getElementById('resultsContainer').style.display = 'none';
+                    document.querySelector('.title-input').value = '';
+                    historyMenu.classList.remove('show');
+                });
+            }
+
+            updateHistoryList() {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = this.history.map((item, index) => `
+                    <div class="history-item" data-index="${index}">
+                        <div class="history-item-content">
+                            <span class="history-topic">${item.topic}</span>
+                            <span class="history-date">${new Date(item.date).toLocaleDateString()}</span>
+                        </div>
+                        <button class="delete-history" title="Delete" onclick="event.stopPropagation();">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                historyList.querySelectorAll('.history-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const index = parseInt(item.dataset.index);
+                        const research = this.history[index];
+                        this.loadResearch(research);
+                    });
+                });
+
+                historyList.querySelectorAll('.delete-history').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(e.target.closest('.history-item').dataset.index);
+                        this.deleteHistoryItem(index);
+                    });
+                });
+            }
+
+            loadResearch(research) {
+                const titleSetup = document.getElementById('titleSetup');
+                const currentTitle = document.getElementById('currentTitle');
+                
+                titleSetup.style.display = 'none';
+                currentTitle.textContent = research.topic;
+                currentTitle.style.display = 'block';
+                
+                document.getElementById('historyMenu').classList.remove('show');
+                document.getElementById('welcomeScreen').style.display = 'none';
+                
+                // Load saved content if available
+                if (research.content) {
+                    this.combinedResults.innerHTML = research.content;
+                    document.querySelector('.follow-up-section').style.display = 'block';
+                    if (research.sources) {
+                        this.updateSideContent(research.sources, research.images || []);
+                    }
+                } else {
+                    // If no saved content, conduct new research
+                    this.conductResearch(research.topic);
+                }
+            }
+
+            deleteHistoryItem(index) {
+                if (confirm('Delete this research from history?')) {
+                    this.history.splice(index, 1);
+                    localStorage.setItem('researchHistory', JSON.stringify(this.history));
+                    this.updateHistoryList();
                 }
             }
         }
