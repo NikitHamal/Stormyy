@@ -27,7 +27,7 @@ const conversationTitle = document.querySelector('.conversation-title');
 // API Endpoints
 const GPT4O_API_URL = 'https://api.paxsenix.us.kg/ai/gpt4o';
 const GPT4O_MINI_API_URL = 'https://api.paxsenix.us.kg/ai/gpt4omini';
-const GEMINI_REALTIME_API_URL = 'https://api.paxsenix.us.kg/ai/gemini-realtime';
+const GEMINI_REALTIME_API_URL = 'https://api.paxsenix.biz.id/ai/gemini-realtime';
 const GEMINI_FLASH_PAXSENIX_API_URL = 'https://api.paxsenix.us.kg/ai/gemini-flash';
 const GEMINI_FLASH_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
 const GEMINI_FLASH_API_KEY = 'AIzaSyBlvhpuRx-ispBO9mCxnMNu78FQ4rLnmrI';
@@ -35,272 +35,9 @@ const CLAUDE_SONNET_API_URL = 'https://api.paxsenix.us.kg/ai/claudeSonnet';
 const MIXTRAL_API_URL = 'https://api.paxsenix.us.kg/ai/mixtral';
 const LLAMA3_API_URL = 'https://api.paxsenix.us.kg/ai/llama3';
 const GEMMA_API_URL = 'https://api.paxsenix.us.kg/ai/gemma';
+const GEMMA2_API_URL = 'https://api.paxsenix.biz.id/ai/gemma';
 const LLAMA3_70B_API_URL = 'https://api.paxsenix.us.kg/ai/llama3-1-70B';
 const PAXSENIX_TTS_API_URL = 'https://api.paxsenix.biz.id/tools/tts';
-
-// Model API endpoints
-const API_ENDPOINTS = {
-    gemini_flash: 'https://api.paxsenix.us.kg/ai/gemini-flash',
-    gemini_realtime: 'https://api.paxsenix.us.kg/ai/gemini-realtime',
-    claude: 'https://api.paxsenix.us.kg/ai/claude',
-    openchat: 'https://api.paxsenix.us.kg/ai/openchat',
-    o3_mini: 'https://api.paxsenix.us.kg/ai/o3-mini',
-    gpt4o: 'https://api.paxsenix.us.kg/ai/gpt4o',
-    gpt4o_mini: 'https://api.paxsenix.us.kg/ai/gpt4o-mini',
-    gpt35turbo: 'https://api.paxsenix.us.kg/ai/gpt35-turbo',
-    qwen_72b: 'https://api.paxsenix.us.kg/ai/qwen-72b',
-    qwen_14b: 'https://api.paxsenix.us.kg/ai/qwen-14b',
-    qwen_7b: 'https://api.paxsenix.us.kg/ai/qwen-7b',
-    gemma2: 'https://api.paxsenix.us.kg/ai/gemma2'
-};
-
-// Model configurations
-const MODEL_CONFIGS = {
-    gemini_flash: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    gemini_realtime: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.9,
-        stream: true
-    },
-    claude: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    openchat: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    o3_mini: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.9
-    },
-    gpt4o: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    gpt4o_mini: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.9
-    },
-    gpt35turbo: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.9
-    },
-    qwen_72b: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    qwen_14b: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    },
-    qwen_7b: {
-        max_tokens: 1024,
-        temperature: 0.8,
-        top_p: 0.9
-    },
-    gemma2: {
-        max_tokens: 2048,
-        temperature: 0.7,
-        top_p: 0.9
-    }
-};
-
-// Function to get model configuration
-function getModelConfig(model) {
-    return MODEL_CONFIGS[model] || {};
-}
-
-// Function to construct API request body
-function constructRequestBody(message, model) {
-    const config = getModelConfig(model);
-    const baseRequest = {
-        messages: [{
-            role: 'user',
-            content: message
-        }],
-        ...config
-    };
-
-    // Add model-specific parameters
-    switch(model) {
-        case 'gemma2':
-            return {
-                ...baseRequest,
-                model: 'gemma-2b-it',
-                stream: false
-            };
-        case 'qwen_72b':
-            return {
-                ...baseRequest,
-                model: 'qwen-72b',
-                response_format: { type: 'text' }
-            };
-        case 'qwen_14b':
-            return {
-                ...baseRequest,
-                model: 'qwen-14b',
-                response_format: { type: 'text' }
-            };
-        case 'qwen_7b':
-            return {
-                ...baseRequest,
-                model: 'qwen-7b',
-                response_format: { type: 'text' }
-            };
-        case 'gpt4o':
-            return {
-                ...baseRequest,
-                model: 'gpt-4o',
-                response_format: { type: 'text' }
-            };
-        case 'gpt4o_mini':
-            return {
-                ...baseRequest,
-                model: 'gpt-4o-mini',
-                response_format: { type: 'text' }
-            };
-        case 'gpt35turbo':
-            return {
-                ...baseRequest,
-                model: 'gpt-3.5-turbo',
-                response_format: { type: 'text' }
-            };
-        case 'claude':
-            return {
-                ...baseRequest,
-                model: 'claude-3-opus-20240229',
-                response_format: { type: 'text' }
-            };
-        case 'openchat':
-            return {
-                ...baseRequest,
-                model: 'openchat-7b',
-                response_format: { type: 'text' }
-            };
-        case 'o3_mini':
-            return {
-                ...baseRequest,
-                model: 'o3-mini',
-                response_format: { type: 'text' }
-            };
-        default:
-            return baseRequest;
-    }
-}
-
-// Function to send message to API
-async function sendMessageToAPI(message, model) {
-    const endpoint = API_ENDPOINTS[model];
-    if (!endpoint) {
-        throw new Error('Invalid model selected');
-    }
-
-    const requestBody = constructRequestBody(message, model);
-    
-    try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.statusText}`);
-        }
-
-        // Handle streaming responses
-        if (MODEL_CONFIGS[model]?.stream) {
-            return handleStreamingResponse(response);
-        }
-
-        const data = await response.json();
-        return extractResponseContent(data, model);
-    } catch (error) {
-        console.error('Error sending message:', error);
-        throw error;
-    }
-}
-
-// Function to extract response content based on model
-function extractResponseContent(data, model) {
-    if (Array.isArray(data.message)) {
-        return data.message.join('');
-    }
-    if (typeof data.message === 'string') {
-        return data.message;
-    }
-    if (data.response) {
-        return data.response;
-    }
-    if (data.text) {
-        return data.text;
-    }
-    if (data.content) {
-        return data.content;
-    }
-    
-    // If no recognized format is found, return the raw data
-    return JSON.stringify(data);
-}
-
-// Function to handle streaming responses
-async function handleStreamingResponse(response) {
-    const reader = response.body.getReader();
-    let content = '';
-
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            // Convert the chunk to text and append it
-            const chunk = new TextDecoder().decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const jsonStr = line.slice(6);
-                    try {
-                        const data = JSON.parse(jsonStr);
-                        content += extractResponseContent(data);
-                        // Trigger UI update for streaming content
-                        updateStreamingContent(content);
-                    } catch (e) {
-                        console.warn('Failed to parse streaming data:', e);
-                    }
-                }
-            }
-        }
-    } finally {
-        reader.releaseLock();
-    }
-
-    return content;
-}
-
-// Function to update UI with streaming content
-function updateStreamingContent(content) {
-    const messageContainer = document.querySelector('.message-content.thinking');
-    if (messageContainer) {
-        messageContainer.textContent = content;
-    }
-}
 
 // Voice categories and models
 const VOICE_CATEGORIES = {
@@ -1787,7 +1524,8 @@ async function sendMessage() {
             messageHistory: [],
             currentVersions: [],
             timestamp: Date.now(),
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            geminirealtimeId: null // Add session ID storage
         };
         conversations.unshift(conversation);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
@@ -1889,6 +1627,46 @@ async function sendMessage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
             };
+        } else if (currentModel === 'gemma2') {
+            apiUrl = GEMMA2_API_URL;
+            
+            options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: chatHistory.length > 0 ? 
+                        [...chatHistory.map(msg => ({
+                            role: msg.isUser ? 'user' : 'assistant',
+                            content: msg.content
+                        })), {
+                            role: 'user',
+                            content: message
+                        }] : [{
+                            role: 'user',
+                            content: message
+                        }]
+                })
+            };
+        } else if (currentModel === 'gemini_realtime') {
+            // Get current conversation
+            const currentConversation = conversations.find(conv => conv.id === currentConversationId);
+            const sessionId = currentConversation?.geminirealtimeId;
+            
+            // Build URL with session ID if available
+            apiUrl = `${GEMINI_REALTIME_API_URL}?text=${encodeURIComponent(message)}`;
+            if (sessionId) {
+                apiUrl += `&session_id=${encodeURIComponent(sessionId)}`;
+            }
+            
+            options = {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json'
+                }
+            };
         } else {
             // Handle other models including gemini_flash_paxsenix
             const now = Date.now();
@@ -1983,6 +1761,15 @@ async function sendMessage() {
 
         updateConversationsList();
 
+        // Store session ID for Gemini Realtime
+        if (currentModel === 'gemini_realtime' && data.session_id) {
+            const conversationIndex = conversations.findIndex(conv => conv.id === currentConversationId);
+            if (conversationIndex !== -1) {
+                conversations[conversationIndex].geminirealtimeId = data.session_id;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+            }
+        }
+
     } catch (error) {
         console.error('Error sending message:', error);
         thinkingMessage.remove();
@@ -2025,57 +1812,21 @@ function getApiUrlForModel(model, message, history = []) {
         'gemini_flash_paxsenix': GEMINI_FLASH_PAXSENIX_API_URL
     }[model] || GEMINI_REALTIME_API_URL;
 
-    // Add model-specific parameters
-    let url = `${baseUrl}?text=${encodedMessage}`;
-    
-    // Add context if available
-    if (context) {
-        url += `&context=${context}`;
-    }
-    
-    // Add model-specific parameters for longer responses
-    if (model === 'llama3' || model === 'llama3_70b') {
-        url += '&max_tokens=2048&temperature=0.7&top_p=0.9';
-    } else if (model === 'mixtral') {
-        url += '&max_tokens=1024&temperature=0.8';
-    } else if (model === 'claude_sonnet') {
-        url += '&max_tokens=1024&temperature=0.7';
-    }
-    
-    return url;
+    // Only append context parameter if it's not empty
+    return context ?
+        `${baseUrl}?text=${encodedMessage}&context=${context}` :
+        `${baseUrl}?text=${encodedMessage}`;
 }
 
 function getBotResponse(data) {
     if (currentModel === 'gemini_flash') {
         if (data.error) throw new Error(data.error.message || 'API Error');
         return data.candidates[0].content.parts[0].text;
-    }
-    
-    // Handle different response formats from various models
-    if (data.message && Array.isArray(data.message)) {
-        // Handle array of messages (like in Llama models)
-        return data.message.map(msg => msg.text || msg).join('\n');
-    } else if (data.message && typeof data.message === 'string') {
-        // Direct message string
+    } else if (currentModel === 'gemma2' || currentModel === 'gemini_realtime') {
+        if (!data.ok) throw new Error('API Error');
         return data.message;
-    } else if (data.response && typeof data.response === 'string') {
-        // Response field
-        return data.response;
-    } else if (data.text && typeof data.text === 'string') {
-        // Text field
-        return data.text;
-    } else if (data.content && typeof data.content === 'string') {
-        // Content field
-        return data.content;
     }
-    
-    // If no recognized format is found, try to extract any text content
-    const possibleContent = JSON.stringify(data, null, 2);
-    if (possibleContent && possibleContent !== '{}') {
-        return `Response format not recognized. Raw content:\n${possibleContent}`;
-    }
-    
-    return 'No response content found from API';
+    return data.response || data.message || 'No response from API';
 }
 
 async function regenerateResponse(content, position, switchModel = false) {
@@ -2159,6 +1910,49 @@ async function regenerateResponse(content, position, switchModel = false) {
                         }]
                     }]
                 })
+            };
+        } else if (currentModel === 'gemma2') {
+            apiUrl = GEMMA2_API_URL;
+            
+            // Include filtered chat history (excluding current message) for context
+            const filteredHistory = chatHistory.filter(msg => msg.content !== content);
+            
+            options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: filteredHistory.length > 0 ? 
+                        [...filteredHistory.map(msg => ({
+                            role: msg.isUser ? 'user' : 'assistant',
+                            content: msg.content
+                        })), {
+                            role: 'user',
+                            content: userMessage
+                        }] : [{
+                            role: 'user',
+                            content: userMessage
+                        }]
+                })
+            };
+        } else if (currentModel === 'gemini_realtime') {
+            // Get current conversation
+            const currentConversation = conversations.find(conv => conv.id === currentConversationId);
+            const sessionId = currentConversation?.geminirealtimeId;
+            
+            // Build URL with session ID if available
+            apiUrl = `${GEMINI_REALTIME_API_URL}?text=${encodeURIComponent(userMessage)}`;
+            if (sessionId) {
+                apiUrl += `&session_id=${encodeURIComponent(sessionId)}`;
+            }
+            
+            options = {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json'
+                }
             };
         } else {
             const now = Date.now();
