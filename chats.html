@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 </head>
 
+
 <body>
     <div class="app-container">
         <!-- Sidebar backdrop -->
@@ -30,6 +31,11 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Conversations</h2>
+                <button class="close-sidebar" id="closeSidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
             
             <div class="sidebar-content">
@@ -110,6 +116,30 @@
                 </div>
 
                 <div class="chat-input-container">
+                    <button class="plus-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                    </button>
+                    <div class="file-upload-menu">
+                        <div class="image-upload-btn" data-type="image" title="Upload image">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Image
+                        </div>
+                        <div class="upload-option" data-type="audio">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18V5l12-2v13"/>
+                                <circle cx="6" cy="18" r="3"/>
+                                <circle cx="18" cy="16" r="3"/>
+                            </svg>
+                            Audio
+                        </div>
+                    </div>
                     <button class="mic-button">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -125,9 +155,22 @@
                             <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                         </svg>
                     </button>
+                    <input type="file" class="image-input" accept="image/*" style="display: none;">
+                    <input type="file" class="audio-input" accept="audio/*" style="display: none;">
                 </div>
             </div>
         </main>
+
+        <!-- Full screen image viewer -->
+        <div class="fullscreen-image-viewer">
+            <button class="close-viewer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <img class="fullscreen-image" src="" alt="Full screen image">
+        </div>
 
         <!-- Settings Modal -->
         <div class="settings-modal" id="settingsModal">
@@ -142,56 +185,434 @@
                 </div>
                 <div class="settings-body">
                     <div class="setting-section">
-                        <h3>AI Model</h3>
-                        <div class="model-options" id="modelOptions">
+                        <h3>AI Models</h3>
+                        <div class="model-categories">
+                            <!-- Gemini Models -->
+                            <div class="model-category">
+                                <h4>Gemini Models</h4>
+                                <div class="model-grid">
                             <div class="model-option">
-                                <input type="radio" id="gemini_flash" name="model" value="gemini_flash">
-                                <label for="gemini_flash">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                                        <input type="radio" id="gemini2_flash" name="model" value="gemini2_flash">
+                                        <label for="gemini2_flash">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                         <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" stroke="currentColor" fill="currentColor"/>
                                     </svg>
                                     <div class="model-info">
-                                        <span class="model-name">Gemini Flash</span>
-                                        <span class="model-description">Fast responses, good for general tasks</span>
+                                        <span class="model-name">Gemini 2.0 Flash</span>
+                                                <span class="model-description">Fast responses with enhanced capabilities</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="gemini2_flash_thinking_exp" name="model" value="gemini2_flash_thinking_exp">
+                                        <label for="gemini2_flash_thinking_exp">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Gemini 2.0 Flash Thinking Exp</span>
+                                                <span class="model-description">Enhanced reasoning with experimental thinking steps</span>
                                     </div>
                                 </label>
                             </div>
                             <div class="model-option">
-                                <input type="radio" id="claude_sonnet" name="model" value="claude_sonnet">
-                                <label for="claude_sonnet">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                                        <path d="M9 21C9 21.5 8.5 22 8 22H5C4.5 22 4 21.5 4 21V14C4 13.5 4.5 13 5 13H8C8.5 13 9 13.5 9 14V21ZM16 21C16 21.5 15.5 22 15 22H12C11.5 22 11 21.5 11 21V9C11 8.5 11.5 8 12 8H15C15.5 8 16 8.5 16 9V21ZM23 21C23 21.5 22.5 22 22 22H19C18.5 22 18 21.5 18 21V4C18 3.5 18.5 3 19 3H22C22.5 3 23 3.5 23 4V21Z" stroke="currentColor" fill="currentColor"/>
+                                        <input type="radio" id="gemini2_realtime" name="model" value="gemini2_realtime">
+                                        <label for="gemini2_realtime">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" stroke="currentColor" fill="currentColor"/>
                                     </svg>
                                     <div class="model-info">
-                                        <span class="model-name">Claude Sonnet</span>
-                                        <span class="model-description">Excellent for creative writing and analysis</span>
+                                                <span class="model-name">Gemini 2.0 Realtime</span>
+                                                <span class="model-description">Real-time responses with memory</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GPT Models -->
+                            <div class="model-category">
+                                <h4>GPT Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="gpt4o" name="model" value="gpt4o">
+                                        <label for="gpt4o">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">GPT-4O</span>
+                                                <span class="model-description">Optimized GPT-4 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="gpt4o_mini" name="model" value="gpt4o_mini">
+                                        <label for="gpt4o_mini">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">GPT-4O Mini</span>
+                                                <span class="model-description">Lightweight optimized GPT-4</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="gpt4" name="model" value="gpt4">
+                                        <label for="gpt4">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">GPT-4</span>
+                                                <span class="model-description">Standard GPT-4 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="gpt35_turbo" name="model" value="gpt35_turbo">
+                                        <label for="gpt35_turbo">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">GPT-3.5 Turbo</span>
+                                                <span class="model-description">Fast and efficient responses</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="o3_mini" name="model" value="o3_mini">
+                                        <label for="o3_mini">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">O3 Mini</span>
+                                                <span class="model-description">Lightweight GPT model variant</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Llama Models -->
+                            <div class="model-category">
+                                <h4>Llama Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_70b" name="model" value="llama3_70b">
+                                        <label for="llama3_70b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 70B</span>
+                                                <span class="model-description">Large Llama 3 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_70b_chat" name="model" value="llama3_70b_chat">
+                                        <label for="llama3_70b_chat">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 70B Chat</span>
+                                                <span class="model-description">Large Llama 3 chat-optimized</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_32b" name="model" value="llama3_32b">
+                                        <label for="llama3_32b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 32B</span>
+                                                <span class="model-description">Medium Llama 3 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_32b_chat" name="model" value="llama3_32b_chat">
+                                        <label for="llama3_32b_chat">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 32B Chat</span>
+                                                <span class="model-description">Medium Llama 3 chat-optimized</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_8b" name="model" value="llama3_8b">
+                                        <label for="llama3_8b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 8B</span>
+                                                <span class="model-description">Base Llama 3 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="llama3_8b_chat" name="model" value="llama3_8b_chat">
+                                        <label for="llama3_8b_chat">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Llama 3 8B Chat</span>
+                                                <span class="model-description">Base Llama 3 chat-optimized</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mixtral Models -->
+                            <div class="model-category">
+                                <h4>Mixtral Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="mixtral_8x7b" name="model" value="mixtral_8x7b">
+                                        <label for="mixtral_8x7b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Mixtral 8x7B</span>
+                                                <span class="model-description">Base Mixtral model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="mixtral_8x7b_instruct" name="model" value="mixtral_8x7b_instruct">
+                                        <label for="mixtral_8x7b_instruct">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Mixtral 8x7B Instruct</span>
+                                                <span class="model-description">Instruction-tuned Mixtral</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Claude Models -->
+                            <div class="model-category">
+                                <h4>Claude Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="claude3_opus" name="model" value="claude3_opus">
+                                        <label for="claude3_opus">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M9 21C9 21.5 8.5 22 8 22H5C4.5 22 4 21.5 4 21V14C4 13.5 4.5 13 5 13H8C8.5 13 9 13.5 9 14V21Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Claude 3 Opus</span>
+                                                <span class="model-description">Most capable Claude model</span>
                                     </div>
                                 </label>
                             </div>
                             <div class="model-option">
-                                <input type="radio" id="mixtral" name="model" value="mixtral">
-                                <label for="mixtral">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                                        <path d="M12 16L19 19V7L12 4L5 7V19L12 16ZM12 16V4" stroke="currentColor" fill="none" stroke-width="2"/>
+                                        <input type="radio" id="claude3_sonnet" name="model" value="claude3_sonnet">
+                                        <label for="claude3_sonnet">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M9 21C9 21.5 8.5 22 8 22H5C4.5 22 4 21.5 4 21V14C4 13.5 4.5 13 5 13H8C8.5 13 9 13.5 9 14V21Z" stroke="currentColor" fill="currentColor"/>
                                     </svg>
                                     <div class="model-info">
-                                        <span class="model-name">Mixtral</span>
-                                        <span class="model-description">Balanced performance for diverse tasks</span>
+                                                <span class="model-name">Claude 3 Sonnet</span>
+                                                <span class="model-description">Balanced Claude model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="claude3_haiku" name="model" value="claude3_haiku">
+                                        <label for="claude3_haiku">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M9 21C9 21.5 8.5 22 8 22H5C4.5 22 4 21.5 4 21V14C4 13.5 4.5 13 5 13H8C8.5 13 9 13.5 9 14V21Z" stroke="currentColor" fill="currentColor"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Claude 3 Haiku</span>
+                                                <span class="model-description">Fast and efficient Claude model</span>
+                                    </div>
+                                </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- OpenChat Models -->
+                            <div class="model-category">
+                                <h4>OpenChat Models</h4>
+                                <div class="model-grid">
+                            <div class="model-option">
+                                        <input type="radio" id="openchat_3.5" name="model" value="openchat_3.5">
+                                        <label for="openchat_3.5">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z" stroke="currentColor" fill="currentColor"/>
+                                    </svg>
+                                    <div class="model-info">
+                                                <span class="model-name">OpenChat 3.5</span>
+                                                <span class="model-description">Latest OpenChat model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gemma Models -->
+                            <div class="model-category">
+                                <h4>Gemma Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="gemma2" name="model" value="gemma2">
+                                        <label for="gemma2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Gemma 2</span>
+                                                <span class="model-description">Google's Gemma 2 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Qwen Models -->
+                            <div class="model-category">
+                                <h4>Qwen Models</h4>
+                                <div class="model-grid">
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen_plus_latest" name="model" value="qwen_plus_latest">
+                                        <label for="qwen_plus_latest">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen Plus Latest</span>
+                                                <span class="model-description">Latest enhanced Qwen model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen_max_latest" name="model" value="qwen_max_latest">
+                                        <label for="qwen_max_latest">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen Max Latest</span>
+                                                <span class="model-description">Latest maximum capability Qwen</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen_turbo_latest" name="model" value="qwen_turbo_latest">
+                                        <label for="qwen_turbo_latest">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen Turbo Latest</span>
+                                                <span class="model-description">Latest high-speed Qwen model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_72b" name="model" value="qwen25_72b">
+                                        <label for="qwen25_72b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 72B</span>
+                                                <span class="model-description">Large Qwen 2.5 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_14b" name="model" value="qwen25_14b">
+                                        <label for="qwen25_14b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 14B</span>
+                                                <span class="model-description">Medium Qwen 2.5 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_7b" name="model" value="qwen25_7b">
+                                        <label for="qwen25_7b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 7B</span>
+                                                <span class="model-description">Base Qwen 2.5 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_4b" name="model" value="qwen25_4b">
+                                        <label for="qwen25_4b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 4B</span>
+                                                <span class="model-description">Small Qwen 2.5 model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_1.8b" name="model" value="qwen25_1.8b">
+                                        <label for="qwen25_1.8b">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 1.8B</span>
+                                                <span class="model-description">Lightweight Qwen 2.5 model</span>
                                     </div>
                                 </label>
                             </div>
                             <div class="model-option">
-                                <input type="radio" id="llama3" name="model" value="llama3">
-                                <label for="llama3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                                        <path d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3ZM20 19H4V5H20V19Z" stroke="currentColor" fill="currentColor"/>
-                                        <path d="M8 12H16M12 8V16" stroke="currentColor" stroke-width="2"/>
+                                        <input type="radio" id="qwen25_72b_instruct" name="model" value="qwen25_72b_instruct">
+                                        <label for="qwen25_72b_instruct">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
                                     </svg>
                                     <div class="model-info">
-                                        <span class="model-name">Llama 3</span>
-                                        <span class="model-description">Advanced language model for complex tasks</span>
+                                                <span class="model-name">Qwen 2.5 72B Instruct</span>
+                                                <span class="model-description">Large Qwen 2.5 instruction model</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="model-option">
+                                        <input type="radio" id="qwen25_vl_72b_instruct" name="model" value="qwen25_vl_72b_instruct">
+                                        <label for="qwen25_vl_72b_instruct">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 16L19 19V7L12 4L5 7V19L12 16Z" stroke="currentColor" fill="none" stroke-width="2"/>
+                                            </svg>
+                                            <div class="model-info">
+                                                <span class="model-name">Qwen 2.5 VL 72B Instruct</span>
+                                                <span class="model-description">Vision-language Qwen 2.5 instruction model</span>
                                     </div>
                                 </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
