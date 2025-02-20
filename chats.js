@@ -1123,15 +1123,14 @@ function appendMessage(content, isUser, options = {}, position = null) {
         // Add model label
         const modelLabel = document.createElement('div');
         modelLabel.className = 'model-label';
-        modelLabel.textContent = options.model || currentModel;
-        modelLabel.textContent = modelLabel.textContent.replace(/_/g, ' ');
+        modelLabel.textContent = formatModelName(options.model || currentModel);
         messageDiv.appendChild(modelLabel);
 
         if (!content) {
             // Add simple thinking text
             const thinkingText = document.createElement('div');
             thinkingText.className = 'thinking';
-            thinkingText.textContent = 'AI is thinking';
+            thinkingText.textContent = 'AI is thinking...';
             messageDiv.appendChild(thinkingText);
             messageDiv.classList.add('thinking');
         } else {
@@ -2080,7 +2079,7 @@ async function regenerateResponse(content, position, switchModel = false) {
         if (switchModel) {
             currentModel = data.model || currentModel;
             localStorage.setItem('current_model', currentModel);
-            showToast(`Switched to ${currentModel.replace(/_/g, ' ')}`);
+            showToast(`Switched to ${formatModelName(currentModel)}`);
         }
 
     } catch (error) {
@@ -2649,5 +2648,33 @@ function initializeVoiceSelection() {
 // Initialize voice selection when document is ready
 document.addEventListener('DOMContentLoaded', () => {
     initializeVoiceSelection();
-    // ... rest of the existing initialization code ...
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Format model names in dropdown
+    const modelSelector = document.getElementById('model-selector');
+    if (modelSelector) {
+        modelSelector.querySelectorAll('option').forEach(option => {
+            option.textContent = formatModelName(option.value);
+        });
+    }
+});
+
+// Rest of your code including formatModelName function and other functionality
+function formatModelName(modelName) {
+    const specialCases = {
+        'gpt4o': 'GPT-4 Optimized',
+        'gpt4omini': 'GPT-4 Mini',
+        'llama3': 'Llama 3',
+        'llama3_70b': 'Llama 3 70B',
+        'gemini_flash': 'Gemini Flash',
+        'claude_sonnet': 'Claude Sonnet',
+        'mixtral': 'Mixtral',
+        'gemma': 'Gemma'
+    };
+
+    return specialCases[modelName] || modelName
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}

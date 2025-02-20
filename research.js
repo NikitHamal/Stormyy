@@ -292,9 +292,9 @@ class ResearchManager {
             const historyItem = {
                 topic: currentTopic,
                 date: new Date().toISOString(),
-                content: formattedContent, // Save formatted content
+                content: formattedContent,
                 sources: sources || [],
-                images: sources ? await this.crawlImagesFromSources(sources) : []
+                images: []
             };
             
             // Update history
@@ -321,8 +321,7 @@ class ResearchManager {
             this.generateSuggestedFollowUps(sources);
 
             if (sources && sources.length > 0) {
-                const imageUrls = await this.crawlImagesFromSources(sources);
-                this.updateSideContent(sources, imageUrls);
+                this.updateSideContent(sources, []);
             }
         } else {
             // Hide follow-up section if no content
@@ -569,11 +568,7 @@ class ResearchManager {
                 
                 // If there are sources, crawl images from them
                 if (data.sources && data.sources.length > 0) {
-                    // Call the new image crawling endpoint
-                    const imageUrls = await this.crawlImagesFromSources(data.sources);
-                    
-                    // Update the display with both sources and images
-                    this.updateSideContent(data.sources, imageUrls);
+                    this.updateSideContent(data.sources, []);
                 }
             } else {
                 throw new Error(data.message || 'Failed to get response');
