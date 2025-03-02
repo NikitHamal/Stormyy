@@ -49,8 +49,8 @@ orbContainer.addEventListener('click', (e) => {
 });
 
 // API configuration
-const API_KEY = 'AIzaSyBlvhpuRx-ispBO9mCxnMNu78FQ4rLnmrI'; // Replace with your actual API key
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const API_KEY = 'AIzaSyBlvhpuRx-ispBO9mCxnMNu78FQ4rLnmrI';
+const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Add these functions to the script section
 function showCaption(text) {
@@ -108,26 +108,38 @@ if (speechSynthesis.onvoiceschanged !== undefined) {
 let recognition;
 let isListening = false;
 let currentLanguage = 'en-US';
+let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 // Add this after initializing other variables
 const languageSelect = document.getElementById('language-select');
 
 // Add this to your initialization code
-languageSelect.addEventListener('change', (e) => {
-    currentLanguage = e.target.value;
-    // Restart recognition with new language
-    if (recognition) {
-        recognition.stop();
-    }
-    initializeSpeechRecognition();
-});
+if (languageSelect) {
+    languageSelect.addEventListener('change', (e) => {
+        currentLanguage = e.target.value;
+        // Restart recognition with new language
+        if (recognition) {
+            recognition.stop();
+        }
+        initializeSpeechRecognition();
+    });
+}
 
 function initializeSpeechRecognition() {
-    if ('webkitSpeechRecognition' in window) {
-        recognition = new webkitSpeechRecognition();
+    // Check for different speech recognition APIs
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition;
+    
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = currentLanguage;
+        
+        // Adjust settings for mobile
+        if (isMobileDevice) {
+            recognition.continuous = false; // Mobile works better with non-continuous mode
+            recognition.interimResults = true; // Allow interim results for better mobile experience
+        }
         
         recognition.onstart = () => {
             orbContainer.classList.add('listening');
@@ -137,22 +149,39 @@ function initializeSpeechRecognition() {
         };
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            console.log('Voice input:', transcript);
+            let finalTranscript = '';
             
-            // Stop listening before processing the command
-            recognition.stop();
-            orbContainer.classList.remove('listening');
-            speechBubble.classList.remove('listening');
+            // Process all results, getting the final one
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                }
+            }
             
-            if (transcript.toLowerCase().includes('imagine')) {
-                const query = transcript.replace(/imagine/i, '').trim();
-                handleUserInput(`imagine ${query}`);
-            } else if (transcript.toLowerCase().includes('play')) {
-                const query = transcript.replace(/play/i, '').trim();
-                handlePlayCommand(query);
-            } else {
-                handleUserInput(transcript);
+            // If we have no final transcript but we have results, use the latest one
+            // This helps on iOS where isFinal might not be properly set
+            if (finalTranscript === '' && event.results.length > 0) {
+                finalTranscript = event.results[event.results.length - 1][0].transcript;
+            }
+            
+            console.log('Voice input:', finalTranscript);
+            
+            // Only process if we have a transcript
+            if (finalTranscript.trim() !== '') {
+                // Stop listening before processing the command
+                recognition.stop();
+                orbContainer.classList.remove('listening');
+                speechBubble.classList.remove('listening');
+                
+                if (finalTranscript.toLowerCase().includes('imagine')) {
+                    const query = finalTranscript.replace(/imagine/i, '').trim();
+                    handleUserInput(`imagine ${query}`);
+                } else if (finalTranscript.toLowerCase().includes('play')) {
+                    const query = finalTranscript.replace(/play/i, '').trim();
+                    handlePlayCommand(query);
+                } else {
+                    handleUserInput(finalTranscript);
+                }
             }
         };
 
@@ -165,12 +194,49 @@ function initializeSpeechRecognition() {
         recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             orbContainer.classList.remove('listening');
-            speechBubble.textContent = "Sorry, I couldn't hear that.";
+            
+            // Show different error messages based on the error
+            if (event.error === 'not-allowed') {
+                speechBubble.textContent = "Please allow microphone access.";
+                showPermissionInstructions();
+            } else if (event.error === 'network') {
+                speechBubble.textContent = "Network error. Please check your connection.";
+            } else {
+                speechBubble.textContent = "Sorry, I couldn't hear that.";
+            }
+            
             speechBubble.classList.remove('listening');
-            setTimeout(() => speechBubble.classList.remove('active'), 2000);
+            setTimeout(() => speechBubble.classList.remove('active'), 3000);
             isListening = false;
         };
+        
+        // Add audio context initialization for iOS
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            initializeIOSAudio();
+        }
+    } else {
+        console.error('Speech recognition not supported in this browser');
+        // Show a message to the user about incompatibility
+        speechBubble.textContent = "Voice recognition not supported in your browser.";
+        speechBubble.classList.add('active');
+        setTimeout(() => speechBubble.classList.remove('active'), 3000);
     }
+}
+
+// Helper function to show permission instructions based on platform
+function showPermissionInstructions() {
+    let instructions = "";
+    
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        instructions = "Go to Settings > Safari > Microphone and allow access.";
+    } else if (/Android/i.test(navigator.userAgent)) {
+        instructions = "Check app permissions in your device settings.";
+    } else {
+        instructions = "Click the microphone icon in your address bar and allow access.";
+    }
+    
+    // Display instructions in a toast or modal
+    alert("Microphone permission needed: " + instructions);
 }
 
 // Update handleUserInput function
@@ -1660,24 +1726,107 @@ function startListening() {
 
 // The speak function remains in English
 function speak(text) {
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US'; // Keep TTS in English
-    utterance.rate = 1;
-    utterance.pitch = 1;
     
-    // Try to use a female voice if available
-    const voices = speechSynthesis.getVoices();
-    const femaleVoice = voices.find(voice => 
-        voice.name.includes('Female') || 
-        voice.name.includes('Samantha') || 
-        voice.name.includes('Google UK English Female')
-    );
-    
-    if (femaleVoice) {
-        utterance.voice = femaleVoice;
+    // Optimize rate based on device
+    if (isMobileDevice) {
+        utterance.rate = 0.9; // Slightly slower for mobile devices
+    } else {
+        utterance.rate = 1;
     }
     
+    utterance.pitch = 1;
+    
+    // Get available voices
+    let voices = speechSynthesis.getVoices();
+    
+    // If voices array is empty, try to load them again
+    if (voices.length === 0) {
+        loadVoices();
+        voices = speechSynthesis.getVoices();
+    }
+    
+    // Try to select an appropriate voice based on platform and availability
+    let selectedVoice = null;
+    
+    // Check for iOS
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // iOS usually has Samantha voice
+        selectedVoice = voices.find(voice => 
+            voice.name.includes('Samantha') || 
+            voice.name.includes('Karen') ||
+            (voice.name.includes('en-US') && voice.name.includes('Female'))
+        );
+    } 
+    // Check for Android
+    else if (/Android/i.test(navigator.userAgent)) {
+        // Try to find good Android voices
+        selectedVoice = voices.find(voice => 
+            voice.name.includes('English US Female') || 
+            voice.name.includes('en-US') ||
+            voice.name.includes('Google UK English Female')
+        );
+    }
+    // Default fallback for desktop browsers
+    else {
+        selectedVoice = voices.find(voice => 
+            voice.name.includes('Google UK English Female') || 
+            voice.name.includes('Microsoft Zira') ||
+            voice.name.includes('Female') ||
+            voice.name.includes('Samantha')
+        );
+    }
+    
+    // Final fallback to any female voice or any voice
+    if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.name.includes('Female')) || voices[0];
+    }
+    
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+    }
+    
+    // Safari on iOS requires user interaction to play audio
+    // Add a safety check for iOS
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // Make sure the audio context is running
+        if (window.audioContext && window.audioContext.state !== 'running') {
+            window.audioContext.resume();
+        }
+    }
+    
+    // Add events to track speech progress and errors
+    utterance.onstart = () => {
+        console.log('Speech started');
+    };
+    
+    utterance.onerror = (event) => {
+        console.error('Speech error:', event.error);
+    };
+    
+    utterance.onend = () => {
+        console.log('Speech ended');
+    };
+    
+    // Actually speak
     window.speechSynthesis.speak(utterance);
+    
+    // Chrome sometimes cuts off speech, this is a workaround
+    if (navigator.userAgent.indexOf('Chrome') !== -1) {
+        const chromeWorkaroundInterval = 300; // milliseconds
+        const chromeWorkaround = setInterval(() => {
+            if (!speechSynthesis.speaking) {
+                clearInterval(chromeWorkaround);
+                return;
+            }
+            speechSynthesis.pause();
+            speechSynthesis.resume();
+        }, chromeWorkaroundInterval);
+    }
 }
 
 // Initialize speech recognition on page load
@@ -1761,16 +1910,32 @@ createRunes();
 
 // Add this function near the top of your script
 function initializeIOSAudio() {
-    // Create and load a silent audio file for iOS
-    const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAFbgBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sUZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=');
-    silentAudio.load();
-
-    // Play silent audio on first user interaction
-    document.addEventListener('touchstart', function initAudioContext() {
-        silentAudio.play().then(() => {
-            document.removeEventListener('touchstart', initAudioContext);
-        }).catch(error => console.log('iOS audio init error:', error));
-    }, { once: true });
+    // Create a global audio context for iOS
+    window.audioContext = window.AudioContext || window.webkitAudioContext;
+    if (window.audioContext) {
+        window.audioContext = new window.audioContext();
+    }
+    
+    // Add touch and click event listeners to start audio context
+    const unlockAudio = () => {
+        if (window.audioContext && window.audioContext.state !== 'running') {
+            window.audioContext.resume();
+        }
+        
+        // Create and play a silent audio element for iOS Safari
+        const silentSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV");
+        silentSound.volume = 0;
+        silentSound.play().catch(e => console.log("Silent audio play prevented:", e));
+        
+        // Remove event listeners once unlocked
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('touchend', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+    };
+    
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('touchend', unlockAudio);
+    document.addEventListener('click', unlockAudio);
 }
 
 // When opening chat input

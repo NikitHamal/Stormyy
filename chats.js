@@ -28,7 +28,7 @@ const conversationTitle = document.querySelector('.conversation-title');
 const GPT4O_API_URL = 'https://api.paxsenix.us.kg/ai/gpt4o';
 const GPT4O_MINI_API_URL = 'https://api.paxsenix.us.kg/ai/gpt4omini';
 const GEMINI_REALTIME_API_URL = 'https://api.paxsenix.biz.id/ai/gemini-realtime';
-const GEMINI_FLASH_PAXSENIX_API_URL = 'https://api.paxsenix.us.kg/ai/gemini-flash';
+const GEMINI_FLASH_PAXSENIX_API_URL = 'https://api.paxsenix.biz.id/ai/gemini';
 const GEMINI_FLASH_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
 const GEMINI_FLASH_API_KEY = 'AIzaSyBlvhpuRx-ispBO9mCxnMNu78FQ4rLnmrI';
 const CLAUDE_SONNET_API_URL = 'https://api.paxsenix.us.kg/ai/claudeSonnet';
@@ -1123,14 +1123,15 @@ function appendMessage(content, isUser, options = {}, position = null) {
         // Add model label
         const modelLabel = document.createElement('div');
         modelLabel.className = 'model-label';
-        modelLabel.textContent = formatModelName(options.model || currentModel);
+        modelLabel.textContent = options.model || currentModel;
+        modelLabel.textContent = modelLabel.textContent.replace(/_/g, ' ');
         messageDiv.appendChild(modelLabel);
 
         if (!content) {
             // Add simple thinking text
             const thinkingText = document.createElement('div');
             thinkingText.className = 'thinking';
-            thinkingText.textContent = 'AI is thinking...';
+            thinkingText.textContent = 'AI is thinking';
             messageDiv.appendChild(thinkingText);
             messageDiv.classList.add('thinking');
         } else {
@@ -1626,6 +1627,30 @@ async function sendMessage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
             };
+        } else if (currentModel === 'gemini_flash_paxsenix') {
+            apiUrl = GEMINI_FLASH_PAXSENIX_API_URL;
+            
+            // Get conversation history
+            const conversationText = chatHistory.length > 0 ?
+                chatHistory.map(msg => `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`).join('\n') : '';
+            
+            const requestBody = {
+                text: message
+            };
+            
+            // Only add context if we have conversation history
+            if (conversationText) {
+                requestBody.context = conversationText;
+            }
+            
+            options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            };
         } else if (currentModel === 'gemma2') {
             apiUrl = GEMMA2_API_URL;
             
@@ -1821,7 +1846,7 @@ function getBotResponse(data) {
     if (currentModel === 'gemini_flash') {
         if (data.error) throw new Error(data.error.message || 'API Error');
         return data.candidates[0].content.parts[0].text;
-    } else if (currentModel === 'gemma2' || currentModel === 'gemini_realtime') {
+    } else if (currentModel === 'gemini_flash_paxsenix' || currentModel === 'gemma2' || currentModel === 'gemini_realtime') {
         if (!data.ok) throw new Error('API Error');
         return data.message;
     }
@@ -1909,6 +1934,30 @@ async function regenerateResponse(content, position, switchModel = false) {
                         }]
                     }]
                 })
+            };
+        } else if (currentModel === 'gemini_flash_paxsenix') {
+            apiUrl = GEMINI_FLASH_PAXSENIX_API_URL;
+            
+            // Get filtered conversation history
+            const conversationText = filteredHistory.length > 0 ?
+                filteredHistory.map(msg => `${msg.isUser ? 'User' : 'Assistant'}: ${msg.content}`).join('\n') : '';
+            
+            const requestBody = {
+                text: userMessage
+            };
+            
+            // Only add context if we have conversation history
+            if (conversationText) {
+                requestBody.context = conversationText;
+            }
+            
+            options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
             };
         } else if (currentModel === 'gemma2') {
             apiUrl = GEMMA2_API_URL;
@@ -2079,7 +2128,7 @@ async function regenerateResponse(content, position, switchModel = false) {
         if (switchModel) {
             currentModel = data.model || currentModel;
             localStorage.setItem('current_model', currentModel);
-            showToast(`Switched to ${formatModelName(currentModel)}`);
+            showToast(`Switched to ${currentModel.replace(/_/g, ' ')}`);
         }
 
     } catch (error) {
@@ -2210,6 +2259,9 @@ let audioChunks = [];
 let currentChunkIndex = 0;
 let isProcessingChunks = false;
 
+// Add this near the top with other initializations
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
 async function playNextChunk(messageDiv) {
     if (currentChunkIndex >= audioChunks.length) {
         isProcessingChunks = false;
@@ -2246,8 +2298,15 @@ async function playNextChunk(messageDiv) {
         const encodedText = encodeURIComponent(chunk);
         const apiUrl = `${PAXSENIX_TTS_API_URL}?text=${encodedText}&voice=${currentVoice}`;
 
-        // Call Paxsenix TTS API
-        const response = await fetch(apiUrl);
+        // Use different fetch options for iOS to avoid CORS issues
+        const fetchOptions = {};
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            fetchOptions.mode = 'cors';
+            fetchOptions.cache = 'no-cache';
+        }
+
+        // Call Paxsenix TTS API with appropriate options
+        const response = await fetch(apiUrl, fetchOptions);
         if (!response.ok) throw new Error('TTS API request failed');
 
         const data = await response.json();
@@ -2256,6 +2315,21 @@ async function playNextChunk(messageDiv) {
         // Create audio element
         const audio = new Audio(data.directUrl);
         currentUtterance = audio;
+        
+        // Handle iOS pre-loading issues
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // For iOS Safari, trigger audio in response to user interaction
+            audio.load(); // Preload the audio
+            
+            // Ensure AudioContext is running (if it exists)
+            if (window.audioContext && window.audioContext.state !== 'running') {
+                try {
+                    await window.audioContext.resume();
+                } catch (e) {
+                    console.warn('Could not resume AudioContext:', e);
+                }
+            }
+        }
         
         // Hide loading, show player
         audioLoading.classList.remove('active');
@@ -2322,7 +2396,42 @@ async function playNextChunk(messageDiv) {
         };
 
         // Start playback
-        audio.play();
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error('Audio playback error:', error);
+                
+                // On iOS, audio playback must be triggered by user interaction
+                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    showToast('Tap to play audio (iOS requires user interaction)');
+                    
+                    // Add a play button overlay
+                    const playOverlay = document.createElement('div');
+                    playOverlay.className = 'ios-play-overlay';
+                    playOverlay.innerHTML = `
+                        <div class="ios-play-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    `;
+                    messageDiv.appendChild(playOverlay);
+                    
+                    playOverlay.addEventListener('click', () => {
+                        audio.play().then(() => {
+                            playOverlay.remove();
+                        }).catch(e => {
+                            console.error('iOS play error after click:', e);
+                            showToast('Audio playback failed');
+                        });
+                    });
+                } else {
+                    // For other browsers, fall back to browser TTS
+                    fallbackToBrowserTTS(chunk, audioPlayer, audioLoading);
+                }
+            });
+        }
+        
         isPlaying = true;
         playPauseBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -2335,22 +2444,104 @@ async function playNextChunk(messageDiv) {
         showToast('TTS failed, falling back to browser TTS');
         
         // Fallback to browser TTS
-        try {
-            const utterance = new SpeechSynthesisUtterance(chunk);
-            utterance.voice = speechSynthesis.getVoices().find(voice => voice.name.includes('Female')) || 
-                             speechSynthesis.getVoices()[0];
-            
-            currentUtterance = utterance;
-            speechSynthesis.speak(utterance);
-            
-            // Hide loading, show player
-            audioLoading.classList.remove('active');
-            audioPlayer.classList.add('active');
-            
-        } catch (fallbackError) {
-            console.error('TTS fallback error:', fallbackError);
-            showToast('Text-to-speech is not available');
+        fallbackToBrowserTTS(chunk, audioPlayer, audioLoading);
+    }
+}
+
+// Separate the fallback functionality into its own function
+function fallbackToBrowserTTS(text, audioPlayer, audioLoading) {
+    try {
+        // Cancel any previous speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Get available voices
+        let voices = speechSynthesis.getVoices();
+        
+        // If voices array is empty, try to load them
+        if (voices.length === 0) {
+            if (typeof speechSynthesis.getVoices === 'function') {
+                voices = speechSynthesis.getVoices();
+            }
         }
+        
+        // Select appropriate voice based on platform
+        let selectedVoice = null;
+        
+        // iOS
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            selectedVoice = voices.find(voice => 
+                voice.name.includes('Samantha') || 
+                voice.name.includes('Karen') ||
+                (voice.name.includes('en-US') && voice.name.includes('Female'))
+            );
+        } 
+        // Android
+        else if (/Android/i.test(navigator.userAgent)) {
+            selectedVoice = voices.find(voice => 
+                voice.name.includes('English US Female') || 
+                voice.name.includes('en-US') ||
+                voice.name.includes('Google UK English Female')
+            );
+        }
+        // Default (Desktop)
+        else {
+            selectedVoice = voices.find(voice => 
+                voice.name.includes('Google UK English Female') || 
+                voice.name.includes('Microsoft Zira') ||
+                voice.name.includes('Female') ||
+                voice.name.includes('Samantha')
+            );
+        }
+        
+        // Fallback to any voice
+        if (!selectedVoice && voices.length > 0) {
+            selectedVoice = voices.find(voice => voice.name.includes('Female')) || voices[0];
+        }
+        
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        
+        // Set parameters
+        utterance.rate = isMobileDevice ? 0.9 : 1;
+        utterance.pitch = 1;
+        
+        // Store the utterance for later control
+        currentUtterance = utterance;
+        
+        // Hide loading, show player
+        audioLoading.classList.remove('active');
+        audioPlayer.classList.add('active');
+        
+        // Chrome sometimes cuts off speech, this is a workaround
+        if (navigator.userAgent.indexOf('Chrome') !== -1) {
+            const chromeWorkaroundInterval = 300; // milliseconds
+            const chromeWorkaround = setInterval(() => {
+                if (!speechSynthesis.speaking) {
+                    clearInterval(chromeWorkaround);
+                    return;
+                }
+                speechSynthesis.pause();
+                speechSynthesis.resume();
+            }, chromeWorkaroundInterval);
+            
+            // Clear interval when speech ends
+            utterance.onend = () => {
+                clearInterval(chromeWorkaround);
+                isPlaying = false;
+                currentUtterance = null;
+            };
+        }
+        
+        // Actually speak
+        window.speechSynthesis.speak(utterance);
+        
+    } catch (fallbackError) {
+        console.error('TTS fallback error:', fallbackError);
+        showToast('Text-to-speech is not available on this device');
+        audioLoading.classList.remove('active');
     }
 }
 
@@ -2648,33 +2839,5 @@ function initializeVoiceSelection() {
 // Initialize voice selection when document is ready
 document.addEventListener('DOMContentLoaded', () => {
     initializeVoiceSelection();
+    // ... rest of the existing initialization code ...
 });
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Format model names in dropdown
-    const modelSelector = document.getElementById('model-selector');
-    if (modelSelector) {
-        modelSelector.querySelectorAll('option').forEach(option => {
-            option.textContent = formatModelName(option.value);
-        });
-    }
-});
-
-// Rest of your code including formatModelName function and other functionality
-function formatModelName(modelName) {
-    const specialCases = {
-        'gpt4o': 'GPT-4 Optimized',
-        'gpt4omini': 'GPT-4 Mini',
-        'llama3': 'Llama 3',
-        'llama3_70b': 'Llama 3 70B',
-        'gemini_flash': 'Gemini Flash',
-        'claude_sonnet': 'Claude Sonnet',
-        'mixtral': 'Mixtral',
-        'gemma': 'Gemma'
-    };
-
-    return specialCases[modelName] || modelName
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}

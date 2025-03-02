@@ -35,48 +35,48 @@ div::-webkit-scrollbar,
 }
 
 :root {
-    --md-sys-color-primary: #2E7D32;
+    --md-sys-color-primary: #6750A4;
     /* Primary color */
     --md-sys-color-on-primary: #FFFFFF;
     /* Text on primary */
-    --md-sys-color-primary-container: #B7DFBA;
+    --md-sys-color-primary-container: #EADDFF;
     /* Light container */
-    --md-sys-color-on-primary-container: #002105;
+    --md-sys-color-on-primary-container: #21005D;
     /* Text on light container */
 
-    --md-sys-color-secondary: #4CAF50;
+    --md-sys-color-secondary: #625B71;
     /* Secondary color */
     --md-sys-color-on-secondary: #FFFFFF;
-    --md-sys-color-secondary-container: #D7E7D8;
-    --md-sys-color-on-secondary-container: #1B1D1B;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
 
-    --md-sys-color-background: #F5F8F5;
+    --md-sys-color-background: #F4EFF4;
     /* Background color */
-    --md-sys-color-on-background: #1B1D1B;
+    --md-sys-color-on-background: #1C1B1F;
     /* Text on background */
 
     --md-sys-color-surface: #FFFFFF;
     /* Main surface */
-    --md-sys-color-on-surface: #1B1D1B;
+    --md-sys-color-on-surface: #1C1B1F;
     /* Text on surface */
-    --md-sys-color-surface-variant: #E1E3E1;
+    --md-sys-color-surface-variant: #E7E0EC;
     /* Variant */
-    --md-sys-color-on-surface-variant: #44474A;
+    --md-sys-color-on-surface-variant: #49454F;
 
-    --md-sys-color-outline: #74796E;
+    --md-sys-color-outline: #79747E;
     /* Border color */
     --md-sys-color-shadow: rgba(0, 0, 0, 0.2);
     /* Shadow for elevation */
 
-    --md-sys-color-error: #B00020;
+    --md-sys-color-error: #B3261E;
     /* Error color */
     --md-sys-color-on-error: #FFFFFF;
-    --md-sys-color-error-container: #FFDAD6;
-    --md-sys-color-on-error-container: #410002;
+    --md-sys-color-error-container: #F9DEDC;
+    --md-sys-color-on-error-container: #410E0B;
 
-    --md-sys-color-inverse-surface: #303030;
+    --md-sys-color-inverse-surface: #313033;
     /* Darker variant of surface */
-    --md-sys-color-inverse-on-surface: #F5F8F5;
+    --md-sys-color-inverse-on-surface: #F4EFF4;
 
     --md-sys-shape-corner: 12px;
     /* Standard rounded corner radius */
@@ -281,7 +281,7 @@ body {
 
 /* Message styles */
 .message {
-    padding: 1rem 1.3rem;
+    padding: 1.2rem 1.5rem;
     margin: 0.5rem 0;
     border-radius: 12px;
     border: none;
@@ -296,7 +296,7 @@ body {
 }
 
 .user-message {
-    border: 1px solid #dfe2e7;
+    background-color: #fff;
     border-radius: 4px;
     color: black;
 }
@@ -318,7 +318,7 @@ body {
 }
 
 .user-message .message-content {
-    color: black;
+    color: var(--md-sys-color-on-primary-container);
 }
 
 /* Code block styling */
@@ -668,7 +668,7 @@ body {
     align-items: center;
     margin-top: 6px;
     padding: 4px 8px;
-    border-top: 1px solid #dfe2e7;
+    border-top: 1px solid var(--md-sys-color-outline);
     opacity: 0.9;
 }
 
@@ -683,8 +683,8 @@ body {
 }
 
 .tool-button {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     padding: 5px;
     background: transparent;
     border: none;
@@ -1807,14 +1807,4 @@ body {
 /* Audio file input styles */
 .audio-input {
     display: none;
-}
-.model-label {
-    padding: 2px 8px;
-    background: var(--md-sys-color-surface-variant);
-    border-radius: 12px;
-    font-weight: 400;
-    font-size: 11px;
-    color: var(--md-sys-color-on-surface-variant);
-    width: fit-content;
-    margin-bottom: 8px;
 }

@@ -3234,3 +3234,173 @@ body {
     0 0 20px color-mix(in srgb, var(--theme-primary) 20%, transparent),
     inset 0 0 10px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
+
+/* iOS Audio Play Overlay */
+.ios-play-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.ios-play-button {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.ios-play-button svg {
+  fill: #333;
+  margin-left: 5px; /* Center the play triangle visually */
+}
+
+/* Responsive layout improvements */
+@media screen and (max-width: 768px) {
+  /* General responsive adjustments */
+  body {
+    font-size: 16px;
+  }
+  
+  .app-container {
+    padding: 5px;
+  }
+  
+  .top-nav {
+    padding: 8px;
+  }
+  
+  .nav-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  /* Orb container adjustments */
+  .orb-wrapper {
+    transform: scale(0.85);
+  }
+  
+  .magical-orb {
+    width: 100px;
+    height: 100px;
+  }
+  
+  /* Message adjustments */
+  .message {
+    padding: 8px 12px;
+    margin: 6px 0;
+  }
+  
+  .message-content {
+    font-size: 14px;
+  }
+  
+  /* Audio player adjustments */
+  .audio-player {
+    padding: 6px 8px;
+  }
+  
+  .audio-controls button {
+    width: 30px;
+    height: 30px;
+  }
+  
+  /* Settings panel adjustments */
+  .settings-panel {
+    width: 90%;
+    max-width: 320px;
+  }
+}
+
+/* Small mobile screens */
+@media screen and (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .magical-orb {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .eyes-container {
+    transform: scale(0.8);
+  }
+  
+  /* Better touch targets for mobile */
+  .toolbar-icon, 
+  .nav-icon,
+  .audio-controls button,
+  .message-tools button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+  
+  /* Improve readability */
+  .message-content {
+    line-height: 1.5;
+  }
+  
+  /* Fix audio player on small screens */
+  .audio-player {
+    flex-direction: column;
+  }
+  
+  .seekbar-container {
+    width: 100%;
+    margin: 8px 0;
+  }
+  
+  .audio-time {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+/* Fix iOS Safari viewport height issue */
+@supports (-webkit-touch-callout: none) {
+  .app-container {
+    min-height: -webkit-fill-available;
+  }
+  
+  .main-content {
+    height: auto;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* iOS specific adjustments */
+@media screen and (max-device-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+  input, 
+  textarea, 
+  button {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+  
+  .message-input {
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+  
+  /* Improved tap targets */
+  .nav-icon, 
+  .toolbar-icon {
+    margin: 0 5px;
+  }
+}
+
+/* ... existing code ... */
