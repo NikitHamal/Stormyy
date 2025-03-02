@@ -12,155 +12,37 @@ let fetchWithTimeout = (url, options = {}) => {
 // Array to store thinking events
 let thinkingEvents = [];
 
-// Auto-scrolling and thinking bubble enhancement
-let userHasScrolledThinking = false;
-let userHasScrolledResponse = false;
-let autoScrollIndicator = null;
-let isThinkingExpanded = false;
-
-function setupAutoScroll() {
-    // Create auto-scroll indicator if it doesn't exist
-    if (!autoScrollIndicator) {
-        autoScrollIndicator = document.createElement('div');
-        autoScrollIndicator.className = 'auto-scroll-active';
-        autoScrollIndicator.textContent = 'Auto-scrolling';
-        document.body.appendChild(autoScrollIndicator);
+// Function to update the thinking events display as continuous text
+function updateThinkingEvents() {
+    const thinkingEventsElement = document.querySelector('.thinking-events');
+    if (!thinkingEventsElement) {
+        console.log('No thinking events element found');
+        return; // Exit if element not found
     }
-
-    // Set up thinking bubble enhanced UI
-    const thinkingBubble = document.querySelector('.thinking-bubble');
-    if (thinkingBubble) {
-        // Add preview mode by default
-        thinkingBubble.classList.add('preview-mode');
+    
+    try {
+        // Get all text generation events (k1)
+        const generationEvents = thinkingEvents.filter(event => 
+            event.event === 'k1' && 
+            event.data && 
+            event.data.text
+        );
         
-        // Create expand indicator if it doesn't exist
-        if (!thinkingBubble.querySelector('.expand-indicator')) {
-            const expandIndicator = document.createElement('div');
-            expandIndicator.className = 'expand-indicator';
-            expandIndicator.textContent = 'See more';
-            thinkingBubble.querySelector('.thinking-content').appendChild(expandIndicator);
-            
-            // Add click event to expand
-            expandIndicator.addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleThinkingExpansion();
-            });
+        if (generationEvents.length === 0) {
+            thinkingEventsElement.innerHTML = 'Waiting for model to generate text...';
+            return;
         }
         
-        // Add click event to the whole thinking header for expansion
-        const thinkingHeader = thinkingBubble.querySelector('.thinking-header');
-        if (thinkingHeader) {
-            thinkingHeader.addEventListener('click', toggleThinkingExpansion);
-        }
+        // Combine all tokens into a single flowing text
+        const fullText = generationEvents.map(event => event.data.text).join('');
         
-        // Add scroll event listener to thinking content
-        const thinkingContent = thinkingBubble.querySelector('.thinking-content');
-        if (thinkingContent) {
-            thinkingContent.addEventListener('scroll', function() {
-                // Check if user has manually scrolled
-                if (thinkingContent.scrollHeight > thinkingContent.clientHeight &&
-                    thinkingContent.scrollTop + thinkingContent.clientHeight < thinkingContent.scrollHeight - 10) {
-                    userHasScrolledThinking = true;
-                    autoScrollIndicator.classList.remove('visible');
-                }
-                
-                // Check if user has scrolled to the bottom
-                if (thinkingContent.scrollTop + thinkingContent.clientHeight >= thinkingContent.scrollHeight - 10) {
-                    userHasScrolledThinking = false;
-                    if (isThinkingExpanded) {
-                        autoScrollIndicator.classList.add('visible');
-                    }
-                }
-            });
-        }
-    }
-    
-    // Set up response body auto-scroll
-    const responseBody = document.querySelector('.response-body');
-    if (responseBody) {
-        responseBody.addEventListener('scroll', function() {
-            // Check if user has manually scrolled
-            if (responseBody.scrollHeight > responseBody.clientHeight &&
-                responseBody.scrollTop + responseBody.clientHeight < responseBody.scrollHeight - 10) {
-                userHasScrolledResponse = true;
-                autoScrollIndicator.classList.remove('visible');
-            }
-            
-            // Check if user has scrolled to the bottom
-            if (responseBody.scrollTop + responseBody.clientHeight >= responseBody.scrollHeight - 10) {
-                userHasScrolledResponse = false;
-                autoScrollIndicator.classList.add('visible');
-            }
-        });
-    }
-}
-
-function toggleThinkingExpansion() {
-    const thinkingBubble = document.querySelector('.thinking-bubble');
-    if (!thinkingBubble) return;
-    
-    isThinkingExpanded = !thinkingBubble.classList.contains('expanded');
-    
-    if (isThinkingExpanded) {
-        // Expand
-        thinkingBubble.classList.add('expanded');
-        thinkingBubble.classList.remove('preview-mode');
-        userHasScrolledThinking = false;
-        autoScrollIndicator.classList.add('visible');
-        scrollThinkingToBottom();
-    } else {
-        // Collapse
-        thinkingBubble.classList.remove('expanded');
-        thinkingBubble.classList.add('preview-mode');
-        autoScrollIndicator.classList.remove('visible');
-    }
-}
-
-function scrollThinkingToBottom() {
-    const thinkingContent = document.querySelector('.thinking-bubble .thinking-content');
-    if (!thinkingContent) return;
-    
-    thinkingContent.scrollTop = thinkingContent.scrollHeight;
-}
-
-function scrollResponseToBottom() {
-    const responseBody = document.querySelector('.response-body');
-    if (!responseBody) return;
-    
-    responseBody.scrollTop = responseBody.scrollHeight;
-}
-
-// Function to update thinking content and auto-scroll if needed
-function updateThinkingContent(content) {
-    const thinkingEvents = document.querySelector('.thinking-events');
-    if (!thinkingEvents) return;
-    
-    thinkingEvents.innerHTML = content;
-    
-    // If thinking is expanded and user hasn't manually scrolled, auto-scroll
-    if (isThinkingExpanded && !userHasScrolledThinking) {
-        scrollThinkingToBottom();
-    }
-}
-
-// Function to update response content and auto-scroll if needed
-function updateResponseContent(content) {
-    const responseBody = document.querySelector('.response-body');
-    if (!responseBody) return;
-    
-    // If user hasn't manually scrolled, auto-scroll
-    if (!userHasScrolledResponse) {
-        setTimeout(() => {
-            scrollResponseToBottom();
-            autoScrollIndicator.classList.add('visible');
-            
-            // Hide the indicator after 2 seconds
-            setTimeout(() => {
-                if (!userHasScrolledResponse) {
-                    autoScrollIndicator.classList.remove('visible');
-                }
-            }, 2000);
-        }, 100);
+        // Update the thinking events element with just the flowing text
+        thinkingEventsElement.innerHTML = fullText;
+        
+        // Auto-scroll to bottom
+        thinkingEventsElement.scrollTop = thinkingEventsElement.scrollHeight;
+    } catch (error) {
+        console.error('Error updating thinking events:', error);
     }
 }
 
@@ -551,37 +433,7 @@ async function sendRequest() {
     }
 }
 
-// Function to initialize or update the thinking bubble UI
-function initThinkingBubble() {
-    const thinkingBubble = document.querySelector('.thinking-bubble');
-    if (!thinkingBubble) return;
-    
-    // Make sure it's visible
-    thinkingBubble.style.display = 'block';
-    thinkingBubble.classList.add('thinking');
-    
-    // Set up preview mode by default if not expanded
-    if (!thinkingBubble.classList.contains('expanded')) {
-        thinkingBubble.classList.add('preview-mode');
-    }
-    
-    // Ensure we have the expand indicator
-    const thinkingContent = thinkingBubble.querySelector('.thinking-content');
-    if (thinkingContent && !thinkingContent.querySelector('.expand-indicator')) {
-        const expandIndicator = document.createElement('div');
-        expandIndicator.className = 'expand-indicator';
-        expandIndicator.textContent = 'See more';
-        thinkingContent.appendChild(expandIndicator);
-        
-        // Add click event
-        expandIndicator.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleThinkingExpansion();
-        });
-    }
-}
-
-// Modify a part of the processKimiStreamingResponse function to call our new function
+// Process Kimi streaming response
 async function processKimiStreamingResponse(response, options = { isPreset: false }) {
     // Get all UI elements we'll be updating
     const responseContainer = document.querySelector('.response');
@@ -807,13 +659,6 @@ async function processKimiStreamingResponse(response, options = { isPreset: fals
                 responseBody.appendChild(buttonContainer);
             }
             
-            // When adding a thinking event, make sure to initialize the thinking bubble
-            if (event && event.event === 'k1' && event.data && event.data.text) {
-                thinkingEvents.push(event);
-                updateThinkingEvents();
-                initThinkingBubble();  // Initialize or update the thinking bubble UI
-            }
-            
         } catch (error) {
             console.error('Error reading stream:', error);
             if (responseBody) {
@@ -846,9 +691,6 @@ function formatAIResponse(text) {
         .replace(/\n\n/g, '<br><br>')
         // Single newlines
         .replace(/\n/g, '<br>');
-    
-    // After updating the formatted response
-    updateResponseContent();
     
     return formatted;
 }
@@ -916,12 +758,6 @@ function displayResponseInfo(response) {
         .map(([key, value]) => `<span class="header-name">${key}:</span> <span class="header-value">${value}</span>`)
         .join('\n');
     document.querySelector('.response-headers').innerHTML = headers;
-
-    // After updating response content
-    updateResponseContent();
-    
-    // Setup auto-scroll if not already done
-    setupAutoScroll();
 }
 
 // Handle fetch errors
@@ -1167,64 +1003,3 @@ async function checkServerStatus() {
         return false;
     }
 }
-
-// Function to update the thinking events display as continuous text
-function updateThinkingEvents() {
-    const thinkingEventsElement = document.querySelector('.thinking-events');
-    if (!thinkingEventsElement) {
-        console.log('No thinking events element found');
-        return; // Exit if element not found
-    }
-    
-    try {
-        // Get all text generation events (k1)
-        const generationEvents = thinkingEvents.filter(event => 
-            event.event === 'k1' && 
-            event.data && 
-            event.data.text
-        );
-        
-        if (generationEvents.length === 0) {
-            thinkingEventsElement.innerHTML = 'Waiting for model to generate text...';
-            return;
-        }
-        
-        // Combine all tokens into a single flowing text
-        const fullText = generationEvents.map(event => event.data.text).join('');
-        
-        // Update the thinking events element with just the flowing text
-        thinkingEventsElement.innerHTML = fullText;
-        
-        // If in expanded mode and user hasn't manually scrolled, auto-scroll to bottom
-        if (isThinkingExpanded && !userHasScrolledThinking) {
-            scrollThinkingToBottom();
-            autoScrollIndicator.classList.add('visible');
-            
-            // Hide the indicator after 2 seconds
-            setTimeout(() => {
-                if (!userHasScrolledThinking) {
-                    autoScrollIndicator.classList.remove('visible');
-                }
-            }, 2000);
-        }
-        
-        // Setup auto-scroll if not already done
-        setupAutoScroll();
-    } catch (error) {
-        console.error('Error updating thinking events:', error);
-    }
-}
-
-// Initialize auto-scroll when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    setupAutoScroll();
-    
-    // Also set up the toggle for the thinking bubble
-    const thinkingToggle = document.querySelector('.thinking-toggle');
-    if (thinkingToggle) {
-        thinkingToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleThinkingExpansion();
-        });
-    }
-});
