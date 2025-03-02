@@ -836,7 +836,9 @@ function setupEventListeners() {
         btn.addEventListener('click', () => {
             const prompt = btn.textContent.replace(/['"]/g, '');
             chatInput.value = prompt;
-            sendMessage();
+            chatInput.focus();
+            // Focus the input field without sending the message
+            // Removed: sendMessage();
         });
     });
 
