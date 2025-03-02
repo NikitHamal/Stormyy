@@ -466,6 +466,30 @@ async function processKimiStreamingResponse(response, options = { isPreset: fals
     if (statusElement) statusElement.textContent = 'Processing...';
     if (headersElement) headersElement.innerHTML = '';
     
+    // Auto-scroll related variables
+    let shouldAutoScroll = true;
+    let userScrolled = false;
+    
+    // Create scroll event listener to detect manual scrolling
+    if (responseBody) {
+        responseBody.addEventListener('scroll', function() {
+            // Calculate if we're at the bottom
+            const isAtBottom = responseBody.scrollHeight - responseBody.scrollTop <= responseBody.clientHeight + 50;
+            
+            // If user scrolled up manually, disable auto-scrolling
+            if (!isAtBottom && !userScrolled) {
+                userScrolled = true;
+                shouldAutoScroll = false;
+            }
+            
+            // If user scrolled back to bottom, re-enable auto-scrolling
+            if (isAtBottom && userScrolled) {
+                userScrolled = false;
+                shouldAutoScroll = true;
+            }
+        });
+    }
+    
     // Display initial response status
     const statusCode = response.status;
     if (statusElement) {
@@ -585,6 +609,11 @@ async function processKimiStreamingResponse(response, options = { isPreset: fals
                                             messageContent += parsed.text;
                                             if (messageContainer) {
                                                 messageContainer.innerHTML = formatAIResponse(messageContent);
+                                                
+                                                // Auto-scroll to the bottom if enabled
+                                                if (shouldAutoScroll && responseBody) {
+                                                    responseBody.scrollTop = responseBody.scrollHeight;
+                                                }
                                             }
                                         }
                                         break;
