@@ -957,4 +957,75 @@ code {
     .input-area {
         padding-bottom: max(20px, calc(20px + var(--safe-area-inset-bottom)));
     }
+}
+
+/* Response Content */
+.response-content {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Thinking Bubble Styles */
+.thinking-bubble {
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-top: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.thinking-bubble.collapsed {
+    max-height: 40px;
+}
+
+.thinking-header {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--color-bg-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.thinking-title {
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.thinking-title::before {
+    content: "💭";
+}
+
+.thinking-toggle {
+    color: var(--color-text-light);
+    transition: transform 0.3s ease;
+}
+
+.thinking-bubble.collapsed .thinking-toggle {
+    transform: rotate(-90deg);
+}
+
+.thinking-content {
+    padding: 15px;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.thinking-bubble.collapsed .thinking-content {
+    display: none;
+}
+
+.thinking-events {
+    font-family: var(--font-mono);
+    line-height: 1.6;
+    margin: 0;
 } 

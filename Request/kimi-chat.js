@@ -182,11 +182,18 @@ function loadConversation(id) {
     
     if (!currentConversation) {
         console.error('Conversation not found:', id);
+        // Create a new conversation if the requested one doesn't exist
+        createNewConversation();
         return;
     }
     
     // Update active state in sidebar
-    updateActiveConversation(id);
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.id === id) {
+            item.classList.add('active');
+        }
+    });
     
     // Clear messages container
     messagesContainer.innerHTML = '';
@@ -198,16 +205,12 @@ function loadConversation(id) {
     
     // Scroll to bottom
     scrollToBottom();
-}
-
-// Update which conversation is active in the sidebar
-function updateActiveConversation(id) {
-    document.querySelectorAll('.conversation-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.id === id) {
-            item.classList.add('active');
-        }
-    });
+    
+    // Close sidebar on mobile after loading conversation
+    if (window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+    }
 }
 
 // Update the conversation list in the sidebar
@@ -217,6 +220,8 @@ function updateConversationsList() {
     conversations.forEach(conv => {
         const convEl = document.createElement('div');
         convEl.className = 'conversation-item';
+        convEl.dataset.id = conv.id;
+        
         if (currentConversation && conv.id === currentConversation.id) {
             convEl.classList.add('active');
         }
@@ -231,8 +236,11 @@ function updateConversationsList() {
             </button>
         `;
         
-        convEl.addEventListener('click', () => {
-            loadConversation(conv.id);
+        // Add click event for loading conversation
+        convEl.addEventListener('click', (e) => {
+            if (!e.target.closest('.delete-conversation')) {
+                loadConversation(conv.id);
+            }
         });
         
         // Add delete button event listener
@@ -286,7 +294,8 @@ function showTypingIndicator() {
     // Add thinking process container for Kimi 1.5
     if (kimiConfig.model === 'k1') {
         content.innerHTML = `
-            <div class="thinking-process">
+            <div class="response-content"></div>
+            <div class="thinking-bubble">
                 <div class="thinking-header">
                     <span class="thinking-title">Thinking Process</span>
                     <span class="thinking-toggle">▼</span>
@@ -296,6 +305,13 @@ function showTypingIndicator() {
                 </div>
             </div>
         `;
+
+        // Add click handler for thinking process toggle
+        const thinkingHeader = content.querySelector('.thinking-header');
+        thinkingHeader.addEventListener('click', () => {
+            const bubble = content.querySelector('.thinking-bubble');
+            bubble.classList.toggle('collapsed');
+        });
     } else {
         content.innerHTML = `<div class="typing-indicator"><span>•</span><span>•</span><span>•</span></div>`;
     }
@@ -314,13 +330,13 @@ function updateThinkingProcess(indicator, event) {
     const thinkingEvents = indicator.querySelector('.thinking-events');
     if (!thinkingEvents) return;
     
-    // Handle different types of thinking events
-    if (event.type === 'thinking') {
-        const thoughtElement = document.createElement('div');
-        thoughtElement.className = 'thinking-step';
-        thoughtElement.textContent = event.content;
-        thinkingEvents.appendChild(thoughtElement);
-        scrollToBottom();
+    try {
+        // Handle different types of thinking events
+        if (event.type === 'thinking') {
+            thinkingEvents.textContent = event.content;
+        }
+    } catch (error) {
+        console.error('Error updating thinking process:', error);
     }
 }
 
@@ -337,32 +353,30 @@ async function processStreamingResponse(response, typingIndicator) {
         
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        let newBuffer = '';
+        buffer = lines.pop() || '';
         
         for (const line of lines) {
-            if (line.trim()) {
+            if (line.trim() && line.startsWith('data:')) {
                 try {
-                    if (line.startsWith('data:')) {
-                        const data = JSON.parse(line.substring(5));
-                        
-                        if (data.event === 'cmpl' && data.text) {
-                            assistantMessage += data.text;
-                            if (typingIndicator) {
-                                const content = typingIndicator.querySelector('.message-content');
-                                if (content) {
-                                    if (kimiConfig.model === 'k1') {
-                                        const thinkingProcess = content.querySelector('.thinking-process');
-                                        if (thinkingProcess) {
-                                            thinkingProcess.insertAdjacentHTML('beforebegin', formatMessage(data.text));
-                                        }
-                                    } else {
-                                        content.innerHTML = formatMessage(assistantMessage);
+                    const data = JSON.parse(line.substring(5));
+                    
+                    if (data.event === 'cmpl' && data.text) {
+                        assistantMessage += data.text;
+                        if (typingIndicator) {
+                            const content = typingIndicator.querySelector('.message-content');
+                            if (content) {
+                                if (kimiConfig.model === 'k1') {
+                                    const responseContent = content.querySelector('.response-content');
+                                    if (responseContent) {
+                                        responseContent.innerHTML = formatMessage(assistantMessage);
                                     }
+                                } else {
+                                    content.innerHTML = formatMessage(assistantMessage);
                                 }
                             }
-                        } else if (data.event === 'thinking' && kimiConfig.model === 'k1') {
-                            updateThinkingProcess(typingIndicator, data);
                         }
+                    } else if (data.event === 'thinking' && kimiConfig.model === 'k1') {
+                        updateThinkingProcess(typingIndicator, data);
                     }
                 } catch (e) {
                     console.error('Error parsing SSE data:', e);
@@ -816,14 +830,11 @@ function toggleSidebar() {
 function deleteConversation(id, event) {
     event.stopPropagation(); // Prevent triggering conversation selection
     
-    // Get conversations from localStorage
-    let conversations = JSON.parse(localStorage.getItem('kimiConversations') || '[]');
-    
-    // Filter out the conversation to delete
+    // Filter out the conversation to delete from the global conversations array
     conversations = conversations.filter(conv => conv.id !== id);
     
-    // Save back to localStorage
-    localStorage.setItem('kimiConversations', JSON.stringify(conversations));
+    // Save to localStorage
+    saveConversations();
     
     // Update UI
     updateConversationsList();
@@ -846,27 +857,43 @@ function closeDeleteModal() {
 
 // Delete all chats
 function deleteAllChats() {
-    // Clear localStorage conversations
-    localStorage.removeItem('kimiConversations');
-    
-    // Clear conversation list UI
-    conversationList.innerHTML = '';
-    
-    // Create a new conversation
-    createNewConversation();
-    
-    // Clear messages
-    messagesContainer.innerHTML = '';
-    
-    // Add welcome message
-    addWelcomeMessage();
-    
-    // Close modal
-    closeDeleteModal();
-    
-    // Close sidebar on mobile
-    if (window.innerWidth <= 768) {
-        toggleSidebar();
+    try {
+        // Clear localStorage conversations
+        localStorage.removeItem('kimiConversations');
+        
+        // Reset conversations array
+        conversations = [];
+        
+        // Reset current conversation
+        currentConversation = null;
+        
+        // Clear conversation list UI
+        conversationList.innerHTML = '';
+        
+        // Create a new conversation
+        createNewConversation();
+        
+        // Clear messages
+        messagesContainer.innerHTML = '';
+        
+        // Add welcome message
+        addWelcomeMessage();
+        
+        // Close modal
+        closeDeleteModal();
+        
+        // Close sidebar on mobile
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
+    } catch (error) {
+        console.error('Error deleting all chats:', error);
+        // Show error message to user
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'system-message error';
+        errorDiv.innerHTML = `<p>Error deleting chats: ${error.message}</p>`;
+        messagesContainer.appendChild(errorDiv);
+        scrollToBottom();
     }
 }
 
