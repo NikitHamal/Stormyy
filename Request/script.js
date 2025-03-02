@@ -25,7 +25,7 @@ function updateThinkingEvents() {
         const generationEvents = thinkingEvents.filter(event => 
             event.event === 'k1' && 
             event.data && 
-            event.data.text
+            event.data.thinking // Only include thinking events, not response events
         );
         
         if (generationEvents.length === 0) {
@@ -34,7 +34,7 @@ function updateThinkingEvents() {
         }
         
         // Combine all tokens into a single flowing text
-        const fullText = generationEvents.map(event => event.data.text).join('');
+        const fullText = generationEvents.map(event => event.data.thinking).join('');
         
         // Update the thinking events element with just the flowing text
         thinkingEventsElement.innerHTML = fullText;
@@ -553,11 +553,13 @@ async function processKimiStreamingResponse(response, options = { isPreset: fals
                                 // Process different event types
                                 switch (parsed.event) {
                                     case 'k1':
-                                        // It's a text generation token
-                                        if (parsed.text !== undefined) {
-                                            // Update thinking events display
+                                        // Check if this is a thinking process token or a response token
+                                        if (parsed.thinking !== undefined) {
+                                            // It's a thinking process token
+                                            // Just update the thinking events display
                                             updateThinkingEvents();
-                                            
+                                        } else if (parsed.text !== undefined) {
+                                            // It's a response text token
                                             // Add to response text
                                             messageContent += parsed.text;
                                             if (messageContainer) {
