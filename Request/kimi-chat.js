@@ -3,12 +3,19 @@ const messagesContainer = document.querySelector('.messages-container');
 const userInput = document.getElementById('user-input');
 const sendButton = document.getElementById('send-btn');
 const settingsBtn = document.querySelector('.settings-btn');
+const deleteAllBtn = document.querySelector('.delete-all-btn');
 const settingsModal = document.getElementById('settings-modal');
-const closeModal = document.querySelector('.close-modal');
+const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+const confirmDeleteBtn = document.getElementById('confirm-delete');
+const closeModal = document.querySelectorAll('.close-modal');
 const saveSettingsBtn = document.getElementById('save-settings');
 const newChatBtn = document.querySelector('.new-chat-btn');
 const conversationList = document.querySelector('.conversation-list');
 const modelBadge = document.querySelector('.model-badge');
+const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+const sidebar = document.querySelector('.sidebar');
+const typingStatus = document.querySelector('.typing-status');
+const charCount = document.querySelector('.char-count');
 
 // Utility functions
 const fetchWithTimeout = (url, options = {}) => {
@@ -55,6 +62,7 @@ function initializeApp() {
     // Create new conversation if none exists
     if (conversations.length === 0) {
         createNewConversation();
+        addWelcomeMessage();
     } else {
         // Load the most recent conversation
         loadConversation(conversations[0].id);
@@ -64,22 +72,49 @@ function initializeApp() {
     userInput.addEventListener('keydown', handleInputKeydown);
     sendButton.addEventListener('click', handleSendMessage);
     settingsBtn.addEventListener('click', openSettingsModal);
-    closeModal.addEventListener('click', closeSettingsModal);
+    closeModal.forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
     saveSettingsBtn.addEventListener('click', saveSettings);
     newChatBtn.addEventListener('click', createNewConversation);
     
     // Auto-resize textarea
     userInput.addEventListener('input', autoResizeTextarea);
-    
-    // Add scroll listener for auto-scrolling
     messagesContainer.addEventListener('scroll', handleScroll);
-    
-    // Update model badge
     updateModelBadge();
     
     // Check if server is available if proxy is enabled
     if (kimiConfig.useProxy) {
         checkServerAvailability();
+    }
+    
+    // Mobile navigation toggle
+    mobileNavToggle.addEventListener('click', toggleSidebar);
+    
+    // Click outside sidebar to close on mobile
+    document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('active') && 
+            !sidebar.contains(e.target) && 
+            e.target !== mobileNavToggle) {
+            toggleSidebar();
+        }
+    });
+    
+    // Delete all chats functionality
+    deleteAllBtn.addEventListener('click', openDeleteModal);
+    confirmDeleteBtn.addEventListener('click', deleteAllChats);
+    
+    // Character counter
+    userInput.addEventListener('input', updateCharCount);
+    
+    // Check if device is iOS and add appropriate class
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+        document.body.classList.add('ios-device');
     }
 }
 
@@ -180,17 +215,32 @@ function updateConversationsList() {
     conversationList.innerHTML = '';
     
     conversations.forEach(conv => {
-        const item = document.createElement('div');
-        item.className = 'conversation-item';
-        item.dataset.id = conv.id;
-        item.textContent = conv.title;
-        item.addEventListener('click', () => loadConversation(conv.id));
-        
+        const convEl = document.createElement('div');
+        convEl.className = 'conversation-item';
         if (currentConversation && conv.id === currentConversation.id) {
-            item.classList.add('active');
+            convEl.classList.add('active');
         }
         
-        conversationList.appendChild(item);
+        convEl.innerHTML = `
+            <span class="conversation-title">${conv.title}</span>
+            <button class="delete-conversation" aria-label="Delete conversation">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        `;
+        
+        convEl.addEventListener('click', () => {
+            loadConversation(conv.id);
+        });
+        
+        // Add delete button event listener
+        convEl.querySelector('.delete-conversation').addEventListener('click', (e) => {
+            deleteConversation(conv.id, e);
+        });
+        
+        conversationList.appendChild(convEl);
     });
 }
 
@@ -201,7 +251,7 @@ function appendMessage(role, content) {
     
     const avatar = document.createElement('div');
     avatar.className = 'message-avatar';
-    avatar.textContent = role === 'user' ? 'U' : 'K';
+    avatar.textContent = role === 'user' ? 'Y' : 'K';
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
@@ -221,23 +271,111 @@ function appendMessage(role, content) {
     scrollToBottom();
 }
 
-// Show typing indicator
+// Show typing indicator with thinking process for Kimi 1.5
 function showTypingIndicator() {
     const indicator = document.createElement('div');
     indicator.className = 'message assistant thinking-indicator';
-    indicator.innerHTML = `
-        <div class="message-avatar">K</div>
-        <div class="message-content">
-            <div class="thinking-dots">
-                <span class="thinking-dot"></span>
-                <span class="thinking-dot"></span>
-                <span class="thinking-dot"></span>
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.textContent = 'K';
+    
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    
+    // Add thinking process container for Kimi 1.5
+    if (kimiConfig.model === 'k1') {
+        content.innerHTML = `
+            <div class="thinking-process">
+                <div class="thinking-header">
+                    <span class="thinking-title">Thinking Process</span>
+                    <span class="thinking-toggle">▼</span>
+                </div>
+                <div class="thinking-content">
+                    <div class="thinking-events"></div>
+                </div>
             </div>
-        </div>
-    `;
+        `;
+    } else {
+        content.innerHTML = `<div class="typing-indicator"><span>•</span><span>•</span><span>•</span></div>`;
+    }
+    
+    indicator.appendChild(avatar);
+    indicator.appendChild(content);
     messagesContainer.appendChild(indicator);
     scrollToBottom();
     return indicator;
+}
+
+// Update thinking process for Kimi 1.5
+function updateThinkingProcess(indicator, event) {
+    if (!indicator || !event || kimiConfig.model !== 'k1') return;
+    
+    const thinkingEvents = indicator.querySelector('.thinking-events');
+    if (!thinkingEvents) return;
+    
+    // Handle different types of thinking events
+    if (event.type === 'thinking') {
+        const thoughtElement = document.createElement('div');
+        thoughtElement.className = 'thinking-step';
+        thoughtElement.textContent = event.content;
+        thinkingEvents.appendChild(thoughtElement);
+        scrollToBottom();
+    }
+}
+
+// Process streaming response with thinking events
+async function processStreamingResponse(response, typingIndicator) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let assistantMessage = '';
+    
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        let newBuffer = '';
+        
+        for (const line of lines) {
+            if (line.trim()) {
+                try {
+                    if (line.startsWith('data:')) {
+                        const data = JSON.parse(line.substring(5));
+                        
+                        if (data.event === 'cmpl' && data.text) {
+                            assistantMessage += data.text;
+                            if (typingIndicator) {
+                                const content = typingIndicator.querySelector('.message-content');
+                                if (content) {
+                                    if (kimiConfig.model === 'k1') {
+                                        const thinkingProcess = content.querySelector('.thinking-process');
+                                        if (thinkingProcess) {
+                                            thinkingProcess.insertAdjacentHTML('beforebegin', formatMessage(data.text));
+                                        }
+                                    } else {
+                                        content.innerHTML = formatMessage(assistantMessage);
+                                    }
+                                }
+                            }
+                        } else if (data.event === 'thinking' && kimiConfig.model === 'k1') {
+                            updateThinkingProcess(typingIndicator, data);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                }
+            }
+        }
+        
+        if (shouldAutoScroll) {
+            scrollToBottom();
+        }
+    }
+    
+    return assistantMessage;
 }
 
 // Format message with markdown-like styling
@@ -509,63 +647,7 @@ async function sendToKimi(message, typingIndicator) {
         
         // Check if we have a streaming response
         if (response.headers.get('content-type')?.includes('text/event-stream')) {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value, { stream: true });
-                buffer += chunk;
-                
-                // Process complete SSE lines
-                let newBuffer = '';
-                const lines = buffer.split('\n');
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    
-                    // If this is not the last line (which might be incomplete)
-                    if (i < lines.length - 1 || buffer.endsWith('\n')) {
-                        if (line.startsWith('data:')) {
-                            try {
-                                // Extract the JSON data
-                                const data = line.substring(5).trim();
-                                const parsed = JSON.parse(data);
-                                
-                                // Handle response based on event type
-                                if (parsed.event === 'cmpl' && parsed.text !== undefined) {
-                                    assistantMessage += parsed.text;
-                                    
-                                    // Use a global reference to the typing indicator passed from handleSendMessage
-                                    if (typingIndicator && typingIndicator.querySelector('.message-content')) {
-                                        typingIndicator.querySelector('.message-content').innerHTML = formatMessage(assistantMessage);
-                                        
-                                        // Auto-scroll if enabled
-                                        if (shouldAutoScroll) {
-                                            scrollToBottom();
-                                        }
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Error parsing SSE data:', e);
-                            }
-                        }
-                    } else {
-                        // This might be an incomplete line, keep it for the next chunk
-                        newBuffer = line;
-                    }
-                }
-                
-                buffer = newBuffer;
-            }
-            
-            // If no message content received, throw an error
-            if (!assistantMessage) {
-                throw new Error('No response content received');
-            }
+            assistantMessage = await processStreamingResponse(response, typingIndicator);
             
             return { content: assistantMessage };
         } else {
@@ -639,15 +721,16 @@ function loadSettings() {
 
 // Load conversations from localStorage
 function loadConversations() {
-    const savedConversations = localStorage.getItem('kimiConversations');
-    if (savedConversations) {
-        try {
-            conversations = JSON.parse(savedConversations);
+    try {
+        const savedConversations = localStorage.getItem('kimiConversations');
+        conversations = savedConversations ? JSON.parse(savedConversations) : [];
+        
+        if (conversations.length > 0) {
             updateConversationsList();
-        } catch (error) {
-            console.error('Error loading conversations:', error);
-            conversations = [];
         }
+    } catch (error) {
+        console.error('Error loading conversations:', error);
+        conversations = [];
     }
 }
 
@@ -721,6 +804,109 @@ function updateSettingsUI() {
     
     // Save settings to localStorage
     localStorage.setItem('kimiConfig', JSON.stringify(kimiConfig));
+}
+
+// Toggle sidebar on mobile
+function toggleSidebar() {
+    sidebar.classList.toggle('active');
+    document.body.classList.toggle('sidebar-open');
+}
+
+// Delete a specific conversation
+function deleteConversation(id, event) {
+    event.stopPropagation(); // Prevent triggering conversation selection
+    
+    // Get conversations from localStorage
+    let conversations = JSON.parse(localStorage.getItem('kimiConversations') || '[]');
+    
+    // Filter out the conversation to delete
+    conversations = conversations.filter(conv => conv.id !== id);
+    
+    // Save back to localStorage
+    localStorage.setItem('kimiConversations', JSON.stringify(conversations));
+    
+    // Update UI
+    updateConversationsList();
+    
+    // If it was the active conversation, create a new one
+    if (currentConversation && currentConversation.id === id) {
+        createNewConversation();
+    }
+}
+
+// Open delete confirmation modal
+function openDeleteModal() {
+    deleteConfirmModal.classList.add('active');
+}
+
+// Close delete confirmation modal
+function closeDeleteModal() {
+    deleteConfirmModal.classList.remove('active');
+}
+
+// Delete all chats
+function deleteAllChats() {
+    // Clear localStorage conversations
+    localStorage.removeItem('kimiConversations');
+    
+    // Clear conversation list UI
+    conversationList.innerHTML = '';
+    
+    // Create a new conversation
+    createNewConversation();
+    
+    // Clear messages
+    messagesContainer.innerHTML = '';
+    
+    // Add welcome message
+    addWelcomeMessage();
+    
+    // Close modal
+    closeDeleteModal();
+    
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+        toggleSidebar();
+    }
+}
+
+// Add welcome message
+function addWelcomeMessage() {
+    const welcomeHtml = `
+        <div class="welcome-message">
+            <h2>Welcome to Kimi Chat</h2>
+            <p>Start a conversation with Kimi, your AI assistant.</p>
+            <div class="suggestion-chips">
+                <button class="suggestion-chip">What can you help me with?</button>
+                <button class="suggestion-chip">Show me an example</button>
+            </div>
+        </div>
+    `;
+    messagesContainer.innerHTML = welcomeHtml;
+    
+    // Add event listeners to suggestion chips
+    document.querySelectorAll('.suggestion-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            userInput.value = chip.textContent;
+            handleSendMessage();
+        });
+    });
+}
+
+// Character counter
+function updateCharCount() {
+    const maxChars = 4000;
+    const currentChars = userInput.value.length;
+    charCount.textContent = `${currentChars}/${maxChars}`;
+    
+    // Add warning color when approaching limit
+    if (currentChars > maxChars * 0.9) {
+        charCount.style.color = 'var(--color-warning)';
+    } else if (currentChars > maxChars) {
+        charCount.style.color = 'var(--color-error)';
+    } else {
+        charCount.style.color = 'var(--color-text-lighter)';
+    }
 }
 
 // Initialize the app
