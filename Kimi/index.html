@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi Chat</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://kimi.moonshot.cn/static/media/logo.png" alt="Kimi Logo" class="logo">
+                <h2>Kimi Chat</h2>
+            </div>
+            <button class="new-chat">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+            <div class="chat-history">
+                <!-- Chat history will be populated here -->
+            </div>
+            <div class="settings-btn">
+                <i class="fas fa-cog"></i> Settings
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-container">
+                <div class="messages" id="messages">
+                    <div class="welcome-message">
+                        <h1>Welcome to Kimi Chat</h1>
+                        <p>Your AI assistant powered by advanced language models</p>
+                    </div>
+                </div>
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea id="user-input" placeholder="Type your message here..." rows="1"></textarea>
+                        <button id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="input-features">
+                        <button class="feature-btn" title="Upload Image">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button class="feature-btn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="feature-btn" title="Clear Chat">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <h3>Model Settings</h3>
+                    <div class="setting-item">
+                        <label for="model-select">Model:</label>
+                        <select id="model-select">
+                            <option value="kimi">Kimi (For most tasks)</option>
+                            <option value="k1">k1.5 (Complex reasoning)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Features</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="web-search" checked>
+                            Enable Web Search
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="research-mode">
+                            Enable Research Mode
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>API Configuration</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="use-proxy">
+                            Use Proxy Server
+                        </label>
+                        <p class="setting-description">Enable to use local proxy server for API calls</p>
+                    </div>
+                    <div class="setting-item">
+                        <label for="proxy-endpoint">Proxy Endpoint:</label>
+                        <input type="text" id="proxy-endpoint" value="http://localhost:3000/kimi-proxy">
+                    </div>
+                    <div class="setting-item">
+                        <label for="device-id">Device ID:</label>
+                        <input type="text" id="device-id" value="7470186203606840333">
+                    </div>
+                    <div class="setting-item">
+                        <label for="session-id">Session ID:</label>
+                        <input type="text" id="session-id" value="1731130480464666566">
+                    </div>
+                    <div class="setting-item">
+                        <label for="traffic-id">Traffic ID:</label>
+                        <input type="text" id="traffic-id" value="cuh5rgiav1f3eq17cf50">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

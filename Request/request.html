@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>API Tester</h1>
+    
+    <div class="container">
+        <div class="presets-container">
+            <label for="presets"><strong>Presets:</strong></label>
+            <select id="presets">
+                <option value="">-- Select a preset --</option>
+                <option value="kimi">Kimi</option>
+            </select>
+            <button onclick="loadPreset()">Load Preset</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="endpoint">Endpoint URL:</label>
+            <input type="url" id="endpoint" placeholder="https://api.example.com/endpoint" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="method">HTTP Method:</label>
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+            </select>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="headers">Headers</div>
+            <div class="tab" data-tab="auth">Authorization</div>
+            <div class="tab" data-tab="body">Request Body</div>
+            <div class="tab" data-tab="params">Query Parameters</div>
+            <div class="tab" data-tab="kimi-options">Kimi Options</div>
+            <div class="tab" data-tab="cookies">Cookies</div>
+        </div>
+        
+        <div id="headers" class="tab-content active">
+            <div class="form-group">
+                <div id="headers-container">
+                    <div class="header-row">
+                        <input type="text" placeholder="Header Name" class="header-name">
+                        <input type="text" placeholder="Header Value" class="header-value">
+                        <button class="btn-remove" onclick="removeHeader(this)">Remove</button>
+                    </div>
+                </div>
+                <button onclick="addHeader()">Add Header</button>
+            </div>
+        </div>
+        
+        <div id="auth" class="tab-content">
+            <div class="form-group">
+                <label for="auth-type">Authorization Type:</label>
+                <select id="auth-type">
+                    <option value="none">None</option>
+                    <option value="basic">Basic Auth</option>
+                    <option value="bearer">Bearer Token</option>
+                    <option value="apikey">API Key</option>
+                </select>
+            </div>
+            
+            <div id="basic-auth" class="auth-section" style="display: none;">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="text" id="password" placeholder="Password">
+                </div>
+            </div>
+            
+            <div id="bearer-auth" class="auth-section" style="display: none;">
+                <div class="form-group">
+                    <label for="token">Bearer Token:</label>
+                    <input type="text" id="token" placeholder="Bearer Token">
+                </div>
+            </div>
+            
+            <div id="apikey-auth" class="auth-section" style="display: none;">
+                <div class="form-group">
+                    <label for="apikey-name">Key Name:</label>
+                    <input type="text" id="apikey-name" placeholder="API Key Name">
+                </div>
+                <div class="form-group">
+                    <label for="apikey-value">Key Value:</label>
+                    <input type="text" id="apikey-value" placeholder="API Key Value">
+                </div>
+                <div class="form-group">
+                    <label for="apikey-location">Add In:</label>
+                    <select id="apikey-location">
+                        <option value="header">Header</option>
+                        <option value="query">Query Parameter</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="body" class="tab-content">
+            <div class="form-group">
+                <label for="content-type">Content Type:</label>
+                <select id="content-type">
+                    <option value="application/json">JSON</option>
+                    <option value="application/x-www-form-urlencoded">Form URL Encoded</option>
+                    <option value="multipart/form-data">Form Data</option>
+                    <option value="text/plain">Plain Text</option>
+                    <option value="application/xml">XML</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="request-body">Request Body:</label>
+                <textarea id="request-body" placeholder="Request body content"></textarea>
+            </div>
+        </div>
+        
+        <div id="params" class="tab-content">
+            <div class="form-group">
+                <div id="params-container">
+                    <div class="header-row">
+                        <input type="text" placeholder="Parameter Name" class="param-name">
+                        <input type="text" placeholder="Parameter Value" class="param-value">
+                        <button class="btn-remove" onclick="removeParam(this)">Remove</button>
+                    </div>
+                </div>
+                <button onclick="addParam()">Add Parameter</button>
+            </div>
+        </div>
+        
+        <div id="kimi-options" class="tab-content">
+            <div class="form-group">
+                <label for="kimi-model">Model:</label>
+                <select id="kimi-model">
+                    <option value="kimi">Kimi (For most tasks)</option>
+                    <option value="k1">k1.5 (Complex visual and text reasoning)</option>
+                </select>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">Select the Kimi model to use for your request. "Kimi" is suitable for most general tasks, while "k1.5" excels at complex reasoning.</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="kimi-use-search" checked>
+                    Enable Web Search
+                </label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">When enabled, allows the model to search the web for current information.</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="kimi-use-research">
+                    Enable Research Mode
+                </label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">When enabled, activates Kimi's research capabilities.</p>
+            </div>
+            <div class="form-group">
+                <label for="kimi-device-id">Device ID:</label>
+                <input type="text" id="kimi-device-id" value="7470186203606840333">
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">Unique identifier for your device.</p>
+            </div>
+            <div class="form-group">
+                <label for="kimi-session-id">Session ID:</label>
+                <input type="text" id="kimi-session-id" value="1731130480464666566">
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">The unique identifier for the current chat session.</p>
+            </div>
+            <div class="form-group">
+                <label for="kimi-traffic-id">Traffic ID:</label>
+                <input type="text" id="kimi-traffic-id" value="cuh5rgiav1f3eq17cf50">
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">Unique identifier for this traffic stream.</p>
+            </div>
+        </div>
+        
+        <div id="cookies" class="tab-content">
+            <div class="form-group">
+                <label>Browser Cookies:</label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">
+                    Copy cookies from your browser's DevTools to bypass login requirements:
+                    <ol style="margin-top: 5px;">
+                        <li>Open <a href="https://kimi.moonshot.cn" target="_blank">kimi.moonshot.cn</a> in Chrome</li>
+                        <li>Sign in to your account (if required)</li>
+                        <li>Press F12 to open DevTools, go to Network tab</li>
+                        <li>Make a request on the site and find a request to "/api/chat"</li>
+                        <li>Click on the request, find "Cookie" under Request Headers</li>
+                        <li>Right-click the cookie value and select "Copy value"</li>
+                        <li>Paste the cookie string below and click "Set Cookies"</li>
+                    </ol>
+                </p>
+                <div id="server-status-cookies" style="margin-top: 10px; padding: 10px; border-radius: 4px; background-color: #f8f9fa; font-weight: bold;">
+                    Checking server connection...
+                </div>
+                <textarea id="cookies-input" placeholder="Paste your browser cookies here" style="height: 100px;"></textarea>
+                <div style="display: flex; margin-top: 10px;">
+                    <button onclick="setCookies()" style="background-color: #2ecc71;">Set Cookies</button>
+                    <button onclick="getCookies()" style="background-color: #3498db; margin-left: 10px;">Show Current Cookies</button>
+                    <button onclick="testKimiConnection()" style="background-color: #f39c12; margin-left: 10px;">Test Kimi Connection</button>
+                </div>
+                <div id="cookies-status" style="margin-top: 10px; font-weight: bold;"></div>
+                <div id="current-cookies" style="margin-top: 10px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; display: none; white-space: pre-wrap; overflow-wrap: break-word; font-family: monospace;"></div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <button id="send-request" onclick="sendRequest()">Send Request</button>
+        </div>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Sending request...</p>
+        </div>
+        
+        <div class="response" style="display: none;">
+            <h2>Response</h2>
+            <div class="status-code"></div>
+            <div class="form-group">
+                <label>Response Headers:</label>
+                <div class="response-headers"></div>
+            </div>
+            <div class="thinking-bubble" style="display: none;">
+                <div class="thinking-header">
+                    <span class="thinking-title">Thinking Process</span>
+                    <span class="thinking-toggle">▼</span>
+                </div>
+                <div class="thinking-content">
+                    <div class="thinking-events"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Response Body:</label>
+                <div class="response-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
