@@ -2451,62 +2451,127 @@ async function playNextChunk(messageDiv) {
 // Separate the fallback functionality into its own function
 function fallbackToBrowserTTS(text, audioPlayer, audioLoading) {
     try {
+        // Check if speech synthesis is available
+        if (typeof window.speechSynthesis === 'undefined') {
+            throw new Error('Speech synthesis not supported in this browser');
+        }
+        
         // Cancel any previous speech
         window.speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         
+        // Force English for consistency
+        utterance.lang = 'en-US';
+        
         // Get available voices
         let voices = speechSynthesis.getVoices();
         
-        // If voices array is empty, try to load them
+        // Safari may not have loaded voices yet
         if (voices.length === 0) {
-            if (typeof speechSynthesis.getVoices === 'function') {
-                voices = speechSynthesis.getVoices();
+            // For Safari, we might need to wait for voices to load
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                // Set a flag to try again after voices load
+                speechSynthesis.onvoiceschanged = function() {
+                    // Only do this once
+                    speechSynthesis.onvoiceschanged = null;
+                    // Try again with loaded voices
+                    fallbackToBrowserTTS(text, audioPlayer, audioLoading);
+                };
+                return; // Exit and wait for voices to load
             }
         }
         
-        // Select appropriate voice based on platform
-        let selectedVoice = null;
+        // Safari/iOS specific handling
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         
-        // iOS
-        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            selectedVoice = voices.find(voice => 
+        if (isIOS || isSafari) {
+            // Try to find a good voice for Safari
+            const safariVoice = voices.find(voice => 
                 voice.name.includes('Samantha') || 
                 voice.name.includes('Karen') ||
-                (voice.name.includes('en-US') && voice.name.includes('Female'))
+                voice.name.includes('Moira') ||
+                voice.name.includes('Daniel') ||
+                voice.lang.includes('en-US')
             );
-        } 
-        // Android
-        else if (/Android/i.test(navigator.userAgent)) {
-            selectedVoice = voices.find(voice => 
-                voice.name.includes('English US Female') || 
-                voice.name.includes('en-US') ||
-                voice.name.includes('Google UK English Female')
-            );
-        }
-        // Default (Desktop)
-        else {
-            selectedVoice = voices.find(voice => 
-                voice.name.includes('Google UK English Female') || 
-                voice.name.includes('Microsoft Zira') ||
-                voice.name.includes('Female') ||
-                voice.name.includes('Samantha')
-            );
+            
+            if (safariVoice) {
+                utterance.voice = safariVoice;
+                console.log('Using Safari voice:', safariVoice.name);
+            }
+            
+            // Safari works better with slower rate
+            utterance.rate = 0.9;
+            
+            // For iOS, ensure we have user interaction before trying to speak
+            if (isIOS) {
+                // Create an overlay button that requires user interaction
+                const messageDiv = audioPlayer.closest('.message');
+                if (messageDiv) {
+                    const playOverlay = document.createElement('div');
+                    playOverlay.className = 'ios-play-overlay';
+                    playOverlay.innerHTML = `
+                        <div class="ios-play-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    `;
+                    messageDiv.appendChild(playOverlay);
+                    
+                    playOverlay.addEventListener('click', () => {
+                        // This happens after user interaction, so it should work
+                        window.speechSynthesis.speak(utterance);
+                        playOverlay.remove();
+                        
+                        // Show the audio player
+                        audioLoading.classList.remove('active');
+                        audioPlayer.classList.add('active');
+                    });
+                    
+                    // Show an instruction toast
+                    showToast('Tap the play button to start speech (iOS requires interaction)');
+                    return;
+                }
+            }
+        } else {
+            // Non-Safari browser, select appropriate voice
+            let selectedVoice = null;
+            
+            // Android
+            if (/Android/i.test(navigator.userAgent)) {
+                selectedVoice = voices.find(voice => 
+                    voice.name.includes('English US Female') || 
+                    voice.name.includes('en-US') ||
+                    voice.name.includes('Google UK English Female')
+                );
+            }
+            // Default (Desktop)
+            else {
+                selectedVoice = voices.find(voice => 
+                    voice.name.includes('Google UK English Female') || 
+                    voice.name.includes('Microsoft Zira') ||
+                    voice.name.includes('Female') ||
+                    voice.name.includes('Samantha')
+                );
+            }
+            
+            // Fallback to any voice
+            if (!selectedVoice && voices.length > 0) {
+                selectedVoice = voices.find(voice => voice.name.includes('Female')) || voices[0];
+            }
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            // Set parameters
+            utterance.rate = isMobileDevice ? 0.9 : 1;
         }
         
-        // Fallback to any voice
-        if (!selectedVoice && voices.length > 0) {
-            selectedVoice = voices.find(voice => voice.name.includes('Female')) || voices[0];
-        }
-        
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-        }
-        
-        // Set parameters
-        utterance.rate = isMobileDevice ? 0.9 : 1;
         utterance.pitch = 1;
+        utterance.volume = 1;
         
         // Store the utterance for later control
         currentUtterance = utterance;
@@ -2515,7 +2580,7 @@ function fallbackToBrowserTTS(text, audioPlayer, audioLoading) {
         audioLoading.classList.remove('active');
         audioPlayer.classList.add('active');
         
-        // Chrome sometimes cuts off speech, this is a workaround
+        // Chrome fix for cut-off speech
         if (navigator.userAgent.indexOf('Chrome') !== -1) {
             const chromeWorkaroundInterval = 300; // milliseconds
             const chromeWorkaround = setInterval(() => {
@@ -2535,8 +2600,19 @@ function fallbackToBrowserTTS(text, audioPlayer, audioLoading) {
             };
         }
         
-        // Actually speak
-        window.speechSynthesis.speak(utterance);
+        // Set up other event handlers
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            showToast('Speech playback error. Please try again.');
+            audioPlayer.classList.remove('active');
+            isPlaying = false;
+            currentUtterance = null;
+        };
+        
+        // For non-iOS, speak immediately
+        if (!isIOS) {
+            window.speechSynthesis.speak(utterance);
+        }
         
     } catch (fallbackError) {
         console.error('TTS fallback error:', fallbackError);

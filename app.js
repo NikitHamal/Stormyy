@@ -1908,34 +1908,105 @@ function createRunes() {
 createParticles();
 createRunes();
 
-// Add this function near the top of your script
+// Add this function at the beginning of the script to ensure it's available early
 function initializeIOSAudio() {
-    // Create a global audio context for iOS
-    window.audioContext = window.AudioContext || window.webkitAudioContext;
-    if (window.audioContext) {
-        window.audioContext = new window.audioContext();
+    // Create a global audio context for iOS and Safari
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    
+    if (window.AudioContext) {
+        try {
+            // If there's already an audio context, don't create a new one
+            if (!window.audioContext) {
+                window.audioContext = new window.AudioContext();
+            }
+            
+            // If context is suspended, try to resume it
+            if (window.audioContext.state === 'suspended') {
+                window.audioContext.resume().catch(e => {
+                    console.warn('Could not resume audio context automatically:', e);
+                });
+            }
+        } catch (e) {
+            console.warn('Error initializing AudioContext:', e);
+        }
     }
+    
+    // Create and play a silent audio element for iOS Safari
+    const silentSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV");
+    silentSound.volume = 0;
+    
+    let audioUnlocked = false;
     
     // Add touch and click event listeners to start audio context
     const unlockAudio = () => {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        
+        if (window.audioContext && window.audioContext.state !== 'running') {
+            window.audioContext.resume().catch(e => {
+                console.warn('Could not resume audio context on user interaction:', e);
+            });
+        }
+        
+        // Play the silent sound
+        const promise = silentSound.play();
+        if (promise !== undefined) {
+            promise.catch(e => {
+                console.warn("Silent audio play prevented:", e);
+                // Try again on next user interaction
+                audioUnlocked = false;
+            });
+        }
+        
+        // Add for WebKit browsers (Safari)
+        if (typeof speechSynthesis !== 'undefined') {
+            const utterance = new SpeechSynthesisUtterance(' ');
+            utterance.volume = 0;
+            speechSynthesis.speak(utterance);
+        }
+    };
+    
+    // Add event listeners
+    document.addEventListener('touchstart', unlockAudio, { passive: true });
+    document.addEventListener('touchend', unlockAudio, { passive: true });
+    document.addEventListener('click', unlockAudio, { passive: true });
+    
+    // Expose the unlock function globally so it can be called manually
+    window.unlockAudio = unlockAudio;
+    
+    // Ensure AudioContext is resumed when a user interacts with the page
+    const resumeAudioContext = () => {
         if (window.audioContext && window.audioContext.state !== 'running') {
             window.audioContext.resume();
         }
         
-        // Create and play a silent audio element for iOS Safari
-        const silentSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDV1dXV1dXV1dXV1dXV1dXV1dXV1dXV6urq6urq6urq6urq6urq6urq6urq6urq6v////////////////////////////////8AAAAATGF2YzU4LjU0AAAAAAAAAAAAAAAAJAAAAAAAAAAAASDs90hvAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAA0gAAAAATEFN//MUZAMAAAGkAAAAAAAAA0gAAAAARTMu//MUZAYAAAGkAAAAAAAAA0gAAAAAOTku//MUZAkAAAGkAAAAAAAAA0gAAAAANVVV");
-        silentSound.volume = 0;
-        silentSound.play().catch(e => console.log("Silent audio play prevented:", e));
-        
-        // Remove event listeners once unlocked
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('touchend', unlockAudio);
-        document.removeEventListener('click', unlockAudio);
+        // Also ensure speech synthesis is initialized
+        if (typeof speechSynthesis !== 'undefined') {
+            const utt = new SpeechSynthesisUtterance('');
+            utt.volume = 0;
+            speechSynthesis.cancel(); // Cancel any pending speech
+            speechSynthesis.speak(utt); // Initialize the speech system
+        }
     };
     
-    document.addEventListener('touchstart', unlockAudio);
-    document.addEventListener('touchend', unlockAudio);
-    document.addEventListener('click', unlockAudio);
+    // Add these at key interaction points
+    if (document.getElementById('userInput')) {
+        document.getElementById('userInput').addEventListener('focus', resumeAudioContext);
+    }
+    
+    if (document.getElementById('sendButton')) {
+        document.getElementById('sendButton').addEventListener('click', resumeAudioContext);
+    }
+    
+    // For any button press
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+            resumeAudioContext();
+        }
+    });
+
+    // Return a function that can be called to ensure audio is unlocked
+    return unlockAudio;
 }
 
 // When opening chat input

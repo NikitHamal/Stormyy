@@ -3234,3 +3234,105 @@ body {
     0 0 20px color-mix(in srgb, var(--theme-primary) 20%, transparent),
     inset 0 0 10px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
+
+/* iOS Audio Play Overlay */
+.ios-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    z-index: 100;
+    cursor: pointer;
+}
+
+.ios-play-button {
+    width: 60px;
+    height: 60px;
+    background: #9333EA;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.ios-play-button svg {
+    fill: white;
+    width: 30px;
+    height: 30px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(147, 51, 234, 0.7);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+    }
+}
+
+/* Responsive styles for iOS audio */
+@media (max-width: 768px) {
+    .ios-play-button {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .ios-play-button svg {
+        width: 25px;
+        height: 25px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ios-play-button {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .ios-play-button svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Audio player responsive styles */
+.audio-player {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+    .audio-player {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .audio-player .seekbar-container {
+        width: 100%;
+    }
+    
+    .audio-player .controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
