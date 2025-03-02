@@ -494,60 +494,50 @@ pre code {
     color: #822727;
 }
 
-/* Thinking Bubble Styles - Modern Grok-like Design */
+/* Thinking Bubble Styles - Updated for flowing text format */
 .thinking-bubble {
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    margin: 20px 0;
-    color: #374151;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: #F7FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    margin: 15px 0;
+    color: #4A5568;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     font-family: 'Poppins', sans-serif;
+    max-height: 400px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: max-height 0.3s ease;
 }
 
 .thinking-header {
-    padding: 14px 20px;
+    padding: 10px 15px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    background-color: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #E2E8F0;
     transition: background-color 0.2s ease;
 }
 
 .thinking-header:hover {
-    background-color: #f3f4f6;
+    background-color: #EDF2F7;
 }
 
 .thinking-title {
-    font-weight: 500;
-    font-size: 15px;
-    color: #4b5563;
+    font-weight: 600;
+    font-size: 14px;
+    color: #3182CE;
     display: flex;
     align-items: center;
-    gap: 8px;
 }
 
 .thinking-title::before {
     content: "💭";
-    font-size: 18px;
+    margin-right: 8px;
 }
 
 .thinking-toggle {
-    color: #6b7280;
+    color: #718096;
     transition: transform 0.3s ease;
-    font-size: 12px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
 }
 
 .thinking-bubble.collapsed .thinking-toggle {
@@ -556,29 +546,11 @@ pre code {
 
 .thinking-content {
     overflow: auto;
-    max-height: 400px;
-    padding: 20px;
-    line-height: 1.6;
+    max-height: 350px;
+    padding: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
     font-size: 14px;
-    background-color: #ffffff;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-    scroll-behavior: smooth;
-    position: relative;
-}
-
-.thinking-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.thinking-content::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.thinking-content::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 3px;
 }
 
 .thinking-bubble.collapsed .thinking-content {
@@ -588,31 +560,12 @@ pre code {
 .thinking-events {
     margin: 0;
     padding: 0;
-    font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #374151;
+    font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #2D3748;
     white-space: pre-wrap;
     overflow-wrap: break-word;
-}
-
-.thinking-events p {
-    margin: 0 0 12px 0;
-}
-
-.thinking-events p:last-child {
-    margin-bottom: 0;
-}
-
-/* Thinking Animation */
-@keyframes thinking {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; }
-    100% { opacity: 0.4; }
-}
-
-.thinking-bubble.thinking .thinking-title::before {
-    animation: thinking 1.5s infinite ease-in-out;
 }
 
 /* Remove old event styles */
@@ -719,85 +672,4 @@ pre code {
         text-align: center;
         margin-bottom: 0.5rem;
     }
-}
-
-/* Preview mode for thinking bubble */
-.thinking-bubble.preview-mode .thinking-content {
-    max-height: 72px; /* Approximately 3 lines */
-    overflow: hidden;
-    position: relative;
-    padding-bottom: 35px;
-}
-
-.thinking-bubble.preview-mode .thinking-content::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 40px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
-    pointer-events: none;
-}
-
-.thinking-bubble .expand-indicator {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 4px 12px;
-    font-size: 12px;
-    color: #6b7280;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    z-index: 2;
-    transition: all 0.2s ease;
-}
-
-.thinking-bubble .expand-indicator:hover {
-    background-color: #e5e7eb;
-    color: #4b5563;
-}
-
-.thinking-bubble .expand-indicator::after {
-    content: "↓";
-    font-size: 10px;
-}
-
-.thinking-bubble.expanded .expand-indicator::after {
-    content: "↑";
-}
-
-/* Autoscroll indicator */
-.auto-scroll-active {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: rgba(99, 102, 241, 0.1);
-    color: #4f46e5;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1000;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-.auto-scroll-active.visible {
-    opacity: 1;
-}
-
-/* Apply smooth scrolling to response area */
-.response-body {
-    scroll-behavior: smooth;
-    position: relative;
-    overflow: auto;
-    max-height: 600px;
 }
