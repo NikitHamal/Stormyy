@@ -80,6 +80,13 @@ div::-webkit-scrollbar,
 
     --md-sys-shape-corner: 12px;
     /* Standard rounded corner radius */
+
+    /* Mobile-specific variables */
+    --mobile-padding: 12px;
+    --mobile-button-size: 40px;
+    --mobile-font-size: 0.9rem;
+    --mobile-border-radius: 8px;
+    --mobile-touch-target: 44px; /* Minimum size for good touch targets */
 }
 
 
@@ -1807,4 +1814,193 @@ body {
 /* Audio file input styles */
 .audio-input {
     display: none;
+}
+
+/* Improve tap targets for mobile */
+@media (max-width: 768px) {
+    button, 
+    .tool-button, 
+    .nav-button,
+    .close-sidebar,
+    .mic-button,
+    #send-button,
+    .plus-button {
+        min-width: var(--mobile-touch-target);
+        min-height: var(--mobile-touch-target);
+    }
+    
+    /* Prevent text selection on double tap */
+    .conversation-item,
+    .tool-button,
+    .more-option,
+    .model-option,
+    .upload-option {
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+    }
+    
+    /* Improve spacing in messages for better readability */
+    .message {
+        padding: 1rem;
+        margin: 0.4rem 0;
+    }
+    
+    .message-content {
+        font-size: var(--mobile-font-size);
+        line-height: 1.6;
+    }
+    
+    /* Make code blocks more readable on mobile */
+    .message-content pre {
+        padding: 0.8rem;
+        margin: 0.6rem 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        font-size: 0.8rem;
+    }
+    
+    /* Better handling of links for touch */
+    .message-content a {
+        padding: 2px 0;
+    }
+    
+    /* Optimize chat input for mobile */
+    #chat-input {
+        font-size: var(--mobile-font-size);
+        padding: 10px 14px;
+    }
+    
+    /* Ensure bottom safe areas for notched phones */
+    .chat-input-container {
+        padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom, var(--mobile-padding)));
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
+    /* Better handling of the sidebar on mobile */
+    .sidebar {
+        width: 85%;
+        max-width: 300px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Sidebar content better spacing */
+    .sidebar-content {
+        padding: var(--mobile-padding);
+    }
+    
+    /* Improve modal behavior on mobile */
+    .settings-content {
+        /* Ensure content doesn't overlap status bar */
+        padding-top: max(20px, env(safe-area-inset-top, 20px));
+        /* Ensure content doesn't overlap home indicator */
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    }
+}
+
+/* Handle orientation changes */
+@media (max-width: 768px) and (orientation: landscape) {
+    .chat-messages {
+        padding-bottom: 60px;
+    }
+    
+    .message {
+        padding: 0.8rem;
+        margin: 0.3rem 0;
+    }
+    
+    /* Compact sidebar for landscape */
+    .sidebar-header {
+        padding: 10px;
+    }
+    
+    .sidebar-content {
+        padding: 10px;
+    }
+    
+    .conversation-item {
+        padding: 8px 12px;
+    }
+}
+
+/* Add smooth momentum scrolling for iOS */
+.chat-messages,
+.sidebar-content,
+.settings-body {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Optimizations for smaller phones */
+@media (max-width: 375px) {
+    .message {
+        padding: 0.8rem;
+    }
+    
+    .message-content {
+        font-size: 0.85rem;
+    }
+    
+    .mic-button, 
+    #send-button,
+    .plus-button {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .tool-button {
+        width: 24px;
+        height: 24px;
+    }
+    
+    /* Further reduce top bar height */
+    .top-bar {
+        height: 44px;
+    }
+}
+
+/* Add touch feedback for better UX */
+@media (max-width: 768px) {
+    .conversation-item:active,
+    .tool-button:active,
+    .model-option:active,
+    .plus-button:active,
+    .mic-button:active,
+    #send-button:active {
+        transform: scale(0.97);
+        transition: transform 0.1s ease;
+    }
+    
+    /* Improve file upload menu for mobile */
+    .file-upload-menu {
+        width: 200px;
+    }
+    
+    .upload-option {
+        padding: 10px 14px;
+    }
+}
+
+/* Fix position:fixed behavior on mobile browsers */
+@supports (-webkit-touch-callout: none) {
+    .settings-modal,
+    .mdc-top-app-bar,
+    .sidebar,
+    .chat-input-container {
+        /* Fix for iOS position:fixed inside transforms */
+        z-index: 9999;
+    }
+}
+
+/* Prevent content from being hidden under the virtual keyboard */
+@media (max-width: 768px) {
+    @supports (padding: max(0px)) {
+        body, html {
+            height: -webkit-fill-available;
+        }
+        
+        .app-container {
+            height: -webkit-fill-available;
+        }
+    }
 }
