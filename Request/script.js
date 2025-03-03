@@ -1,6 +1,35 @@
 // Global variables
 let fetchWithTimeout = (url, options = {}) => {
-    const { timeout = 8000, ...fetchOptions } = options;
+    const { timeout = 30000, ...fetchOptions } = options;
+    
+    // Add CORS headers for Kimi API
+    if (url.includes('kimi.moonshot.cn')) {
+        // For Kimi API, we need to use different approach due to strict CORS policies
+        // The fetch might still fail due to browser's security restrictions
+        // Consider using fetch mode 'no-cors' as a fallback
+        fetchOptions.headers = fetchOptions.headers || {};
+        fetchOptions.headers = new Headers(fetchOptions.headers);
+        
+        // Only set if not already set
+        if (!fetchOptions.headers.has('accept')) {
+            fetchOptions.headers.set('accept', 'application/json, text/plain, */*');
+        }
+        if (!fetchOptions.headers.has('accept-language')) {
+            fetchOptions.headers.set('accept-language', 'en-US,en;q=0.9');
+        }
+        
+        // These headers might not be respected in CORS mode
+        fetchOptions.headers.set('sec-fetch-dest', 'empty');
+        fetchOptions.headers.set('sec-fetch-mode', 'cors');
+        fetchOptions.headers.set('sec-fetch-site', 'same-origin');
+        
+        // We'll avoid credentials:include which can cause additional CORS issues
+        fetchOptions.credentials = 'same-origin';
+        
+        // Ensure mode is properly set
+        fetchOptions.mode = 'cors';
+    }
+    
     return Promise.race([
         fetch(url, fetchOptions),
         new Promise((_, reject) => 
@@ -305,17 +334,39 @@ function removeParam(button) {
     paramRow.remove();
 }
 
+// Helper function to create a proxy URL if needed
+function createProxyUrl(originalUrl) {
+    const useProxy = document.getElementById('use-proxy')?.checked;
+    const proxyUrl = document.getElementById('proxy-url')?.value;
+    
+    if (useProxy && proxyUrl && proxyUrl.trim()) {
+        // Remove trailing slash from proxy URL if present
+        const cleanProxyUrl = proxyUrl.trim().replace(/\/$/, '');
+        
+        // For CORS-anywhere style proxies
+        if (cleanProxyUrl.includes('cors-anywhere')) {
+            return `${cleanProxyUrl}/${originalUrl}`;
+        }
+        
+        // For custom proxies where the target URL is sent as a parameter
+        return `${cleanProxyUrl}?url=${encodeURIComponent(originalUrl)}`;
+    }
+    
+    return originalUrl;
+}
+
 // Main send request function
 async function sendRequest() {
     document.querySelector('.response').style.display = 'none';
     document.querySelector('.loading').style.display = 'block';
     
     // Get URL and validate
-    const url = new URL(document.getElementById('endpoint').value);
+    const originalUrl = document.getElementById('endpoint').value;
+    let url = new URL(originalUrl);
     const method = document.getElementById('method').value;
     
     // Create headers
-        const headers = new Headers();
+    const headers = new Headers();
     document.querySelectorAll('#headers-container .header-row').forEach(row => {
         const name = row.querySelector('.header-name').value.trim();
         const value = row.querySelector('.header-value').value.trim();
@@ -325,27 +376,27 @@ async function sendRequest() {
     });
     
     // Add authorization headers
-        const authType = document.getElementById('auth-type').value;
-        if (authType === 'basic') {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+    const authType = document.getElementById('auth-type').value;
+    if (authType === 'basic') {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
         const credentials = btoa(`${username}:${password}`);
         headers.set('Authorization', `Basic ${credentials}`);
-        } else if (authType === 'bearer') {
-            const token = document.getElementById('token').value;
+    } else if (authType === 'bearer') {
+        const token = document.getElementById('token').value;
         headers.set('Authorization', `Bearer ${token}`);
-        } else if (authType === 'apikey') {
-            const keyName = document.getElementById('apikey-name').value;
-            const keyValue = document.getElementById('apikey-value').value;
+    } else if (authType === 'apikey') {
+        const keyName = document.getElementById('apikey-name').value;
+        const keyValue = document.getElementById('apikey-value').value;
         const keyLocation = document.getElementById('apikey-location').value;
         
         if (keyLocation === 'header') {
             headers.set(keyName, keyValue);
         } else if (keyLocation === 'query') {
-                url.searchParams.append(keyName, keyValue);
-            }
+            url.searchParams.append(keyName, keyValue);
         }
-        
+    }
+    
     // Add query parameters
     document.querySelectorAll('#params-container .header-row').forEach(row => {
         const name = row.querySelector('.param-name').value.trim();
@@ -356,78 +407,130 @@ async function sendRequest() {
     });
     
     // Build request options
-        const options = {
-            method: method,
-            headers: headers,
-            mode: 'cors',
-            cache: 'no-cache',
+    const options = {
+        method: method,
+        headers: headers,
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin', // Changed from 'include' to 'same-origin'
         redirect: 'follow'
-        };
-        
+    };
+    
     // Add request body for methods that support it
-        if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
         const contentType = document.getElementById('content-type').value;
         headers.set('Content-Type', contentType);
         
-        const bodyContent = document.getElementById('request-body').value;
+        let bodyContent = document.getElementById('request-body').value;
+        
+        // If this is a Kimi API call, process the body content
+        if (url.toString().includes('kimi.moonshot.cn')) {
+            try {
+                const bodyData = JSON.parse(bodyContent);
+                
+                // Add Kimi options based on the form inputs
+                if (document.getElementById('kimi-model')) {
+                    bodyData.model = document.getElementById('kimi-model').value;
+                }
+                
+                if (document.getElementById('kimi-use-search')) {
+                    bodyData.use_search = document.getElementById('kimi-use-search').checked;
+                }
+                
+                if (document.getElementById('kimi-use-research')) {
+                    bodyData.use_research = document.getElementById('kimi-use-research').checked;
+                }
+                
+                // Update request body
+                bodyContent = JSON.stringify(bodyData);
+                
+                // Add required Kimi headers if the elements exist
+                if (document.getElementById('kimi-device-id')) {
+                    headers.set('x-msh-device-id', document.getElementById('kimi-device-id').value);
+                }
+                
+                if (document.getElementById('kimi-session-id')) {
+                    headers.set('x-msh-session-id', document.getElementById('kimi-session-id').value);
+                }
+                
+                if (document.getElementById('kimi-traffic-id')) {
+                    headers.set('x-traffic-id', document.getElementById('kimi-traffic-id').value);
+                }
+                
+                // Common Kimi headers
+                headers.set('x-language', 'en-US');
+                headers.set('x-msh-platform', 'web');
+                headers.set('referer', `https://kimi.moonshot.cn/chat/${url.pathname.split('/')[3]}`);
+            } catch (e) {
+                console.warn("Failed to parse request body to add Kimi options:", e);
+            }
+        }
+        
         if (bodyContent) {
             options.body = bodyContent;
         }
     }
     
-        let response;
+    let response;
     
-        try {
-        // Check if we need to use our proxy for Kimi
-            if (url.toString().includes('kimi.moonshot.cn')) {
-            console.log("Using kimi-proxy for Kimi API");
-            const proxyUrl = 'http://localhost:3000/kimi-proxy';
-            
-            // Set target URL header for proxy
-            headers.set('Target-URL', url.toString());
-            
-            // If this is a POST with a JSON body, check for Kimi options
-                if (method === 'POST' && options.body) {
-                    try {
-                        const bodyData = JSON.parse(options.body);
-                        
-                    // Add Kimi options based on the form inputs
-                    bodyData.model = document.getElementById('kimi-model').value;
-                    bodyData.use_search = document.getElementById('kimi-use-search').checked;
-                    bodyData.use_research = document.getElementById('kimi-use-research').checked;
-                    
-                    // Add device and session IDs
-                    headers.set('x-msh-device-id', document.getElementById('kimi-device-id').value);
-                    headers.set('x-msh-session-id', document.getElementById('kimi-session-id').value);
-                    headers.set('x-traffic-id', document.getElementById('kimi-traffic-id').value);
-                    
-                    // Update request body
-                        options.body = JSON.stringify(bodyData);
-                    } catch (e) {
-                    console.warn("Failed to parse request body to add Kimi options:", e);
-                    }
-                }
-
-            // Send the request to our proxy
-                response = await fetch(proxyUrl, {
-                    method: method,
-                    headers: headers,
-                    body: options.body,
-                    mode: 'cors'
-                });
-                
-            // Handle streaming response if needed
-            if (response.headers.get('content-type')?.includes('text/event-stream')) {
-                await processKimiStreamingResponse(response);
-                return;
-            }
-        } else {
-            // For regular endpoints, use normal fetch
-            response = await fetch(url.toString(), options);
+    try {
+        // Check if we should use a proxy
+        const finalUrl = createProxyUrl(url.toString());
+        const isUsingProxy = finalUrl !== url.toString();
+        
+        console.log(`Making request to: ${finalUrl} ${isUsingProxy ? '(via proxy)' : '(direct)'}`);
+        console.log("With options:", JSON.stringify({
+            method: options.method,
+            mode: options.mode,
+            credentials: options.credentials,
+            headers: Array.from(headers.entries()),
+            bodyLength: options.body ? options.body.length : 0
+        }, null, 2));
+        
+        // If using a proxy, we might need to adjust some options
+        if (isUsingProxy) {
+            // Some proxies expect the target URL in a header
+            headers.set('X-Target-URL', url.toString());
+            options.mode = 'cors'; // Ensure CORS mode for proxy
         }
+        
+        // Try API call
+        try {
+            response = await fetchWithTimeout(finalUrl, options);
+        } catch (directError) {
+            console.error("Fetch failed:", directError);
             
-            // Display response info
-            displayResponseInfo(response);
+            // If this is a CORS error and we're not already using a proxy, suggest using one
+            if (!isUsingProxy && 
+                directError instanceof TypeError && 
+                directError.message.includes('Failed to fetch')) {
+                
+                console.log("CORS error detected, suggesting proxy");
+                throw new Error(
+                    "CORS policy blocked the direct request. " +
+                    "Try enabling the 'Use Proxy' option in the settings " +
+                    "and provide a CORS proxy URL like 'https://cors-anywhere.herokuapp.com/'"
+                );
+            } else if (isUsingProxy) {
+                // If we're already using a proxy but still getting an error
+                throw new Error(
+                    `Request via proxy failed: ${directError.message}. ` +
+                    "Check that your proxy URL is correct and working."
+                );
+            } else {
+                // Re-throw other errors
+                throw directError;
+            }
+        }
+        
+        // Handle streaming response if needed
+        if (response.headers.get('content-type')?.includes('text/event-stream')) {
+            await processKimiStreamingResponse(response);
+            return;
+        }
+        
+        // Display response info for non-streaming responses
+        displayResponseInfo(response);
     } catch (error) {
         handleFetchError(error);
     }
@@ -789,15 +892,61 @@ function displayResponseInfo(response) {
     document.querySelector('.response-headers').innerHTML = headers;
 }
 
-// Handle fetch errors
+// Handle fetch errors with more detailed information
 function handleFetchError(error) {
-        document.querySelector('.status-code').textContent = 'Error: ' + error.message;
-        document.querySelector('.status-code').className = 'status-code status-4xx';
-        document.querySelector('.response-headers').textContent = '';
-        document.querySelector('.response-body').textContent = error.toString();
-        document.querySelector('.response').style.display = 'block';
-        document.querySelector('.loading').style.display = 'none';
+    const statusElement = document.querySelector('.status-code');
+    const responseHeaders = document.querySelector('.response-headers');
+    const responseBody = document.querySelector('.response-body');
+    const loadingIndicator = document.querySelector('.loading');
+    
+    if (statusElement) {
+        statusElement.textContent = 'Error: ' + error.message;
+        statusElement.className = 'status-code status-4xx';
     }
+    
+    if (responseHeaders) {
+        responseHeaders.textContent = '';
+    }
+    
+    if (responseBody) {
+        let errorMessage = error.toString();
+        
+        // Add more context for common errors
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+            errorMessage += '\n\nThis is a CORS (Cross-Origin Resource Sharing) error.\n\n';
+            errorMessage += 'Unfortunately, making direct API calls to external services like Kimi\n';
+            errorMessage += 'from a browser is often blocked by CORS policies.\n\n';
+            
+            errorMessage += 'Possible solutions:\n';
+            errorMessage += '1. Use a server-side proxy (recommended)\n';
+            errorMessage += '   - Create a simple server using Node.js/Express\n';
+            errorMessage += '   - Have your server forward requests to the API\n';
+            errorMessage += '   - Access your local server instead of the API directly\n\n';
+            
+            errorMessage += '2. Use a CORS proxy service (temporary/testing only)\n';
+            errorMessage += '   - Example: https://cors-anywhere.herokuapp.com/\n';
+            errorMessage += '   - Add the proxy URL before your API URL\n';
+            errorMessage += '   - Note: Not recommended for production or sensitive data\n\n';
+            
+            errorMessage += '3. Browser extension to disable CORS (for development only)\n';
+            errorMessage += '   - Not recommended for regular browsing\n\n';
+            
+            errorMessage += 'For more information on CORS:\n';
+            errorMessage += 'https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS';
+        } else if (error.name === 'AbortError') {
+            errorMessage += '\n\nRequest timed out. The server took too long to respond.';
+        }
+        
+        responseBody.innerHTML = `<pre class="error-message">${errorMessage}</pre>`;
+    }
+    
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
+    
+    document.querySelector('.response').style.display = 'block';
+    console.error('Request error:', error);
+}
 
 // Check server status
 async function checkServerStatus() {
@@ -898,137 +1047,108 @@ async function testKimiConnection() {
     }
 }
 
-// Set cookies
-async function setCookies() {
-    const cookies = document.getElementById('cookies-input').value.trim();
-    if (!cookies) {
-        document.getElementById('cookies-status').textContent = 'No cookies provided';
-        document.getElementById('cookies-status').style.color = '#721c24';
-        return;
+// Add proxy settings to the UI
+function addProxySettings() {
+    // Find the settings section or create one if it doesn't exist
+    let settingsSection = document.querySelector('.settings-section');
+    
+    if (!settingsSection) {
+        // Create settings section
+        settingsSection = document.createElement('div');
+        settingsSection.className = 'settings-section';
+        settingsSection.style.marginTop = '20px';
+        settingsSection.style.padding = '15px';
+        settingsSection.style.backgroundColor = '#f8f9fa';
+        settingsSection.style.borderRadius = '4px';
+        settingsSection.style.border = '1px solid #e2e8f0';
+        
+        // Create section header
+        const settingsHeader = document.createElement('h3');
+        settingsHeader.textContent = 'Advanced Settings';
+        settingsHeader.style.marginTop = '0';
+        settingsSection.appendChild(settingsHeader);
+        
+        // Add settings section to the page
+        const container = document.querySelector('.container') || document.body;
+        container.appendChild(settingsSection);
     }
     
-    document.getElementById('cookies-status').textContent = 'Setting cookies...';
-    document.getElementById('cookies-status').style.color = '#856404';
-    document.getElementById('cookies-status').style.backgroundColor = '#fff3cd';
-    document.getElementById('cookies-status').style.padding = '10px';
-    document.getElementById('cookies-status').style.borderRadius = '4px';
+    // Create proxy settings container
+    const proxyContainer = document.createElement('div');
+    proxyContainer.className = 'proxy-settings';
+    proxyContainer.style.marginBottom = '15px';
     
-    // Check if server is running first
-    try {
-        const serverRunning = await checkServerStatus();
-        if (!serverRunning) {
-            document.getElementById('cookies-status').textContent = 'Server is not running! Start it with "node server.js"';
-            document.getElementById('cookies-status').style.color = '#721c24';
-            document.getElementById('cookies-status').style.backgroundColor = '#f8d7da';
-            return;
-        }
-        
-        const response = await fetchWithTimeout('http://localhost:3000/set-cookies', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cookies }),
-            timeout: 5000
-        });
-        
-        // Check if response is HTML (indicates an error page)
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('text/html')) {
-            throw new Error('Server returned HTML instead of JSON. The server might be running but not properly handling the request.');
-        }
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            document.getElementById('cookies-status').textContent = 'Cookies set successfully ✓';
-            document.getElementById('cookies-status').style.color = '#155724';
-            document.getElementById('cookies-status').style.backgroundColor = '#d4edda';
-        } else {
-            document.getElementById('cookies-status').textContent = `Failed to set cookies: ${data.error}`;
-            document.getElementById('cookies-status').style.color = '#721c24';
-            document.getElementById('cookies-status').style.backgroundColor = '#f8d7da';
-        }
-    } catch (error) {
-        if (error.message.includes('JSON')) {
-            document.getElementById('cookies-status').textContent = `Error parsing response: ${error.message}. Make sure the server is handling the request correctly.`;
-        } else {
-            document.getElementById('cookies-status').textContent = `Connection error: ${error.message}`;
-        }
-        document.getElementById('cookies-status').style.color = '#721c24';
-        document.getElementById('cookies-status').style.backgroundColor = '#f8d7da';
-        console.error('Set cookies error:', error);
-    }
-}
-async function getCookies() {
-    document.getElementById('cookies-status').textContent = 'Fetching current cookies...';
-    document.getElementById('cookies-status').style.color = '#856404';
-    document.getElementById('cookies-status').style.backgroundColor = '#fff3cd';
-    document.getElementById('cookies-status').style.padding = '10px';
-    document.getElementById('cookies-status').style.borderRadius = '4px';
-
-    try {
-        const response = await fetchWithTimeout('http://localhost:3000/get-cookies', {
-            timeout: 5000
-        });
-
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('text/html')) {
-            throw new Error('Server returned HTML instead of JSON');
-        }
-
-        const data = await response.json();
-
-        if (response.ok) {
-            const currentCookies = document.getElementById('current-cookies');
-            currentCookies.textContent = data.cookies || 'No cookies set';
-            currentCookies.style.display = 'block';
-            document.getElementById('cookies-status').textContent = 'Current cookies retrieved ✓';
-            document.getElementById('cookies-status').style.color = '#155724';
-            document.getElementById('cookies-status').style.backgroundColor = '#d4edda';
-        } else {
-            throw new Error(data.error || 'Failed to get cookies');
-        }
-    } catch (error) {
-        document.getElementById('cookies-status').textContent = `Error getting cookies: ${error.message}`;
-        document.getElementById('cookies-status').style.color = '#721c24';
-        document.getElementById('cookies-status').style.backgroundColor = '#f8d7da';
-        console.error('Get cookies error:', error);
-    }
+    // Create proxy checkbox
+    const proxyCheckboxContainer = document.createElement('div');
+    proxyCheckboxContainer.className = 'form-group';
+    proxyCheckboxContainer.style.marginBottom = '10px';
+    
+    const proxyCheckbox = document.createElement('input');
+    proxyCheckbox.type = 'checkbox';
+    proxyCheckbox.id = 'use-proxy';
+    proxyCheckbox.style.marginRight = '8px';
+    
+    const proxyCheckboxLabel = document.createElement('label');
+    proxyCheckboxLabel.htmlFor = 'use-proxy';
+    proxyCheckboxLabel.textContent = 'Use CORS Proxy (for external APIs)';
+    proxyCheckboxLabel.style.fontWeight = 'normal';
+    
+    proxyCheckboxContainer.appendChild(proxyCheckbox);
+    proxyCheckboxContainer.appendChild(proxyCheckboxLabel);
+    
+    // Create proxy URL input
+    const proxyUrlContainer = document.createElement('div');
+    proxyUrlContainer.className = 'form-group';
+    proxyUrlContainer.style.marginBottom = '10px';
+    
+    const proxyUrlLabel = document.createElement('label');
+    proxyUrlLabel.htmlFor = 'proxy-url';
+    proxyUrlLabel.textContent = 'Proxy URL:';
+    proxyUrlLabel.style.display = 'block';
+    proxyUrlLabel.style.marginBottom = '5px';
+    
+    const proxyUrlInput = document.createElement('input');
+    proxyUrlInput.type = 'text';
+    proxyUrlInput.id = 'proxy-url';
+    proxyUrlInput.className = 'form-control';
+    proxyUrlInput.placeholder = 'https://cors-anywhere.herokuapp.com/';
+    proxyUrlInput.style.width = '100%';
+    proxyUrlInput.style.padding = '8px';
+    proxyUrlInput.style.border = '1px solid #ced4da';
+    proxyUrlInput.style.borderRadius = '4px';
+    
+    // Initially disable the URL input
+    proxyUrlInput.disabled = !proxyCheckbox.checked;
+    
+    // Enable/disable URL input based on checkbox
+    proxyCheckbox.addEventListener('change', () => {
+        proxyUrlInput.disabled = !proxyCheckbox.checked;
+    });
+    
+    proxyUrlContainer.appendChild(proxyUrlLabel);
+    proxyUrlContainer.appendChild(proxyUrlInput);
+    
+    // Add help text
+    const helpText = document.createElement('p');
+    helpText.className = 'help-text';
+    helpText.textContent = 'A CORS proxy helps bypass browser security restrictions when calling external APIs directly.';
+    helpText.style.fontSize = '0.85em';
+    helpText.style.color = '#6c757d';
+    helpText.style.marginTop = '5px';
+    
+    // Assemble the proxy settings
+    proxyContainer.appendChild(proxyCheckboxContainer);
+    proxyContainer.appendChild(proxyUrlContainer);
+    proxyContainer.appendChild(helpText);
+    
+    // Add to settings section
+    settingsSection.appendChild(proxyContainer);
 }
 
-async function testKimiConnection() {
-    document.getElementById('server-status-cookies').textContent = 'Testing connection...';
-    document.getElementById('server-status-cookies').style.color = '#856404';
-    document.getElementById('server-status-cookies').style.backgroundColor = '#fff3cd';
-
-    try {
-        const response = await fetchWithTimeout('http://localhost:3000/test-kimi', {
-            timeout: 8000
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            document.getElementById('server-status-cookies').textContent = '✓ Connected to Kimi successfully';
-            document.getElementById('server-status-cookies').style.color = '#155724';
-            document.getElementById('server-status-cookies').style.backgroundColor = '#d4edda';
-        } else {
-            throw new Error(data.error || 'Connection test failed');
-        }
-    } catch (error) {
-        document.getElementById('server-status-cookies').textContent = `✗ Connection failed: ${error.message}`;
-        document.getElementById('server-status-cookies').style.color = '#721c24';
-        document.getElementById('server-status-cookies').style.backgroundColor = '#f8d7da';
-        console.error('Kimi connection test error:', error);
-    }
-}
-
-async function checkServerStatus() {
-    try {
-        const response = await fetchWithTimeout('http://localhost:3000/health', {
-            timeout: 2000
-        });
-        return response.ok;
-    } catch (error) {
-        return false;
-    }
-}
+// Call this function when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    
+    // Add proxy settings
+    addProxySettings();
+});

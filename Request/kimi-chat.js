@@ -69,19 +69,7 @@ function initializeApp() {
     }
     
     // Add event listeners
-    userInput.addEventListener('keydown', handleInputKeydown);
-    sendButton.addEventListener('click', handleSendMessage);
-    settingsBtn.addEventListener('click', openSettingsModal);
-    closeModal.forEach(button => {
-        button.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        });
-    });
-    saveSettingsBtn.addEventListener('click', saveSettings);
-    newChatBtn.addEventListener('click', createNewConversation);
+    initEventListeners();
     
     // Auto-resize textarea
     userInput.addEventListener('input', autoResizeTextarea);
@@ -105,10 +93,6 @@ function initializeApp() {
         }
     });
     
-    // Delete all chats functionality
-    deleteAllBtn.addEventListener('click', openDeleteModal);
-    confirmDeleteBtn.addEventListener('click', deleteAllChats);
-    
     // Character counter
     userInput.addEventListener('input', updateCharCount);
     
@@ -116,6 +100,48 @@ function initializeApp() {
     if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
         document.body.classList.add('ios-device');
     }
+}
+
+// Initialize event listeners
+function initEventListeners() {
+    // User input events
+    userInput.addEventListener('input', autoResizeTextarea);
+    userInput.addEventListener('input', updateCharCount);
+    userInput.addEventListener('keydown', handleInputKeydown);
+    
+    // Send button
+    sendButton.addEventListener('click', handleSendMessage);
+    
+    // Sidebar toggle
+    mobileNavToggle.addEventListener('click', toggleSidebar);
+    
+    // New chat button
+    newChatBtn.addEventListener('click', createNewConversation);
+    
+    // Suggestion chips
+    document.querySelectorAll('.suggestion-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            userInput.value = chip.textContent;
+            handleSendMessage();
+        });
+    });
+    
+    // Settings modal events
+    document.querySelector('.settings-btn').addEventListener('click', openSettingsModal);
+    document.querySelector('.close-modal').addEventListener('click', closeSettingsModal);
+    document.getElementById('save-settings').addEventListener('click', saveSettings);
+    
+    // Delete all chats button
+    document.querySelector('.delete-all-btn').addEventListener('click', openDeleteModal);
+    
+    // Delete confirmation modal events
+    const closeButtons = document.querySelectorAll('#delete-confirm-modal .close-modal, #delete-confirm-modal .secondary-btn');
+    closeButtons.forEach(btn => btn.addEventListener('click', closeDeleteModal));
+    
+    document.getElementById('confirm-delete').addEventListener('click', deleteAllChats);
+    
+    // Initialize scrolling behavior
+    messagesContainer.addEventListener('scroll', handleScroll);
 }
 
 // Handle scroll events for auto-scrolling
@@ -252,7 +278,7 @@ function updateConversationsList() {
     });
 }
 
-// Append a message to the UI
+// Append a message to the chat
 function appendMessage(role, content) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
@@ -264,19 +290,17 @@ function appendMessage(role, content) {
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
     
-    // Format content if it's from the assistant
-    if (role === 'assistant') {
+    // Only format content if it exists and is not empty
+    if (content && typeof content === 'string') {
         messageContent.innerHTML = formatMessage(content);
-    } else {
-        messageContent.textContent = content;
     }
     
     messageDiv.appendChild(avatar);
     messageDiv.appendChild(messageContent);
     messagesContainer.appendChild(messageDiv);
     
-    // Scroll to bottom
     scrollToBottom();
+    return messageDiv;
 }
 
 // Show typing indicator with thinking process for Kimi 1.5
@@ -291,39 +315,54 @@ function showTypingIndicator() {
     const content = document.createElement('div');
     content.className = 'message-content';
     
-    // Add thinking process container for Kimi 1.5
-    if (kimiConfig.model === 'k1') {
-        content.innerHTML = `
-            <div class="response-content"></div>
-            <div class="thinking-bubble">
-                <div class="thinking-header">
-                    <span class="thinking-title">Thinking Process</span>
-                    <span class="thinking-toggle">▼</span>
-                </div>
-                <div class="thinking-content">
-                    <div class="thinking-events"></div>
-                </div>
-            </div>
-        `;
-
-        // Add click handler for thinking process toggle
-        const thinkingHeader = content.querySelector('.thinking-header');
-        thinkingHeader.addEventListener('click', () => {
-            const bubble = content.querySelector('.thinking-bubble');
-            bubble.classList.toggle('collapsed');
-        });
-    } else {
-        content.innerHTML = `<div class="typing-indicator"><span>•</span><span>•</span><span>•</span></div>`;
-    }
+    // Create thinking bubble structure
+    const thinkingBubble = document.createElement('div');
+    thinkingBubble.className = 'thinking-bubble';
+    thinkingBubble.style.display = kimiConfig.model === 'k1' ? 'block' : 'none';
+    
+    const thinkingHeader = document.createElement('div');
+    thinkingHeader.className = 'thinking-header';
+    thinkingHeader.innerHTML = `
+        <span class="thinking-title">Thinking Process</span>
+        <span class="thinking-toggle">▼</span>
+    `;
+    
+    const thinkingContent = document.createElement('div');
+    thinkingContent.className = 'thinking-content';
+    
+    const thinkingEvents = document.createElement('div');
+    thinkingEvents.className = 'thinking-events';
+    thinkingEvents.textContent = 'Waiting for model to think...';
+    
+    thinkingContent.appendChild(thinkingEvents);
+    thinkingBubble.appendChild(thinkingHeader);
+    thinkingBubble.appendChild(thinkingContent);
+    
+    // Add toggle functionality
+    thinkingHeader.addEventListener('click', () => {
+        thinkingBubble.classList.toggle('collapsed');
+        const toggle = thinkingHeader.querySelector('.thinking-toggle');
+        if (toggle) {
+            toggle.textContent = thinkingBubble.classList.contains('collapsed') ? '▶' : '▼';
+        }
+    });
+    
+    // Create response content area
+    const responseContent = document.createElement('div');
+    responseContent.className = 'response-content';
+    
+    content.appendChild(thinkingBubble);
+    content.appendChild(responseContent);
     
     indicator.appendChild(avatar);
     indicator.appendChild(content);
     messagesContainer.appendChild(indicator);
+    
     scrollToBottom();
     return indicator;
 }
 
-// Update thinking process for Kimi 1.5
+// Update thinking process display
 function updateThinkingProcess(indicator, event) {
     if (!indicator || !event || kimiConfig.model !== 'k1') return;
     
@@ -332,8 +371,22 @@ function updateThinkingProcess(indicator, event) {
     
     try {
         // Handle different types of thinking events
-        if (event.type === 'thinking') {
-            thinkingEvents.textContent = event.content;
+        let content = '';
+        
+        if (event.event === 'thinking') {
+            content = event.content || '';
+        } else if (event.event === 'k1' && event.data && event.data.text) {
+            content = event.data.text || '';
+        }
+        
+        if (content) {
+            thinkingEvents.textContent = content;
+            
+            // Auto-scroll thinking content
+            const thinkingContent = indicator.querySelector('.thinking-content');
+            if (thinkingContent) {
+                thinkingContent.scrollTop = thinkingContent.scrollHeight;
+            }
         }
     } catch (error) {
         console.error('Error updating thinking process:', error);
@@ -346,50 +399,74 @@ async function processStreamingResponse(response, typingIndicator) {
     const decoder = new TextDecoder();
     let buffer = '';
     let assistantMessage = '';
-    
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        
-        for (const line of lines) {
-            if (line.trim() && line.startsWith('data:')) {
-                try {
-                    const data = JSON.parse(line.substring(5));
-                    
-                    if (data.event === 'cmpl' && data.text) {
-                        assistantMessage += data.text;
-                        if (typingIndicator) {
-                            const content = typingIndicator.querySelector('.message-content');
-                            if (content) {
-                                if (kimiConfig.model === 'k1') {
-                                    const responseContent = content.querySelector('.response-content');
-                                    if (responseContent) {
-                                        responseContent.innerHTML = formatMessage(assistantMessage);
+    let thinkingEvents = [];
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (line.trim() && line.startsWith('data:')) {
+                    try {
+                        const data = JSON.parse(line.substring(5));
+                        
+                        if (data.event === 'resp' && data.model === 'k1') {
+                            // Show thinking bubble for Kimi 1.5
+                            const thinkingBubble = typingIndicator.querySelector('.thinking-bubble');
+                            if (thinkingBubble) {
+                                thinkingBubble.style.display = 'block';
+                            }
+                        } else if (data.event === 'k1') {
+                            // Handle k1 thinking events
+                            if (data.data && data.data.text) {
+                                const thinkingContent = typingIndicator.querySelector('.thinking-events');
+                                if (thinkingContent) {
+                                    // Append the new thinking text
+                                    thinkingContent.textContent = data.data.text;
+                                    
+                                    // Auto-scroll thinking content
+                                    const thinkingContainer = typingIndicator.querySelector('.thinking-content');
+                                    if (thinkingContainer) {
+                                        thinkingContainer.scrollTop = thinkingContainer.scrollHeight;
                                     }
-                                } else {
-                                    content.innerHTML = formatMessage(assistantMessage);
+                                }
+                            }
+                        } else if (data.event === 'cmpl' && data.text) {
+                            // Handle completion text
+                            assistantMessage += data.text;
+                            
+                            // Update the response content
+                            if (typingIndicator) {
+                                const responseContent = typingIndicator.querySelector('.response-content');
+                                if (responseContent) {
+                                    responseContent.innerHTML = formatMessage(assistantMessage);
                                 }
                             }
                         }
-                    } else if (data.event === 'thinking' && kimiConfig.model === 'k1') {
-                        updateThinkingProcess(typingIndicator, data);
+                    } catch (e) {
+                        console.error('Error parsing SSE data:', e, line);
                     }
-                } catch (e) {
-                    console.error('Error parsing SSE data:', e);
                 }
+            }
+
+            // Auto-scroll main messages container if we're not manually scrolling
+            if (shouldAutoScroll) {
+                scrollToBottom();
             }
         }
         
-        if (shouldAutoScroll) {
-            scrollToBottom();
-        }
+        return assistantMessage;
+    } catch (error) {
+        console.error('Error processing streaming response:', error);
+        throw error;
+    } finally {
+        reader.releaseLock();
     }
-    
-    return assistantMessage;
 }
 
 // Format message with markdown-like styling
@@ -467,28 +544,35 @@ async function handleSendMessage() {
         const response = await sendToKimi(userMessage, typingIndicator);
         
         // Remove typing indicator
-        typingIndicator.remove();
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
         
-        // Add assistant response to UI
-        appendMessage('assistant', response.content);
-        
-        // Add assistant response to conversation
-        if (currentConversation) {
-            currentConversation.messages.push({
-                role: 'assistant',
-                content: response.content
-            });
+        // Only append message if we have content
+        if (response && response.content) {
+            // Add assistant response to UI
+            appendMessage('assistant', response.content);
             
-            // Save to localStorage
-            saveConversations();
+            // Add assistant response to conversation
+            if (currentConversation) {
+                currentConversation.messages.push({
+                    role: 'assistant',
+                    content: response.content
+                });
+                
+                // Save to localStorage
+                saveConversations();
+            }
         }
     } catch (error) {
         console.error('Error handling message:', error);
         
-        // Remove typing indicator
-        typingIndicator.remove();
+        // Remove typing indicator if it still exists
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
         
-        // Show error message if not already shown (prevent duplicates)
+        // Show error message if not already shown
         if (!document.querySelector('.system-message.error')) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'system-message error';
@@ -511,7 +595,8 @@ async function sendToKimi(message, typingIndicator) {
     const baseEndpoint = kimiConfig.useProxy ? kimiConfig.proxyEndpoint : 'https://kimi.moonshot.cn/api/chat/cv2840f6o68qmpt16krg/completion/stream';
     
     const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream'
     };
     
     // Add proxy-specific headers
@@ -523,25 +608,17 @@ async function sendToKimi(message, typingIndicator) {
         headers['Referer'] = 'https://kimi.moonshot.cn/chat/cv2840f6o68qmpt16krg';
         headers['x-language'] = 'en-US';
         headers['x-msh-platform'] = 'web';
-        // Add authorization token for direct API access
         headers['Authorization'] = 'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1c2VyLWNlbnRlciIsImV4cCI6MTc0NzA2NDMyMywiaWF0IjoxNzM5Mjg4MzIzLCJqdGkiOiJjdWxtdTBzcmlpY2RwZmo3c3FzMCIsInR5cCI6ImFjY2VzcyIsImFwcF9pZCI6ImtpbWkiLCJzdWIiOiJjdWg1cmdpYXYxZjNlcTE3Y2Y1MCIsInNwYWNlX2lkIjoiY3VoNXJnaWF2MWYzZXExN2NmNGciLCJhYnN0cmFjdF91c2VyX2lkIjoiY3VoNXJnaWF2MWYzZXExN2NmNDAiLCJkZXZpY2VfaWQiOiI3NDcwMTg2MjAzNjA2ODQwMzMzIn0.vIdmw4H-uLl5gYo1ERok62c3QC6KeAzi_RvU0h-1DVM7DGQkPSH-nGhNiKuPmNzucq2qtn5We52rO7kedXuC1A';
     }
     
     // Add Kimi-specific headers
-    if (kimiConfig.deviceId) {
-        headers['x-msh-device-id'] = kimiConfig.deviceId;
-    }
-    if (kimiConfig.sessionId) {
-        headers['x-msh-session-id'] = kimiConfig.sessionId;
-    }
-    if (kimiConfig.trafficId) {
-        headers['x-traffic-id'] = kimiConfig.trafficId;
-    }
+    if (kimiConfig.deviceId) headers['x-msh-device-id'] = kimiConfig.deviceId;
+    if (kimiConfig.sessionId) headers['x-msh-session-id'] = kimiConfig.sessionId;
+    if (kimiConfig.trafficId) headers['x-traffic-id'] = kimiConfig.trafficId;
     
     // Build message history from current conversation
     const messageHistory = [];
     
-    // Include conversation history (limit to last 10 messages for performance)
     if (currentConversation && currentConversation.messages.length > 0) {
         const recentMessages = currentConversation.messages.slice(-10);
         recentMessages.forEach(msg => {
@@ -550,128 +627,50 @@ async function sendToKimi(message, typingIndicator) {
                 content: msg.content
             });
         });
-    } else {
-        // Add the current message if no history exists
-        messageHistory.push({
-            role: 'user',
-            content: message
-        });
     }
     
-    // Prepare the request body according to Kimi API format
-    const body = {
-        model: kimiConfig.model,
-        stream: true,
+    messageHistory.push({
+        role: 'user',
+        content: message
+    });
+    
+    const requestBody = {
         messages: messageHistory,
-        parameters: {
-            temperature: 0.7,
-            top_p: 0.9,
-            presence_penalty: 0,
-            frequency_penalty: 0,
-            use_search: kimiConfig.useSearch,
-            use_research: kimiConfig.useResearch
-        }
+        model: kimiConfig.model === 'k1' ? 'k1' : 'moonshot-v1-8k',
+        stream: true,
+        useSearch: kimiConfig.useSearch || false,
+        useResearch: kimiConfig.useResearch || false
     };
     
-    // Log request details
-    console.log('Sending request to:', baseEndpoint);
-    console.log('Headers:', headers);
-    console.log('Body:', body);
-    
-    // For streaming response
-    let assistantMessage = '';
-    
-    // For handling errors
     try {
-        // First check if endpoint is reachable
-        let response;
-        try {
-            console.log('Attempting to connect to:', baseEndpoint);
-            response = await fetchWithTimeout(baseEndpoint, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body),
-                timeout: 15000 // Allow more time for the actual API call
-            });
-        } catch (networkError) {
-            console.error('Network error:', networkError);
-            // Show detailed error in chat
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'system-message error';
-            if (networkError.message.includes('timeout')) {
-                errorDiv.innerHTML = `<p>Request timed out. The server took too long to respond.</p>
-                                    <p>Please try again or check your connection.</p>`;
-            } else if (networkError.message.includes('Failed to fetch')) {
-                errorDiv.innerHTML = `<p>Unable to connect to Kimi API.</p>
-                                    <p>Please check your internet connection and ensure the endpoint is accessible.</p>
-                                    <p>Endpoint: ${baseEndpoint}</p>`;
-            } else {
-                errorDiv.innerHTML = `<p>Network error: ${networkError.message}</p>
-                                    <p>Please check your connection and try again.</p>`;
-            }
-            messagesContainer.appendChild(errorDiv);
-            scrollToBottom();
-            throw new Error(`Failed to connect to Kimi API: ${networkError.message}`);
-        }
+        const response = await fetchWithTimeout(baseEndpoint, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody),
+            timeout: 120000
+        });
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Kimi API error: HTTP ${response.status}`, errorText);
-            
-            // Display detailed error message based on status code
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'system-message error';
-            
-            switch (response.status) {
-                case 404:
-                    errorDiv.innerHTML = `<p>Error 404: API endpoint not found</p>
-                                        <p>The requested endpoint does not exist: ${baseEndpoint}</p>
-                                        <p>Please check your API configuration.</p>`;
-                    break;
-                case 401:
-                    errorDiv.innerHTML = `<p>Error 401: Unauthorized</p>
-                                        <p>Please check your API token or authentication settings.</p>`;
-                    break;
-                case 403:
-                    errorDiv.innerHTML = `<p>Error 403: Forbidden</p>
-                                        <p>You don't have permission to access this resource.</p>`;
-                    break;
-                case 429:
-                    errorDiv.innerHTML = `<p>Error 429: Too Many Requests</p>
-                                        <p>Please wait a moment before trying again.</p>`;
-                    break;
-                case 500:
-                case 502:
-                case 503:
-                case 504:
-                    errorDiv.innerHTML = `<p>Error ${response.status}: Server Error</p>
-                                        <p>The Kimi API server is experiencing issues. Please try again later.</p>`;
-                    break;
-                default:
-                    errorDiv.innerHTML = `<p>Error from Kimi API: ${response.status} ${response.statusText}</p>
-                                        <p>Response: ${errorText}</p>
-                                        <p>Try refreshing the page or checking your settings.</p>`;
-            }
-            
-            messagesContainer.appendChild(errorDiv);
-            scrollToBottom();
-            
-            throw new Error(`Failed to get response: HTTP error! status: ${response.status}, body: ${errorText}`);
+            throw new Error(`API returned ${response.status} ${response.statusText}`);
         }
         
-        // Check if we have a streaming response
-        if (response.headers.get('content-type')?.includes('text/event-stream')) {
-            assistantMessage = await processStreamingResponse(response, typingIndicator);
-            
-            return { content: assistantMessage };
-        } else {
-            // Handle non-streaming response
-            const data = await response.json();
-            return { content: data.message || 'No content available' };
-        }
+        // Process streaming response and get the final message
+        const content = await processStreamingResponse(response, typingIndicator);
+        
+        // Return the response object with content
+        return { content };
+        
     } catch (error) {
-        console.error('Kimi API error:', error);
-        throw new Error(`Failed to get response: ${error.message}`);
+        console.error('Error calling Kimi API:', error);
+        if (typingIndicator) typingIndicator.remove();
+        
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'message system-message error';
+        errorMessage.innerHTML = `<p>Error: ${error.message}</p><p>Please try again later.</p>`;
+        messagesContainer.appendChild(errorMessage);
+        scrollToBottom();
+        
+        throw error;
     }
 }
 
@@ -847,34 +846,36 @@ function deleteConversation(id, event) {
 
 // Open delete confirmation modal
 function openDeleteModal() {
-    deleteConfirmModal.classList.add('active');
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 // Close delete confirmation modal
 function closeDeleteModal() {
-    deleteConfirmModal.classList.remove('active');
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 // Delete all chats
 function deleteAllChats() {
     try {
-        // Clear localStorage conversations
+        // Clear localStorage
         localStorage.removeItem('kimiConversations');
         
         // Reset conversations array
         conversations = [];
-        
-        // Reset current conversation
         currentConversation = null;
         
-        // Clear conversation list UI
+        // Clear UI
         conversationList.innerHTML = '';
-        
-        // Create a new conversation
-        createNewConversation();
-        
-        // Clear messages
         messagesContainer.innerHTML = '';
+        
+        // Create new conversation
+        createNewConversation();
         
         // Add welcome message
         addWelcomeMessage();
@@ -888,11 +889,10 @@ function deleteAllChats() {
         }
     } catch (error) {
         console.error('Error deleting all chats:', error);
-        // Show error message to user
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'system-message error';
-        errorDiv.innerHTML = `<p>Error deleting chats: ${error.message}</p>`;
-        messagesContainer.appendChild(errorDiv);
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'message system-message error';
+        errorMessage.innerHTML = `<p>Error deleting chats: ${error.message}</p>`;
+        messagesContainer.appendChild(errorMessage);
         scrollToBottom();
     }
 }
