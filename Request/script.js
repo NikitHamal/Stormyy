@@ -110,6 +110,76 @@ const presets = {
             }, null, 2)
         },
         params: []
+    },
+    grok: {
+        url: "http://localhost:3000/grok-proxy",
+        method: "POST",
+        headers: [
+            { name: "content-type", value: "application/json" }
+        ],
+        auth: {
+            type: "none"
+        },
+        body: {
+            contentType: "application/json",
+            content: JSON.stringify({
+                temporary: false,
+                modelName: "grok-3",
+                message: "",
+                fileAttachments: [],
+                imageAttachments: [],
+                disableSearch: false,
+                enableImageGeneration: true,
+                returnImageBytes: false,
+                returnRawGrokInXaiRequest: false,
+                enableImageStreaming: true,
+                imageGenerationCount: 2,
+                forceConcise: false,
+                toolOverrides: {
+                    imageGen: false,
+                    webSearch: false,
+                    xSearch: false,
+                    xMediaSearch: false,
+                    trendsSearch: false,
+                    xPostAnalyze: false
+                },
+                enableSideBySide: true,
+                isPreset: false,
+                sendFinalMetadata: true,
+                customInstructions: "",
+                deepsearchPreset: "default",
+                isReasoning: false
+            }, null, 2)
+        },
+        params: []
+    },
+    deepseek: {
+        url: "http://localhost:3000/deepseek-proxy",
+        method: "POST",
+        headers: [
+            { name: "accept", value: "*/*" },
+            { name: "accept-language", value: "en-US,en-GB;q=0.9,en;q=0.8" },
+            { name: "content-type", value: "application/json" },
+            { name: "authorization", value: "Bearer AUXtcPXwKSNpg/gCziP8a3TKGyJn/X88NUxR41mLkLonXl7kqUIcf9rtaepkVuqU" },
+            { name: "x-app-version", value: "20241129.1" },
+            { name: "x-client-locale", value: "en_US" },
+            { name: "x-client-platform", value: "web" },
+            { name: "x-client-version", value: "1.0.0-always" }
+        ],
+        auth: {
+            type: "bearer",
+            token: "AUXtcPXwKSNpg/gCziP8a3TKGyJn/X88NUxR41mLkLonXl7kqUIcf9rtaepkVuqU"
+        },
+        body: {
+            contentType: "application/json",
+            content: JSON.stringify({
+                prompt: "",
+                thinking_enabled: true,
+                search_enabled: false,
+                ref_file_ids: []
+            }, null, 2)
+        },
+        params: []
     }
 };
 
@@ -359,6 +429,35 @@ function createProxyUrl(originalUrl) {
 async function sendRequest() {
     document.querySelector('.response').style.display = 'none';
     document.querySelector('.loading').style.display = 'block';
+    
+    // Get the selected preset
+    const presetSelect = document.getElementById('presets');
+    const preset = presetSelect.value;
+    
+    if (preset === 'deepseek') {
+        try {
+            const requestData = prepareRequestData('deepseek');
+            const response = await DEEPSEEK_API.sendMessage(
+                requestData.messages[0].content,
+                {
+                    authToken: 'AUXtcPXwKSNpg/gCziP8a3TKGyJn/X88NUxR41mLkLonXl7kqUIcf9rtaepkVuqU',
+                    forceNewSession: requestData.force_new_session,
+                    useSearch: requestData.use_search,
+                    useTools: requestData.use_tools
+                }
+            );
+            
+            document.querySelector('.response').style.display = 'block';
+            document.querySelector('.loading').style.display = 'none';
+            
+            await processDeepSeekResponse(response);
+            updateDeepSeekSessionInfo();
+            return;
+        } catch (error) {
+            handleFetchError(error);
+            return;
+        }
+    }
     
     // Get URL and validate
     const originalUrl = document.getElementById('endpoint').value;
@@ -1152,3 +1251,133 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add proxy settings
     addProxySettings();
 });
+
+// Function to update DeepSeek session info in UI
+async function updateDeepSeekSessionInfo() {
+    const statusDiv = document.getElementById('deepseek-status');
+    const sessionIdInput = document.getElementById('deepseek-session-id');
+    const parentMessageInput = document.getElementById('deepseek-parent-message-id');
+    
+    if (!statusDiv || !sessionIdInput || !parentMessageInput) {
+        console.error('Required UI elements not found');
+        return;
+    }
+    
+    try {
+        const sessionData = await DEEPSEEK_API.getSessionInfo();
+        console.log('Current session data:', sessionData);
+        
+        // Update session ID field
+        sessionIdInput.value = sessionData.id || 'No active session';
+        
+        // Update parent message ID field
+        parentMessageInput.value = sessionData.parent_message_id || 'No parent message';
+        
+        // Update status display
+        if (sessionData.id) {
+            statusDiv.style.backgroundColor = '#d4edda';
+            statusDiv.textContent = 'Active session found';
+        } else {
+            statusDiv.style.backgroundColor = '#fff3cd';
+            statusDiv.textContent = 'No active session';
+        }
+    } catch (error) {
+        console.error('Error updating DeepSeek session info:', error);
+        statusDiv.style.backgroundColor = '#f8d7da';
+        statusDiv.textContent = `Error: ${error.message}`;
+        sessionIdInput.value = 'Error loading session';
+        parentMessageInput.value = 'Error loading message ID';
+    }
+}
+
+// Function to test DeepSeek connection
+async function testDeepSeekConnection() {
+    const statusDiv = document.getElementById('deepseek-status');
+    if (!statusDiv) return;
+
+    try {
+        await DEEPSEEK_API.createSession('AUXtcPXwKSNpg/gCziP8a3TKGyJn/X88NUxR41mLkLonXl7kqUIcf9rtaepkVuqU');
+        statusDiv.style.backgroundColor = '#d4edda';
+        statusDiv.textContent = 'Connection successful';
+        updateDeepSeekSessionInfo();
+    } catch (error) {
+        console.error('DeepSeek connection test failed:', error);
+        statusDiv.style.backgroundColor = '#f8d7da';
+        statusDiv.textContent = `Connection failed: ${error.message}`;
+    }
+}
+
+// Function to force new DeepSeek session
+async function forceNewDeepSeekSession() {
+    const statusDiv = document.getElementById('deepseek-status');
+    if (!statusDiv) return;
+
+    try {
+        await DEEPSEEK_API.createSession('AUXtcPXwKSNpg/gCziP8a3TKGyJn/X88NUxR41mLkLonXl7kqUIcf9rtaepkVuqU');
+        statusDiv.style.backgroundColor = '#d4edda';
+        statusDiv.textContent = 'New session created successfully';
+        updateDeepSeekSessionInfo();
+    } catch (error) {
+        console.error('Failed to create new DeepSeek session:', error);
+        statusDiv.style.backgroundColor = '#f8d7da';
+        statusDiv.textContent = `Failed to create new session: ${error.message}`;
+    }
+}
+
+// Function to prepare request data based on selected preset
+function prepareRequestData(preset) {
+    const data = {};
+    
+    if (preset === 'deepseek') {
+        const useSearch = document.getElementById('deepseek-use-search')?.checked ?? true;
+        const useTools = document.getElementById('deepseek-use-tools')?.checked ?? true;
+        const forceNewSession = document.getElementById('deepseek-force-new-session')?.checked ?? false;
+        
+        return {
+            messages: [{
+                role: 'user',
+                content: document.getElementById('request-body').value
+            }],
+            use_search: useSearch,
+            use_tools: useTools,
+            force_new_session: forceNewSession
+        };
+    }
+    // ... existing preset handling ...
+    
+    return data;
+}
+
+// Update session info when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updateDeepSeekSessionInfo();
+    // ... existing DOMContentLoaded handlers ...
+});
+
+async function processDeepSeekResponse(response, options = {}) {
+    const responseBody = document.querySelector('.response-body');
+    const thinkingEvents = document.querySelector('.thinking-events');
+    
+    if (!responseBody || !thinkingEvents) return;
+    
+    try {
+        for await (const eventData of response) {
+            if (eventData.error) {
+                console.error('DeepSeek error:', eventData.error);
+                responseBody.innerHTML += `<p class="error">Error: ${eventData.error}</p>`;
+                continue;
+            }
+            
+            if (eventData.thinking_step) {
+                thinkingEvents.innerHTML += `<div class="thinking-step">${eventData.thinking_step}</div>`;
+            }
+            
+            if (eventData.content) {
+                responseBody.innerHTML += formatAIResponse(eventData.content);
+            }
+        }
+    } catch (error) {
+        console.error('Error processing DeepSeek response:', error);
+        responseBody.innerHTML += `<p class="error">Error processing response: ${error.message}</p>`;
+    }
+}

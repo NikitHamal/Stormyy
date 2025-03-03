@@ -1,14 +1,14 @@
 {
-  "name": "kimi-proxy",
+  "name": "api-tester-proxy",
   "version": "1.0.0",
-  "description": "Proxy server for Kimi API",
+  "description": "Proxy server for API Tester",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "express": "^4.18.3",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "node-fetch": "^2.6.7"
+    "axios": "^1.6.7"
   }
 }

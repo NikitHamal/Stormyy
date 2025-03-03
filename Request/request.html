@@ -16,6 +16,8 @@
             <select id="presets">
                 <option value="">-- Select a preset --</option>
                 <option value="kimi">Kimi</option>
+                <option value="grok">Grok</option>
+                <option value="deepseek">DeepSeek</option>
             </select>
             <button onclick="loadPreset()">Load Preset</button>
         </div>
@@ -44,6 +46,7 @@
             <div class="tab" data-tab="body">Request Body</div>
             <div class="tab" data-tab="params">Query Parameters</div>
             <div class="tab" data-tab="kimi-options">Kimi Options</div>
+            <div class="tab" data-tab="deepseek-options">DeepSeek Options</div>
             <div class="tab" data-tab="cookies">Cookies</div>
         </div>
         
@@ -178,6 +181,47 @@
             </div>
         </div>
         
+        <div id="deepseek-options" class="tab-content">
+            <div class="form-group">
+                <label for="deepseek-session-id">Session ID:</label>
+                <input type="text" id="deepseek-session-id" readonly>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">Current session ID (automatically managed)</p>
+            </div>
+            <div class="form-group">
+                <label for="deepseek-parent-message-id">Parent Message ID:</label>
+                <input type="text" id="deepseek-parent-message-id" readonly>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">Current parent message ID (automatically managed)</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="deepseek-force-new-session">
+                    Force New Session
+                </label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">When enabled, creates a new chat session instead of continuing the existing one.</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="deepseek-use-search" checked>
+                    Enable Web Search
+                </label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">When enabled, allows the model to search the web for current information.</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="deepseek-use-tools" checked>
+                    Enable Tools
+                </label>
+                <p style="color: #666; margin-top: 5px; font-size: 0.9em;">When enabled, allows the model to use additional tools and capabilities.</p>
+            </div>
+            <div class="form-group">
+                <button onclick="testDeepSeekConnection()" style="background-color: #f39c12;">Test DeepSeek Connection</button>
+                <button onclick="forceNewDeepSeekSession()" style="background-color: #e74c3c; margin-left: 10px;">Force New Session</button>
+            </div>
+            <div id="deepseek-status" style="margin-top: 10px; padding: 10px; border-radius: 4px; background-color: #f8f9fa; font-weight: bold;">
+                Session status will appear here
+            </div>
+        </div>
+        
         <div id="cookies" class="tab-content">
             <div class="form-group">
                 <label>Browser Cookies:</label>
@@ -239,6 +283,7 @@
         </div>
     </div>
 
+    <script src="deepseek.js"></script>
     <script src="script.js"></script>
 </body>
 </html> 

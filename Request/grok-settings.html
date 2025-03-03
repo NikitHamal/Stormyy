@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok Chat Settings</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: #f6f6f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #444;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .settings-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f5ff;
+            border-left: 4px solid #0066ff;
+            border-radius: 4px;
+        }
+        
+        h2 {
+            color: #0066ff;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 120px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #0066ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #0055dd;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #e6f7e6;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #ffecec;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .status-icon {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grok Chat Settings</h1>
+    
+    <div class="settings-container">
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <p>To use Grok Chat, you need to provide your Grok cookies. Here's how to get them:</p>
+            <ol>
+                <li>Log in to <a href="https://grok.com" target="_blank">grok.com</a> in your browser</li>
+                <li>Open the developer tools (F12 or right-click > Inspect)</li>
+                <li>Go to the "Application" or "Storage" tab</li>
+                <li>In the left sidebar, click on "Cookies" and then "https://grok.com"</li>
+                <li>Look for cookies like "sso", "sso-rw", and "cf_clearance"</li>
+                <li>Copy the entire cookie string or the value of each cookie</li>
+                <li>Paste the cookies in the field below</li>
+            </ol>
+        </div>
+        
+        <div class="form-group">
+            <label for="cookiesInput">Grok Cookies:</label>
+            <textarea id="cookiesInput" placeholder="Paste your cookies here (e.g., sso=xxx; sso-rw=xxx; cf_clearance=xxx)"></textarea>
+        </div>
+        
+        <div class="button-row">
+            <button id="saveCookiesBtn">
+                <span class="material-icons-outlined">save</span> Save Cookies
+            </button>
+            <button id="testCookiesBtn">
+                <span class="material-icons-outlined">check_circle</span> Test Connection
+            </button>
+            <button id="loadCookiesBtn">
+                <span class="material-icons-outlined">refresh</span> Load Saved Cookies
+            </button>
+        </div>
+        
+        <div id="resultContainer" class="result"></div>
+    </div>
+    
+    <div class="settings-container">
+        <h2>Quick Links</h2>
+        <ul>
+            <li><a href="grok.html">Go to Grok Chat Interface</a></li>
+            <li><a href="http://localhost:3000/health" target="_blank">Check Proxy Server Health</a></li>
+        </ul>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cookiesInput = document.getElementById('cookiesInput');
+            const saveCookiesBtn = document.getElementById('saveCookiesBtn');
+            const testCookiesBtn = document.getElementById('testCookiesBtn');
+            const loadCookiesBtn = document.getElementById('loadCookiesBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // Function to show result message
+            function showResult(message, isSuccess) {
+                resultContainer.textContent = message;
+                resultContainer.className = isSuccess ? 'result success' : 'result error';
+                resultContainer.style.display = 'block';
+                
+                // Add icon to the message
+                const icon = document.createElement('span');
+                icon.className = 'material-icons-outlined status-icon';
+                icon.textContent = isSuccess ? 'check_circle' : 'error';
+                resultContainer.prepend(icon);
+            }
+            
+            // Save cookies
+            saveCookiesBtn.addEventListener('click', async () => {
+                const cookies = cookiesInput.value.trim();
+                if (!cookies) {
+                    showResult('Please enter your cookies.', false);
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('http://localhost:3000/set-grok-cookies', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ cookies })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showResult('Cookies saved successfully!', true);
+                    } else {
+                        showResult(`Error: ${data.error || data.message || 'Unknown error'}`, false);
+                    }
+                } catch (error) {
+                    showResult(`Connection error: ${error.message}. Make sure the proxy server is running.`, false);
+                }
+            });
+            
+            // Test cookies by making a sample request
+            testCookiesBtn.addEventListener('click', async () => {
+                try {
+                    // First check if proxy is running
+                    try {
+                        const healthResponse = await fetch('http://localhost:3000/health');
+                        if (!healthResponse.ok) {
+                            showResult('Proxy server is not responding. Please start the server.', false);
+                            return;
+                        }
+                    } catch (error) {
+                        showResult('Proxy server is not running. Please start the server using "node server.js".', false);
+                        return;
+                    }
+                    
+                    // Use the cookies from input if available, otherwise use saved cookies
+                    const cookies = cookiesInput.value.trim();
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'Target-URL': 'https://grok.com/rest/app-chat/info'
+                    };
+                    
+                    if (cookies) {
+                        headers.Cookie = cookies;
+                    }
+                    
+                    const response = await fetch('http://localhost:3000/grok-proxy', {
+                        method: 'GET',
+                        headers: headers
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showResult('Connection successful! Your cookies are working.', true);
+                        console.log('API Response:', data);
+                    } else {
+                        showResult(`Error: ${data.error || data.message || 'Authentication failed. Please check your cookies.'}`, false);
+                    }
+                } catch (error) {
+                    showResult(`Connection error: ${error.message}. Make sure the proxy server is running.`, false);
+                }
+            });
+            
+            // Load saved cookies
+            loadCookiesBtn.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('http://localhost:3000/get-grok-cookies');
+                    const data = await response.json();
+                    
+                    if (response.ok && data.cookies) {
+                        cookiesInput.value = data.cookies;
+                        showResult('Cookies loaded successfully!', true);
+                    } else {
+                        showResult('No saved cookies found.', false);
+                    }
+                } catch (error) {
+                    showResult(`Connection error: ${error.message}. Make sure the proxy server is running.`, false);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

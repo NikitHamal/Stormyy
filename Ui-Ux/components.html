@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StormUI - Components Library</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <!-- Add Prism.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" width="32" height="32">
+                    <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z" fill="#bb86fc"/>
+                    <path d="M12 4L6 8v8l6 3 6-3V8l-6-4z" fill="#1e1e24"/>
+                    <path d="M12 6l-4 2v4l4 2 4-2V8l-4-2z" fill="#bb86fc"/>
+                </svg>
+                <span>StormUI</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="components.html" class="active">Components</a>
+                <a href="#">Templates</a>
+                <a href="#">Resources</a>
+                <a href="#">Blog</a>
+            </div>
+            <div class="nav-buttons">
+                <button class="theme-toggle btn btn-icon" aria-label="Toggle dark/light mode">
+                    <span class="material-icons theme-icon-dark">dark_mode</span>
+                    <span class="material-icons theme-icon-light">light_mode</span>
+                </button>
+                <button class="btn btn-text">Login</button>
+                <button class="btn btn-primary">Sign Up</button>
+            </div>
+            <button class="menu-toggle">
+                <span class="material-icons">menu</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Components Page Layout -->
+    <div class="components-layout">
+        <!-- Sidebar for navigation -->
+        <aside class="components-sidebar">
+            <div class="sidebar-header">
+                <h3>Components</h3>
+                <button class="sidebar-close btn-icon">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <div class="search-input">
+                    <span class="material-icons">search</span>
+                    <input type="text" placeholder="Search components...">
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-category">
+                    <h4>Core</h4>
+                    <ul>
+                        <li><a href="#buttons" class="active">Buttons</a></li>
+                        <li><a href="#typography">Typography</a></li>
+                        <li><a href="#colors">Colors</a></li>
+                        <li><a href="#iconography">Iconography</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-category">
+                    <h4>Layout</h4>
+                    <ul>
+                        <li><a href="#grid">Grid</a></li>
+                        <li><a href="#containers">Containers</a></li>
+                        <li><a href="#spacing">Spacing</a></li>
+                        <li><a href="#breakpoints">Breakpoints</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-category">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#app-bar">App Bar</a></li>
+                        <li><a href="#drawer">Drawer</a></li>
+                        <li><a href="#tabs">Tabs</a></li>
+                        <li><a href="#breadcrumbs">Breadcrumbs</a></li>
+                        <li><a href="#menu">Menu</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-category">
+                    <h4>Inputs</h4>
+                    <ul>
+                        <li><a href="#text-fields">Text Fields</a></li>
+                        <li><a href="#select">Select</a></li>
+                        <li><a href="#checkbox">Checkbox</a></li>
+                        <li><a href="#radio">Radio</a></li>
+                        <li><a href="#switch">Switch</a></li>
+                        <li><a href="#sliders">Sliders</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-category">
+                    <h4>Data Display</h4>
+                    <ul>
+                        <li><a href="#cards">Cards</a></li>
+                        <li><a href="#lists">Lists</a></li>
+                        <li><a href="#tables">Tables</a></li>
+                        <li><a href="#chips">Chips</a></li>
+                        <li><a href="#badges">Badges</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-category">
+                    <h4>Feedback</h4>
+                    <ul>
+                        <li><a href="#alerts">Alerts</a></li>
+                        <li><a href="#dialogs">Dialogs</a></li>
+                        <li><a href="#snackbars">Snackbars</a></li>
+                        <li><a href="#progress">Progress</a></li>
+                        <li><a href="#tooltips">Tooltips</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main content area -->
+        <main class="components-content">
+            <div class="component-hero">
+                <h1>Components</h1>
+                <p>High-quality UI components ready to use in your projects. Customize and implement with ease.</p>
+            </div>
+
+            <!-- This is where component content will be dynamically loaded -->
+            <div id="component-container">
+                <!-- Loading indicator -->
+                <div class="component-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading component...</p>
+                </div>
+            </div>
+
+           
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-css.min.js"></script>
+    <script src="script.js"></script>
+    <script src="components.js"></script>
+</body>
+</html> 

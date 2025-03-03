@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen Chat</title>
+    <link rel="stylesheet" href="qwen.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <span class="material-icons-outlined">chat</span>
+            <h1>Qwen Chat</h1>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be inserted here -->
+        </div>
+
+        <div class="chat-input-container">
+            <textarea 
+                id="messageInput" 
+                placeholder="Type your message here..."
+                rows="1"
+            ></textarea>
+            <button id="sendButton" class="send-button">
+                <span class="material-icons-outlined">send</span>
+            </button>
+        </div>
+    </div>
+    <script src="qwen.js"></script>
+</body>
+</html> 

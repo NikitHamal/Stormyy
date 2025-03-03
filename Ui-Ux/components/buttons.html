@@ -1,0 +1,109 @@
+<!-- Buttons Section -->
+<section id="buttons" class="component-section">
+    <div class="component-header">
+        <h2>Buttons</h2>
+        <p>Buttons allow users to take actions, and make choices, with a single tap.</p>
+    </div>
+
+    <!-- Button Variations -->
+    <div class="component-variations">
+        <h3>Button Variants</h3>
+
+        <div class="component-demo">
+            <div class="demo-preview">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-outlined">Outlined</button>
+                <button class="btn btn-text">Text</button>
+                <button class="btn btn-primary" disabled>Disabled</button>
+            </div>
+            <div class="demo-controls">
+                <button class="btn-code-toggle">
+                    <span class="material-icons">code</span>
+                    View Code
+                </button>
+            </div>
+            <div class="demo-code">
+                <div class="code-header">
+                    <div class="code-tabs">
+                        <button class="code-tab active" data-tab="html">HTML</button>
+                        <button class="code-tab" data-tab="css">CSS</button>
+                    </div>
+                    <div class="code-actions">
+                        <button class="btn-copy">
+                            <span class="material-icons">content_copy</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="code-content">
+                    <div class="code-block active" data-tab-content="html">
+<pre><code class="language-html">&lt;button class="btn btn-primary"&gt;Primary&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Secondary&lt;/button&gt;
+&lt;button class="btn btn-outlined"&gt;Outlined&lt;/button&gt;
+&lt;button class="btn btn-text"&gt;Text&lt;/button&gt;
+&lt;button class="btn btn-primary" disabled&gt;Disabled&lt;/button&gt;</code></pre>
+                    </div>
+                    <div class="code-block" data-tab-content="css">
+<pre><code class="language-css">.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    color: var(--on-secondary);
+}
+
+.btn-outlined {
+    background-color: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-text {
+    background-color: transparent;
+    color: var(--primary);
+}</code></pre>
+                    </div>
+                </div>
+                <div class="code-editor">
+                    <div class="editor-header">
+                        <h4>Try it yourself</h4>
+                        <button class="btn-run">Run</button>
+                    </div>
+                    <div class="editor-area">
+                        <textarea class="editor-input" spellcheck="false"></textarea>
+                    </div>
+                    <div class="editor-preview">
+                        <div class="preview-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- More button demos... -->
+
+        <!-- Component Navigation -->
+        <div class="component-navigation">
+            <a href="#typography" class="next-component">
+                Next: Typography
+                <span class="material-icons">arrow_forward</span>
+            </a>
+        </div>
+    </div>
+</section> 
