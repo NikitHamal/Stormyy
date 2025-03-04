@@ -16,10 +16,10 @@ const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
 const closeSidebarBtn = document.querySelector('.close-sidebar-btn');
 const sidebar = document.querySelector('.sidebar');
 const typingStatus = document.querySelector('.typing-status');
-const charCount = document.querySelector('.char-count');
 const cancelSettingsBtn = document.getElementById('cancel-settings');
 const cancelDeleteBtn = document.getElementById('cancel-delete');
 const suggestionChips = document.querySelectorAll('.suggestion-chip');
+const inputArea = document.querySelector('.input-area');
 
 // Utility functions
 const fetchWithTimeout = (url, options = {}) => {
@@ -63,6 +63,8 @@ let isProcessing = false;
 let shouldAutoScroll = true;
 let userScrolled = false;
 let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+let currentGroupId = null;
+let currentChatId = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', initializeApp);
@@ -80,12 +82,33 @@ function initializeApp() {
     // Load saved conversations
     loadConversations();
     
-    // Create new conversation if none exists
+    // Check for session ID in URL path
+    const pathSegments = window.location.pathname.split('/');
+    const sessionId = pathSegments[pathSegments.length - 1];
+    
+    // If we have a valid session ID in the URL, try to find a conversation with matching API session ID
+    if (sessionId && sessionId.length > 8 && sessionId !== 'kimi.html') {
+        // First try to find a conversation with matching Kimi chat ID
+        const matchingByKimiChatId = conversations.find(conv => conv.kimiChatId === sessionId);
+        if (matchingByKimiChatId) {
+            loadConversation(matchingByKimiChatId.id, false); // Load without updating URL
+            return;
+        }
+        
+        // Fallback to matching on conversation ID if needed
+        const matchingById = conversations.find(conv => conv.id === sessionId);
+        if (matchingById) {
+            loadConversation(matchingById.id, false); // Load without updating URL
+            return;
+        }
+    }
+    
+    // If no valid session ID or conversation not found, load most recent or create new
     if (conversations.length === 0) {
         createNewConversation();
     } else {
         // Load the most recent conversation
-        loadConversation(conversations[0].id);
+        loadConversation(conversations[0].id, false); // Don't update URL for initial load
     }
     
     // Add event listeners
@@ -126,7 +149,6 @@ function fixIOSViewportHeight() {
 function initEventListeners() {
     // User input events
     userInput.addEventListener('input', autoResizeTextarea);
-    userInput.addEventListener('input', updateCharCount);
     userInput.addEventListener('keydown', handleInputKeydown);
     
     // Send button
@@ -192,6 +214,9 @@ function initEventListeners() {
             toggleSidebar();
         }
     });
+    
+    // Add popstate event listener for handling browser back/forward navigation
+    window.addEventListener('popstate', handlePopState);
     
     // Prevent iOS rubber-banding/bouncing effect
     if (isIOS) {
@@ -262,19 +287,36 @@ function createNewConversation() {
     // Update the UI
     updateConversationsList();
     
+    // Reset chat and group IDs
+    currentChatId = null;
+    currentGroupId = null;
+    
+    // Update URL to remove any session parameter and just show kimi.html
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.split('/').filter(segment => 
+        segment !== '' && !segment.includes('kimi.html') && segment.length < 20
+    ).join('/');
+    
+    const newPath = basePath ? `/${basePath}/kimi.html` : `/kimi.html`;
+    window.history.pushState({}, '', newPath);
+    
     // Load the new conversation
-    loadConversation(newConversation.id);
+    loadConversation(newConversation.id, false); // Don't update URL again since we just did
     
     // Focus the input field - on iOS, delay focus to avoid keyboard issues
     if (isIOS) {
         setTimeout(() => userInput.focus(), 100);
     } else {
-    userInput.focus();
+        userInput.focus();
     }
 }
 
 // Load a specific conversation
-function loadConversation(id) {
+function loadConversation(id, shouldUpdateUrl = true) {
+    // Reset chat and group IDs when loading a new conversation
+    currentChatId = null;
+    currentGroupId = null;
+    
     // Find the conversation
     currentConversation = conversations.find(conv => conv.id === id);
     
@@ -283,6 +325,11 @@ function loadConversation(id) {
         // Create a new conversation if the requested one doesn't exist
         createNewConversation();
         return;
+    }
+    
+    // Update URL with session ID if requested and if this is not a new empty conversation
+    if (shouldUpdateUrl && currentConversation.messages.length > 0) {
+        updateUrlWithSessionId(currentConversation.kimiChatId || id);
     }
     
     // Update active state in sidebar
@@ -298,9 +345,9 @@ function loadConversation(id) {
     
     // Add all messages to the container
     if (currentConversation.messages.length > 0) {
-    currentConversation.messages.forEach(msg => {
-        appendMessage(msg.role, msg.content);
-    });
+        currentConversation.messages.forEach(msg => {
+            appendMessage(msg.role, msg.content);
+        });
     } else {
         // Add welcome message if the conversation is empty
         setTimeout(addWelcomeMessage, 100);
@@ -314,6 +361,29 @@ function loadConversation(id) {
         sidebar.classList.remove('active');
         document.body.classList.remove('sidebar-open');
     }
+    
+    // Remove recommended prompts when loading a new conversation
+    const existingPrompts = document.querySelector('.recommended-prompts');
+    if (existingPrompts) existingPrompts.remove();
+}
+
+// Helper function to update URL with session ID
+function updateUrlWithSessionId(sessionId) {
+    if (!sessionId) return;
+    
+    // Get the base path without any session ID
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.split('/').filter(segment => 
+        segment !== '' && !segment.includes('kimi.html') && segment.length < 20
+    ).join('/');
+    
+    // Construct the new path with session parameter
+    const newPath = basePath ? 
+        `/${basePath}/kimi.html?session=${sessionId}` : 
+        `/kimi.html?session=${sessionId}`;
+    
+    // Update URL with query parameter
+    window.history.pushState({}, '', newPath);
 }
 
 // Update the conversation list in the sidebar
@@ -360,11 +430,11 @@ function appendMessage(role, content) {
     const messageEl = document.createElement('div');
     messageEl.className = `message ${role}`;
     
-    // Create a simpler message structure
+    // Create message content wrapper
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
     
-    // Add role indicator (just for user messages to keep UI cleaner)
+    // Add role indicator for user messages
     if (role === 'user') {
         const roleIndicator = document.createElement('div');
         roleIndicator.className = 'message-role';
@@ -378,9 +448,9 @@ function appendMessage(role, content) {
     messageEl.appendChild(messageContent);
     messagesContainer.appendChild(messageEl);
     
-    // Scroll to the new message
+    // Scroll to the new message if auto-scroll is enabled
     if (shouldAutoScroll) {
-    scrollToBottom();
+        scrollToBottom();
     }
 }
 
@@ -411,29 +481,61 @@ function showTypingIndicator() {
 
 // Format message with Markdown-like syntax
 function formatMessage(text) {
-    // Basic formatting for code, bold, italic, etc.
-    // This is a simplified version - for production, use a proper Markdown parser
-    
-    // Process code blocks
-    text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    // Process code blocks with language support
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        return `<pre><code class="language-${lang || 'plaintext'}">${code.trim()}</code></pre>`;
+    });
     
     // Process inline code
     text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
     
     // Process bold text
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
     // Process italic text
-    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
     
-    // Process links - simplified
-    text = text.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Process links
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Process lists
+    text = text.replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>');
+    text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    
+    // Process numbered lists
+    text = text.replace(/^\s*(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+    text = text.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+    
+    // Process blockquotes
+    text = text.replace(/^\s*>\s*(.+)$/gm, '<blockquote>$1</blockquote>');
+    
+    // Process headers
+    text = text.replace(/^#{6}\s+(.+)$/gm, '<h6>$1</h6>');
+    text = text.replace(/^#{5}\s+(.+)$/gm, '<h5>$1</h5>');
+    text = text.replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>');
+    text = text.replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>');
+    text = text.replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>');
+    text = text.replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>');
+    
+    // Process tables
+    text = text.replace(/\|(.+)\|/g, (match, content) => {
+        const cells = content.split('|').map(cell => cell.trim());
+        return `<tr>${cells.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+    });
+    text = text.replace(/(<tr>.*<\/tr>)/s, '<table>$1</table>');
+    
+    // Process horizontal rules
+    text = text.replace(/^---+$/gm, '<hr>');
     
     // Process paragraphs (double newlines)
     text = text.replace(/\n\n/g, '</p><p>');
     
-    // Wrap in paragraph tags
-    return `<p>${text}</p>`;
+    // Wrap in paragraph tags if not already wrapped
+    if (!text.startsWith('<')) {
+        text = `<p>${text}</p>`;
+    }
+    
+    return text;
 }
 
 // Scroll to the bottom of the messages container
@@ -466,9 +568,6 @@ async function handleSendMessage() {
     // Clear the input field
     userInput.value = '';
     userInput.style.height = 'auto';
-    
-    // Reset char count
-    updateCharCount();
     
     // Remove welcome message if it exists
     const welcomeMessage = messagesContainer.querySelector('.welcome-message');
@@ -554,9 +653,9 @@ async function createKimiChatSession(firstMessage) {
         const endpoint = kimiConfig.useProxy ? 
             `${kimiConfig.proxyEndpoint}/chat` : 
             `${kimiConfig.apiBaseUrl}/chat`;
-        
-        const headers = {
-            'Content-Type': 'application/json',
+    
+    const headers = {
+        'Content-Type': 'application/json',
             'Authorization': kimiConfig.authorization,
             'x-msh-device-id': kimiConfig.deviceId,
             'x-msh-session-id': kimiConfig.sessionId,
@@ -569,10 +668,12 @@ async function createKimiChatSession(firstMessage) {
         const payload = {
             "name": firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage,
             "born_from": "chat",
-            "kimiplus_id": kimiConfig.model === 'k1' ? 'k1' : 'kimi',
-            "is_example": false,
+            "model": kimiConfig.model === 'k1' ? 'k1' : 'kimi',
             "source": "web",
-            "tags": []
+            "messages": [{
+                "role": "user",
+                "content": firstMessage
+            }]
         };
         
         const response = await fetchWithTimeout(endpoint, {
@@ -583,13 +684,25 @@ async function createKimiChatSession(firstMessage) {
         });
         
         if (!response.ok) {
-            throw new Error(`Failed to create chat session: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`Failed to create chat session: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
         
-        // Return the chat ID
-        return data.id;
+        // Store both chat_id and group_id
+        currentChatId = data.conversation_id || data.id;
+        currentGroupId = data.group_id;
+        
+        // Update the URL with the API-provided chat ID
+        if (currentChatId) {
+            updateUrlWithSessionId(currentChatId);
+        }
+        
+        // Fetch recommended prompts after creating new session
+        await fetchRecommendedPrompts();
+        
+        return currentChatId;
     } catch (error) {
         console.error('Error creating chat session:', error);
         throw error;
@@ -599,139 +712,169 @@ async function createKimiChatSession(firstMessage) {
 // Send message to Kimi API
 async function sendToKimi(message, typingIndicator) {
     try {
-        // Prepare the API request
-        const endpoint = kimiConfig.useProxy ? kimiConfig.proxyEndpoint : kimiConfig.endpoint;
+        let chatEndpoint;
         
-        // Use chat ID if available
-        let chatEndpoint = endpoint;
-        if (currentConversation && currentConversation.kimiChatId) {
+        if (currentChatId) {
             chatEndpoint = kimiConfig.useProxy ? 
-                `${kimiConfig.proxyEndpoint}/chat/${currentConversation.kimiChatId}/completion/stream` : 
-                `${kimiConfig.apiBaseUrl}/chat/${currentConversation.kimiChatId}/completion/stream`;
+                `${kimiConfig.proxyEndpoint}/chat/${currentChatId}/completion/stream` : 
+                `${kimiConfig.apiBaseUrl}/chat/${currentChatId}/completion/stream`;
+        } else {
+            const chatId = await createKimiChatSession(message);
+            currentChatId = chatId;
+            chatEndpoint = kimiConfig.useProxy ? 
+                `${kimiConfig.proxyEndpoint}/chat/${chatId}/completion/stream` : 
+                `${kimiConfig.apiBaseUrl}/chat/${chatId}/completion/stream`;
         }
     
-    const headers = {
-        'Content-Type': 'application/json',
+        const headers = {
+            'Content-Type': 'application/json',
             'Accept': 'text/event-stream',
             'Authorization': kimiConfig.authorization,
             'x-msh-device-id': kimiConfig.deviceId,
             'x-msh-session-id': kimiConfig.sessionId,
             'x-traffic-id': kimiConfig.trafficId,
             'x-msh-platform': 'web',
-            'x-language': 'en-US'
+            'x-language': 'en-US',
+            'r-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
         };
-    
-    // Build message history from current conversation
-    const messageHistory = [];
-    
-    if (currentConversation && currentConversation.messages.length > 0) {
-        const recentMessages = currentConversation.messages.slice(-10);
-        recentMessages.forEach(msg => {
-            messageHistory.push({
-                role: msg.role,
-                content: msg.content
-            });
-        });
-    }
-    
+
+        // Format messages for API
+        const formattedMessages = currentConversation.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            name: msg.role === 'user' ? 'user' : 'assistant'
+        }));
+
         const requestData = {
-        messages: messageHistory,
+            kimiplus_id: "kimi",
+            extend: {
+                sidebar: true
+            },
             model: kimiConfig.model === 'k1' ? 'k1' : 'kimi',
-        stream: true,
-            use_search: kimiConfig.useSearch,
-            use_research: kimiConfig.useResearch
+            use_research: false,
+            use_search: false,
+            messages: [{
+                role: 'user',
+                content: message
+            }],
+            refs: [],
+            history: [],
+            scene_labels: []
         };
         
-        // Show typing status
-        typingStatus.textContent = 'Kimi is typing...';
-        
-        // Make the API request
         const response = await fetchWithTimeout(chatEndpoint, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(requestData),
-            timeout: 30000 // 30-second timeout
+            timeout: 30000
         });
         
         if (!response.ok) {
-            throw new Error(`API request failed with status ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`API request failed with status ${response.status}: ${errorText}`);
         }
         
-        // Process streaming response
         await processStreamingResponse(response, typingIndicator);
         
-        // Clear typing status
-        typingStatus.textContent = '';
+        // Fetch new recommended prompts after response
+        await fetchRecommendedPrompts();
         
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('Error during Kimi communication:', error);
         throw error;
     }
 }
 
 // Process streaming response from the API
 async function processStreamingResponse(response, typingIndicator) {
-    // Get a reader from the response body
     const reader = response.body.getReader();
     let accumulator = '';
+    let thoughtText = '';
     let responseText = '';
+    let isThinking = true;
+    let messageId = null;
+    let currentGroupId = null;
     
-    // Create a new assistant message element
-    const messageEl = document.createElement('div');
-    messageEl.className = 'message assistant';
+    // Create thought message element
+    const thoughtEl = document.createElement('div');
+    thoughtEl.className = 'message assistant thought';
+    const thoughtContent = document.createElement('div');
+    thoughtContent.className = 'message-content';
+    thoughtContent.innerHTML = '<p class="thought-text">Thinking: </p>';
+    thoughtEl.appendChild(thoughtContent);
     
-    const messageContent = document.createElement('div');
-    messageContent.className = 'message-content';
-    messageContent.innerHTML = '<p></p>';
+    // Create response message element
+    const responseEl = document.createElement('div');
+    responseEl.className = 'message assistant response';
+    const responseContent = document.createElement('div');
+    responseContent.className = 'message-content';
+    responseContent.innerHTML = '<p></p>';
+    responseEl.appendChild(responseContent);
     
-    messageEl.appendChild(messageContent);
+    // Replace typing indicator with thought element
+    messagesContainer.replaceChild(thoughtEl, typingIndicator);
     
-    // Process the stream
     try {
-        let firstChunk = true;
-        
         while (true) {
             const { done, value } = await reader.read();
             
-            if (done) {
-                break;
-            }
+            if (done) break;
             
-            // Convert the chunk to text
             const chunk = new TextDecoder('utf-8').decode(value);
             accumulator += chunk;
             
-            // Split by data: prefixes (SSE format)
             const dataItems = accumulator.split('data: ');
             
-            // Process complete data items
             for (let i = 0; i < dataItems.length - 1; i++) {
                 let dataItem = dataItems[i].trim();
                 
                 if (dataItem) {
                     try {
                         const jsonData = JSON.parse(dataItem);
-                        console.log("Received data:", jsonData);
                         
-                        // Handle different event types
-                        if (jsonData.event === 'cmpl' && jsonData.text) {
-                            responseText += jsonData.text;
-                            
-                            // On first chunk, replace the typing indicator with the actual message
-                            if (firstChunk) {
-                                messagesContainer.replaceChild(messageEl, typingIndicator);
-                                firstChunk = false;
+                        // Store message ID and group ID when available
+                        if (jsonData.event === 'req' || jsonData.event === 'resp') {
+                            if (jsonData.id) {
+                                messageId = jsonData.id;
+                                lastMessageId = messageId;
                             }
+                            if (jsonData.group_id) {
+                                currentGroupId = jsonData.group_id;
+                                // Store the group_id globally for use in other functions
+                                window.currentGroupId = currentGroupId;
+                            }
+                        }
+
+                        if (jsonData.event === 'k1' && jsonData.text) {
+                            // This is the thinking phase
+                            thoughtText += jsonData.text;
+                            thoughtContent.innerHTML = formatMessage(thoughtText);
                             
-                            // Update the message content with formatted text
-                            messageContent.innerHTML = formatMessage(responseText);
-                            
-                            // Scroll to bottom if needed
                             if (shouldAutoScroll) {
-        scrollToBottom();
+                                requestAnimationFrame(scrollToBottom);
+                            }
+                        } else if (jsonData.event === 'cmpl' && jsonData.text) {
+                            // This is the actual response
+                            if (isThinking) {
+                                // First response chunk, add response element
+                                messagesContainer.appendChild(responseEl);
+                                isThinking = false;
+                            }
+                            responseText += jsonData.text;
+                            responseContent.innerHTML = formatMessage(responseText);
+                            
+                            if (shouldAutoScroll) {
+                                requestAnimationFrame(scrollToBottom);
                             }
                         } else if (jsonData.event === 'done' || jsonData.event === 'all_done') {
-                            console.log("Stream completed");
+                            // After completion, fetch recommended prompts using the latest group_id
+                            if (currentChatId && currentGroupId) {
+                                try {
+                                    await fetchRecommendedPrompts(currentGroupId);
+                                } catch (error) {
+                                    console.error('Error fetching recommended prompts:', error);
+                                }
+                            }
                         }
                     } catch (e) {
                         console.error('Error parsing JSON:', e, dataItem);
@@ -739,36 +882,27 @@ async function processStreamingResponse(response, typingIndicator) {
                 }
             }
             
-            // Keep the incomplete part
             accumulator = dataItems[dataItems.length - 1];
         }
         
-        // If we never received any content, remove the typing indicator
-        if (firstChunk) {
-            messagesContainer.removeChild(typingIndicator);
-        }
-        
-        // Add the final message to the conversation
+        // Add the final response to the conversation history with group_id and message_id
         if (responseText) {
             currentConversation.messages.push({
                 role: 'assistant',
-                content: responseText
+                content: responseText,
+                group_id: currentGroupId,
+                message_id: messageId
             });
-            
-            // Save to localStorage
             saveConversations();
         }
         
     } catch (error) {
         console.error('Error processing stream:', error);
-        
-        // Remove the typing indicator
-        if (typingIndicator.parentNode) {
-            messagesContainer.removeChild(typingIndicator);
-        }
-        
+        thoughtContent.innerHTML = '<p class="error">Error: Failed to process response</p>';
         throw error;
     }
+    
+    return responseText;
 }
 
 // Settings functions
@@ -950,9 +1084,22 @@ function deleteConversation(id, event) {
     // Update UI
     updateConversationsList();
     
-    // If it was the active conversation, create a new one
+    // If it was the active conversation, create a new one or load the most recent one
     if (currentConversation && currentConversation.id === id) {
-        createNewConversation();
+        // Reset chat and group IDs
+        currentChatId = null;
+        currentGroupId = null;
+        
+        // Update URL to remove session parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('session');
+        window.history.pushState({}, '', url.pathname);
+        
+        if (conversations.length > 0) {
+            loadConversation(conversations[0].id);
+        } else {
+            createNewConversation();
+        }
     }
 }
 
@@ -978,9 +1125,16 @@ function deleteAllChats() {
         // Clear localStorage
         localStorage.removeItem('kimiConversations');
         
-        // Reset conversations array
+        // Reset conversations array and current states
         conversations = [];
         currentConversation = null;
+        currentChatId = null;
+        currentGroupId = null;
+        
+        // Update URL to remove session parameter
+        const url = new URL(window.location);
+        url.searchParams.delete('session');
+        window.history.pushState({}, '', url.pathname);
         
         // Clear UI
         conversationList.innerHTML = '';
@@ -1001,11 +1155,6 @@ function deleteAllChats() {
         }
     } catch (error) {
         console.error('Error deleting all chats:', error);
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'message system-message error';
-        errorMessage.innerHTML = `<p>Error deleting chats: ${error.message}</p>`;
-        messagesContainer.appendChild(errorMessage);
-        scrollToBottom();
     }
 }
 
@@ -1045,24 +1194,365 @@ function addWelcomeMessage() {
     }
 }
 
-// Update character count with safety indicators
-function updateCharCount() {
-    const count = userInput.value.length;
-    charCount.textContent = `${count}/4000`;
+// Handle browser back/forward navigation
+function handlePopState() {
+    // Get session ID from query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
     
-    // Add warning class when approaching limit
-    if (count > 3800) {
-        charCount.classList.add('error');
-        charCount.classList.remove('warning');
-    } else if (count > 3500) {
-        charCount.classList.add('warning');
-        charCount.classList.remove('error');
-    } else {
-        charCount.classList.remove('warning', 'error');
+    // If no session ID or invalid URL, load most recent conversation
+    if (!sessionId) {
+        if (conversations.length > 0) {
+            loadConversation(conversations[conversations.length - 1].id, false);
+        } else {
+            createNewConversation();
+        }
+        return;
     }
+    
+    // Try to find conversation with matching Kimi chat ID
+    const matchingByKimiChatId = conversations.find(conv => conv.kimiChatId === sessionId);
+    if (matchingByKimiChatId) {
+        loadConversation(matchingByKimiChatId.id, false); // Load without updating URL
+        return;
+    }
+    
+    // Fallback to matching on conversation ID
+    const matchingById = conversations.find(conv => conv.id === sessionId);
+    if (matchingById) {
+        loadConversation(matchingById.id, false);
+        return;
+    }
+    
+    // If no matching conversation found, create new one
+    createNewConversation();
 }
 
 // Initialize the app
 window.addEventListener('load', () => {
     console.log('Kimi Chat interface loaded');
 }); 
+
+// Fetch recommended prompts from the API
+async function fetchRecommendedPrompts() {
+    try {
+        if (!currentChatId || !currentGroupId) {
+            return;
+        }
+
+        const endpoint = kimiConfig.useProxy ? 
+            `${kimiConfig.proxyEndpoint}/chat/${currentChatId}/prompts` : 
+            `${kimiConfig.apiBaseUrl}/chat/${currentChatId}/prompts`;
+
+        const response = await fetchWithTimeout(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': kimiConfig.authorization,
+                'x-msh-device-id': kimiConfig.deviceId,
+                'x-msh-session-id': kimiConfig.sessionId,
+                'x-traffic-id': kimiConfig.trafficId,
+                'x-msh-platform': 'web',
+                'x-language': 'en-US',
+                'r-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+            },
+            timeout: 5000
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch prompts: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const prompts = data.prompts || [];
+
+        // Remove existing prompts
+        const existingPrompts = document.querySelector('.recommended-prompts');
+        if (existingPrompts) {
+            existingPrompts.remove();
+        }
+
+        if (prompts.length > 0) {
+            // Create new prompts container
+            const promptsContainer = document.createElement('div');
+            promptsContainer.className = 'recommended-prompts';
+
+            // Add each prompt
+            prompts.forEach(prompt => {
+                const promptElement = document.createElement('button');
+                promptElement.className = 'recommended-prompt';
+                promptElement.textContent = prompt;
+                
+                // Set the prompt text in the input when clicked
+                promptElement.addEventListener('click', () => {
+                    userInput.value = prompt;
+                    userInput.focus();
+                });
+
+                promptsContainer.appendChild(promptElement);
+            });
+
+            // Find the last assistant message and append prompts after it
+            const messages = document.querySelectorAll('.message');
+            let lastAssistantMessage = null;
+            for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].classList.contains('assistant') && !messages[i].classList.contains('thought')) {
+                    lastAssistantMessage = messages[i];
+                    break;
+                }
+            }
+
+            if (lastAssistantMessage) {
+                lastAssistantMessage.insertAdjacentElement('afterend', promptsContainer);
+                scrollToBottom();
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching recommended prompts:', error);
+    }
+}
+
+// Add after the fetchRecommendedPrompts function
+let lastMessageId = null;
+
+async function fetchSegmentScroll(chatId, lastId, limit = 10) {
+    try {
+        const response = await fetchWithTimeout(`${kimiConfig.apiBaseUrl}/chat/${chatId}/segment/scroll`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': kimiConfig.authorization,
+                'x-msh-device-id': kimiConfig.deviceId,
+                'x-msh-session-id': kimiConfig.sessionId,
+                'x-traffic-id': kimiConfig.trafficId,
+                'x-msh-platform': 'web',
+                'x-language': 'en-US',
+                'r-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+            },
+            body: JSON.stringify({
+                chat_id: chatId,
+                group_id: currentGroupId || null,
+                model: kimiConfig.model || 'k1',
+                source: 'web',
+                limit: limit,
+                last_id: lastId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch segments: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Transform response if needed
+        if (data.items && Array.isArray(data.items)) {
+            // Sort items by creation date if needed
+            data.items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            // Process each message to ensure proper formatting
+            data.items = data.items.map(item => ({
+                ...item,
+                content: item.content || '',
+                context_type: item.context_type || 'text',
+                status: item.status || { is_thumb_up: false, is_thumb_down: false },
+                role: item.role || 'assistant',
+                info: item.info || {
+                    model: item.model || 'k1',
+                    stop: false,
+                    by_recommend_kimiplus: false,
+                    image_gen_ratio: '',
+                    use_image_gen: false
+                },
+                contents: item.contents || {
+                    zones: [{
+                        index: 0,
+                        zone_type: 'normal',
+                        sections: [{
+                            index: 0,
+                            view: 'cmpl',
+                            cmpl: item.content || ''
+                        }]
+                    }]
+                }
+            }));
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error fetching segments:', error);
+        throw error;
+    }
+}
+
+// Add developer tools functionality
+const devTools = {
+    requests: [],
+    maxStoredRequests: 100,
+
+    addRequest(requestInfo) {
+        this.requests.unshift(requestInfo);
+        if (this.requests.length > this.maxStoredRequests) {
+            this.requests.pop();
+        }
+        this.saveToLocalStorage();
+    },
+
+    saveToLocalStorage() {
+        localStorage.setItem('kimiDevTools', JSON.stringify(this.requests));
+    },
+
+    loadFromLocalStorage() {
+        const saved = localStorage.getItem('kimiDevTools');
+        if (saved) {
+            this.requests = JSON.parse(saved);
+        }
+    },
+
+    clearHistory() {
+        this.requests = [];
+        this.saveToLocalStorage();
+    },
+
+    showDevTools() {
+        const modal = document.createElement('div');
+        modal.className = 'modal dev-tools-modal active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Developer Tools</h2>
+                    <button class="close-modal">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="dev-tools-controls">
+                        <button class="clear-history">Clear History</button>
+                        <button class="export-json">Export JSON</button>
+                    </div>
+                    <div class="requests-list">
+                        ${this.requests.map((req, index) => `
+                            <div class="request-item">
+                                <div class="request-header" onclick="devTools.toggleRequest(${index})">
+                                    <span class="method ${req.method.toLowerCase()}">${req.method}</span>
+                                    <span class="url">${req.url}</span>
+                                    <span class="status status-${Math.floor(req.status/100)}xx">${req.status}</span>
+                                    <span class="timestamp">${new Date(req.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                                <div class="request-details" id="request-${index}" style="display: none;">
+                                    <h4>Request Headers</h4>
+                                    <pre>${JSON.stringify(req.requestHeaders, null, 2)}</pre>
+                                    <h4>Request Body</h4>
+                                    <pre>${JSON.stringify(req.requestBody, null, 2)}</pre>
+                                    <h4>Response Headers</h4>
+                                    <pre>${JSON.stringify(req.responseHeaders, null, 2)}</pre>
+                                    <h4>Response Body</h4>
+                                    <pre>${JSON.stringify(req.responseBody, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add event listeners
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        modal.querySelector('.clear-history').addEventListener('click', () => {
+            this.clearHistory();
+            modal.remove();
+            this.showDevTools();
+        });
+
+        modal.querySelector('.export-json').addEventListener('click', () => {
+            const dataStr = JSON.stringify(this.requests, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kimi-dev-tools-${new Date().toISOString()}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+    },
+
+    toggleRequest(index) {
+        const details = document.getElementById(`request-${index}`);
+        if (details) {
+            details.style.display = details.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+};
+
+// Modify fetchWithTimeout to capture request/response info
+const originalFetchWithTimeout = window.fetchWithTimeout;
+window.fetchWithTimeout = async (url, options = {}) => {
+    const startTime = Date.now();
+    const requestHeaders = { ...options.headers };
+    const requestBody = options.body ? JSON.parse(options.body) : null;
+
+    try {
+        const response = await originalFetchWithTimeout(url, options);
+        const responseHeaders = {};
+        response.headers.forEach((value, name) => {
+            responseHeaders[name] = value;
+        });
+
+        let responseBody;
+        if (response.headers.get('content-type')?.includes('application/json')) {
+            const clonedResponse = response.clone();
+            try {
+                responseBody = await clonedResponse.json();
+            } catch (e) {
+                responseBody = 'Could not parse JSON response';
+            }
+        } else if (response.headers.get('content-type')?.includes('text')) {
+            const clonedResponse = response.clone();
+            responseBody = await clonedResponse.text();
+        } else {
+            responseBody = 'Binary data not shown';
+        }
+
+        devTools.addRequest({
+            timestamp: startTime,
+            url,
+            method: options.method || 'GET',
+            status: response.status,
+            requestHeaders,
+            requestBody,
+            responseHeaders,
+            responseBody,
+            duration: Date.now() - startTime
+        });
+
+        return response;
+    } catch (error) {
+        devTools.addRequest({
+            timestamp: startTime,
+            url,
+            method: options.method || 'GET',
+            status: 0,
+            requestHeaders,
+            requestBody,
+            responseHeaders: {},
+            responseBody: error.message,
+            duration: Date.now() - startTime,
+            error: true
+        });
+        throw error;
+    }
+};
+
+// Add keyboard shortcut to open dev tools (Ctrl+Shift+D)
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        devTools.showDevTools();
+    }
+});
+
+// Initialize dev tools
+devTools.loadFromLocalStorage(); 
